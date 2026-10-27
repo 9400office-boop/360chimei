@@ -181,6 +181,52 @@
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
   .spot { animation-name: rise2; } @keyframes rise2 { from { opacity: 0; transform: translate(-50%, 14px); } }
   body[data-time="night"] .mode { color: rgba(255,255,255,.5); }
+
+  /* 聚光：作者 */
+  .spot .author { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .spot .author svg { width: 46px; height: 55px; }
+  .spot .author b { display: block; font-size: 18px; }
+  .spot .author span { color: var(--ink-soft); font-size: 14px; }
+  /* 共識大樹（全螢幕） */
+  .bigtree { position: fixed; inset: 0; z-index: 30; display: flex; background: radial-gradient(ellipse at 50% 35%, #FFFFFF, #F6F4EE 70%); animation: fadein .6s; }
+  .bigtree.hide { display: none; }
+  @keyframes fadein { from { opacity: 0 } }
+  .bt-stage { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 18px 10px 10px; }
+  .bt-stage svg { flex: 1; width: 100%; min-height: 0; }
+  .bt-title { text-align: center; }
+  .bt-title small { display: block; letter-spacing: .3em; font-size: 13px; color: #8A8FA8; font-weight: 700; }
+  .bt-title b { display: block; font-family: var(--serif); font-size: 44px; color: #3E3F6E; letter-spacing: .2em; line-height: 1.2; }
+  .bt-sub { font-size: 14px; color: #6B7772; }
+  .bt-foot { text-align: center; padding-bottom: 8px; }
+  .bt-foot b { display: block; font-family: var(--serif); font-size: 30px; color: #3E3F6E; letter-spacing: .15em; }
+  .bt-bar { width: min(420px, 60%); height: 10px; margin: 8px auto 6px; background: #E6E9F2; border-radius: 999px; overflow: hidden; }
+  .bt-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8FD6A0, #3E8E41); border-radius: 999px; transition: width .8s; }
+  .bigtree .drip { animation: dripfall 1.6s ease-in both; }
+  @keyframes dripfall { 0% { transform: translate(var(--x), 60px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--x), 700px); opacity: 0; } }
+  .bigtree .branches path, .bigtree .fruits { transition: opacity .8s; }
+  .bigtree .grow { transform-box: view-box; transform-origin: 500px 905px; transition: transform 1s cubic-bezier(.3,1.2,.5,1); }
+  .bt-count { font-size: 15px; color: #2F6FC4; font-weight: 700; }
+  .bt-side { width: min(440px, 32vw); background: rgba(255,255,255,.9); border-left: 1px solid var(--line); padding: 26px 24px; overflow-y: auto; }
+  .bt-side h3 { margin: 0 0 10px; font-family: var(--serif); font-size: 24px; color: #3E3F6E; }
+  .bt-row { display: flex; gap: 10px; padding: 12px 0; border-top: 1px dashed var(--line); }
+  .bt-row.top .bt-rk { color: #C99A2E; }
+  .bt-rk { font-family: var(--num); font-style: italic; font-size: 30px; color: #8A8FA8; width: 30px; text-align: center; }
+  .bt-tx { flex: 1; font-size: 16px; line-height: 1.6; }
+  .bt-meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+  .bt-tag { display: inline-block; color: #fff; border-radius: 6px; padding: 0 6px; margin-right: 6px; font-weight: 700; }
+  .bt-v { color: #2F6FC4; font-weight: 700; font-size: 17px; white-space: nowrap; }
+  .bt-more { color: var(--ink-soft); font-size: 13px; text-align: center; }
+  .bigtree .leaf { animation: leafpop .7s cubic-bezier(.3,1.6,.5,1) both; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes leafpop { from { opacity: 0; scale: .1; } }
+  body.treemode .topbar { z-index: 31; }
+  body.treemode .phase { display: none; }
+  body.treemode .side-btns .pill:not([data-act=help]) { display: none; }
+  body.treemode .topbar .brand { display: none; }
+  body.memode .bigtree { flex-direction: column; }
+  body.memode .bt-side { width: auto; max-height: 38vh; border-left: 0; border-top: 1px solid var(--line); padding: 12px 14px 90px; }
+  body.memode .bt-title b { font-size: 26px; }
+  body.memode .bt-foot b { font-size: 18px; }
+  body.memode .bigtree { z-index: 8; }
 </style>
 </head>
 <body>
@@ -202,6 +248,7 @@
     <button class="tb" data-mode="links"><svg viewBox="0 0 24 24"><circle cx="5" cy="17" r="2"/><circle cx="19" cy="7" r="2"/><path d="M7 16c4-1 6-5 10-8"/></svg>協作線</button>
     <button class="tb" data-mode="pause"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg>暫停</button>
     <button class="tb" data-mode="top"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>鳥瞰</button>
+    <button class="tb" data-mode="tree"><svg viewBox="0 0 24 24"><path d="M12 21v-6M12 15c-4 0-7-2.5-7-6a7 7 0 0 1 14 0c0 3.5-3 6-7 6z"/></svg>大樹</button>
     <button class="tb" data-mode="log"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>日誌</button>
   </div>
 </div>
@@ -232,11 +279,11 @@
 <div class="log hide" id="log"></div>
 <div class="help hide" id="help"><div class="box">
   <h2 style="margin-top:0">🏥 360°深耕奇美怎麼玩</h2>
-  1. 掃右側 QR Code，選一位捏捏人、打上暱稱，就會降落在第二醫療大樓前的永續廣場。<br>
-  2. 系統隨機派給你 01–06 其中一張詞卡，寫下你的詞並選擇範疇，你就會走到那個範疇的大樓前。<br>
-  3. 主持人揭曉時，全場的詞會拼成一句句話，在行動廣場長出幼苗，六位作者會走到幼苗旁。<br>
-  4. 每人 3 滴水，澆給最想實現的句子，票多的會長成大樹。<br>
-  <p style="color:#6B7772;font-size:13px">外圍一圈與院區前的大道都是「連續照護大道」，八個照護站用「採購橋」連回院區；七台資訊車、人資船與會計船、人資碼頭與會計碼頭、資訊廣場，是行政後勤夥伴「渡大家一程、一同完成」的象徵，點一下就能看說明。<br>滑鼠拖曳旋轉、滾輪縮放、右鍵拖曳平移；點地塊名稱可看說明。</p>
+  1. 掃右側 QR Code，選一位捏捏人、填上部門和姓名，再選一個想深耕的範疇，你的人物就會走到那個範疇的大樓前。<br>
+  2. 寫下六欄行動句（主詞、動詞、受詞、合作夥伴、方式、目的），種下後會在社會情緒學習廣場或復原力廣場開出一朵花。<br>
+  3. 主持人挑選並揭曉行動句，鏡頭會飛到作者身邊。<br>
+  4. 每人 3 滴水，澆給最想實現的句子；每一滴水讓共識大樹長出一片葉子，票多的句子掛在樹上最醒目的位置。<br>
+  <p style="color:#6B7772;font-size:13px">外圍一圈與院區前的大道都是「連續照護大道」，八個照護站用「採購橋」連回院區；七台資訊車、七顆人資熱氣球、會計船與會計碼頭、資訊廣場，是行政後勤夥伴「渡大家一程、一同完成」的象徵，點一下就能看說明。<br>滑鼠拖曳旋轉、滾輪縮放、右鍵拖曳平移；點地塊名稱可看說明。</p>
   <button class="pill on" data-act="help">知道了</button>
 </div></div>
 <div class="mode" id="mode"></div>
@@ -252,6 +299,8 @@
 <script src="js/store.js"></script>
 <script src="js/world3d.js"></script>
 <script src="js/life3d.js"></script>
+<script src="js/balloons3d.js"></script>
+<script src="js/bigtree.js"></script>
 <script src="js/screen3d.js"></script>
 </body>
 </html>
