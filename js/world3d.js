@@ -753,7 +753,7 @@
         bulb.material = (Math.sin((t || performance.now() / 1000) * 6 + i) > 0) ? mat(0x5FE0C8, true) : mat(0xBFFFF2, true);
         if (wait > 0) { wait -= dt; return; }
         const prev = a; a = (a + dt * .045) % TAU;
-        sa.forEach((s) => { if (prev < a ? (prev < s && s <= a) : (s > prev || s <= a)) wait = 2.2; });
+        sa.forEach((s, si) => { if (prev < a ? (prev < s && s <= a) : (s > prev || s <= a)) { wait = 2.2; if (W.onCarStop) W.onCarStop(i, W.stages[si]); } });
         const x = Math.cos(a) * RX, z = Math.sin(a) * RZ, nx = Math.cos(a + .01) * RX, nz = Math.sin(a + .01) * RZ;
         g.rotation.order = "YXZ";
         g.position.set(x, W.ringY(x, z) + .1, z);
@@ -795,7 +795,7 @@
         g.position.y = Math.sin((t || performance.now() / 1000) * 1.5 + ph) * .08;
         if (wait > 0) { wait -= dt; } else {
           const px = x; x += lane.dir * dt * 6;
-          if ((px - dx) * (x - dx) <= 0 && px !== dx) { x = dx + lane.dir * .01; wait = 3.5; }
+          if ((px - dx) * (x - dx) <= 0 && px !== dx) { x = dx + lane.dir * .01; wait = 3.5; if (W.onBoatDock) W.onBoatDock(bt.kind, i); }
           if (x > XMAX) x -= SPAN; if (x < XMIN) x += SPAN;
         }
         g.position.x = x; g.position.z = lane.z;

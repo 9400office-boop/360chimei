@@ -169,7 +169,7 @@
       html += top.map((s, i) => `<div class="sent"><div class="text"><span class="rank">${i + 1}</span>${sentenceHtml(s)}</div><div class="meta"><span>${SC(s.scope).tag}・${escapeHtml(authorOf(s))}</span><span>💧 ${tot[s.id] || 0}</span></div></div>`).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a>`;
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">在地圖上點任何一朵花，就能看到那句行動句是誰寫的</p>`;
     html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
     return html;
   }
