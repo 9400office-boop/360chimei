@@ -442,7 +442,8 @@
     // 階段
     if (phase !== lastPhase) { treeOverride = null; lastPhase = phase; }
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
-    const showTree = treeOverride !== null ? treeOverride : ((phase === "water" || phase === "harvest") && sents.length > 0 && !spotId);
+    // 參加者手機的地圖（?me=）不切換共識大樹，維持院區全景；大樹只在大螢幕顯示
+    const showTree = ME ? false : (treeOverride !== null ? treeOverride : ((phase === "water" || phase === "harvest") && sents.length > 0 && !spotId));
     BigTree.show(showTree);
     document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
     if (showTree) BigTree.update({ sents, totals, people, edits: S.edits, phase, drops, possible: Object.keys(people).length * CFG.dropsPerPerson });
