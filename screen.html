@@ -234,51 +234,9 @@
   .spot .author svg { width: 46px; height: 55px; }
   .spot .author b { display: block; font-size: 18px; }
   .spot .author span { color: var(--ink-soft); font-size: 14px; }
-  /* 共識大樹（全螢幕） */
-  .bigtree { position: fixed; inset: 0; z-index: 30; display: flex; background: radial-gradient(ellipse at 50% 35%, #FFFFFF, #F6F4EE 70%); animation: fadein .6s; }
-  .bigtree.hide { display: none; }
-  @keyframes fadein { from { opacity: 0 } }
-  .bt-stage { flex: 1 1 0; position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 18px 10px 10px; }
-  .bt-stage svg { flex: 1 1 0; width: 100%; height: auto; min-height: 0; }
-  .bt-title { text-align: center; }
-  .bt-title small { display: block; letter-spacing: .3em; font-size: 13px; color: #8A8FA8; font-weight: 700; }
-  .bt-title b { display: block; font-family: var(--serif); font-size: 44px; color: #3E3F6E; letter-spacing: .2em; line-height: 1.2; }
-  .bt-sub { font-size: 14px; color: #6B7772; }
-  .bt-foot { text-align: center; padding-bottom: 8px; }
-  .bt-foot b { display: block; font-family: var(--serif); font-size: 30px; color: #3E3F6E; letter-spacing: .15em; }
-  .bt-bar { width: min(420px, 60%); height: 10px; margin: 8px auto 6px; background: #E6E9F2; border-radius: 999px; overflow: hidden; }
-  .bt-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8FD6A0, #3E8E41); border-radius: 999px; transition: width .8s; }
-  .bigtree .drip { animation: dripfall 1.6s ease-in both; }
-  @keyframes dripfall { 0% { transform: translate(var(--x), 60px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--x), 700px); opacity: 0; } }
-  .bigtree .branches path, .bigtree .fruits { transition: opacity .8s; }
-  .bigtree .grow { transform-box: view-box; transform-origin: 500px 905px; transition: transform 1s cubic-bezier(.3,1.2,.5,1); }
-  .bt-count { font-size: 15px; color: #2F6FC4; font-weight: 700; }
-  .bt-side { width: min(440px, 32vw); background: rgba(255,255,255,.9); border-left: 1px solid var(--line); padding: 26px 24px; overflow-y: auto; }
-  .bt-side h3 { margin: 0 0 10px; font-family: var(--serif); font-size: 24px; color: #3E3F6E; }
-  .bt-row { display: flex; gap: 10px; padding: 12px 0; border-top: 1px dashed var(--line); }
-  .bt-row.top .bt-rk { color: #C99A2E; }
-  .bt-rk { font-family: var(--num); font-style: italic; font-size: 30px; color: #8A8FA8; width: 30px; text-align: center; }
-  .bt-tx { flex: 1; font-size: 16px; line-height: 1.6; }
-  .bt-meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
-  .bt-tag { display: inline-block; color: #fff; border-radius: 6px; padding: 0 6px; margin-right: 6px; font-weight: 700; }
-  .bt-v { color: #2F6FC4; font-weight: 700; font-size: 17px; white-space: nowrap; }
-  .bt-more { color: var(--ink-soft); font-size: 13px; text-align: center; }
-  .bigtree .leaf { animation: leafpop .7s cubic-bezier(.3,1.6,.5,1) both; transform-box: fill-box; transform-origin: 50% 100%; }
-  @keyframes leafpop { from { opacity: 0; scale: .1; } }
-  body.treemode .topbar { z-index: 31; }
-  body.treemode .phase { display: none; }
-  body.treemode .side-btns .pill:not([data-act=help]) { display: none; }
-  body.treemode .topbar .brand { display: none; }
-  @media (max-width: 760px) {
-    .bigtree { flex-direction: column; }
-    .bt-stage { padding-top: 64px; }
-    .bt-side { width: auto; flex: 0 0 auto; max-height: 34vh; border-left: 0; border-top: 1px solid var(--line); padding: 12px 14px 86px; }
-    .bt-title b { font-size: 26px; }
-    .bt-foot b { font-size: 18px; }
-    .bt-tx { font-size: 14px; }
-  }
   body.memode .bigtree { z-index: 8; }
 </style>
+<link rel="stylesheet" href="css/bigtree.css">
 </head>
 <body>
 <div id="stage"><div id="labels"></div></div>

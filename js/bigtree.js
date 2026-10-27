@@ -11,74 +11,89 @@
   // ---------- 固定亂數，讓每次畫出的樹一樣 ----------
   function rng(seed) { return () => (seed = (seed * 9301 + 49297) % 233280) / 233280; }
 
-  // ---------- 生成枝幹 ----------
+  // ---------- 生成枝幹（圓形茂密樹冠，參考指紋樹） ----------
   const r = rng(20261027);
-  const branches = [], tips = [], forks = [], mids = [];
+  const TOPY = GROUND - 250;                       // 樹幹分岔點
+  const CROWN = { x: CX, y: 410, R: 330 };          // 圓形樹冠
+  const inCrown = (x, y, k = 1) => Math.hypot(x - CROWN.x, (y - CROWN.y) * 1.05) < CROWN.R * k;
+  const branches = [], tips = [], forks = [];
   function grow(x, y, ang, len, w, depth) {
-    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
-    const bend = (r() - .5) * len * .35;
+    let x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+    // 枝條不超出樹冠
+    for (let k = 0; k < 6 && !inCrown(x2, y2, .9); k++) { len *= .82; x2 = x + Math.cos(ang) * len; y2 = y + Math.sin(ang) * len; }
+    const bend = (r() - .5) * len * .3;
     const mx = (x + x2) / 2 + Math.cos(ang + Math.PI / 2) * bend, my = (y + y2) / 2 + Math.sin(ang + Math.PI / 2) * bend;
     branches.push({ d: `M${x.toFixed(1)},${y.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`, w, depth });
-    if (depth <= 2) { mids.push({ x: (x + x2) / 2, y: (y + y2) / 2, ang }); mids.push({ x: x2, y: y2, ang }); }
-    if (depth >= 2 && depth <= 4) forks.push({ x: x2, y: y2, depth });
-    if (depth === 0 || len < 22) { tips.push({ x: x2, y: y2, ang }); return; }
-    const n = depth > 3 ? 2 : (r() < .5 ? 2 : 3);
+    if (depth >= 1 && depth <= 3) forks.push({ x: x2, y: y2, depth, ang });
+    if (depth === 0 || len < 26) { tips.push({ x: x2, y: y2, ang }); return; }
+    const n = depth >= 3 ? 2 : (r() < .55 ? 2 : 3);
     for (let i = 0; i < n; i++) {
-      const spread = n === 2 ? (i ? 1 : -1) * (.32 + r() * .28) : (i - 1) * (.45 + r() * .2);
-      grow(x2, y2, ang + spread + (r() - .5) * .15, len * (.68 + r() * .1), w * .66, depth - 1);
+      const spread = n === 2 ? (i ? 1 : -1) * (.3 + r() * .22) : (i - 1) * (.42 + r() * .15);
+      grow(x2, y2, ang + spread + (r() - .5) * .12, len * (.72 + r() * .1), w * .64, depth - 1);
     }
   }
-  // 主幹，再分成五大枝
-  branches.push({ d: `M${CX - 34},${GROUND} C${CX - 22},${GROUND - 90} ${CX - 30},${GROUND - 170} ${CX - 12},${GROUND - 230} L${CX + 14},${GROUND - 230} C${CX + 30},${GROUND - 170} ${CX + 24},${GROUND - 90} ${CX + 40},${GROUND} Z`, w: 0, depth: 9, fill: true });
-  [[-2.45, 128], [-2.0, 140], [-1.57, 150], [-1.14, 140], [-.69, 128]].forEach(([a, l]) => grow(CX + (a + 1.57) * 8, GROUND - 226, a, l, 22, 5));
+  // 樹幹（較粗、向上漸細，根部微微外擴）
+  branches.push({ d: `M${CX - 48},${GROUND} C${CX - 26},${GROUND - 40} ${CX - 30},${GROUND - 150} ${CX - 16},${TOPY} L${CX + 16},${TOPY} C${CX + 30},${GROUND - 150} ${CX + 28},${GROUND - 40} ${CX + 52},${GROUND} Z`, w: 0, depth: 9, fill: true });
+  [[-2.75, 150, 18], [-2.3, 175, 22], [-1.85, 190, 24], [-1.32, 190, 24], [-.85, 175, 22], [-.4, 150, 18]]
+    .forEach(([a, l, w]) => grow(CX + Math.cos(a) * 10, TOPY + 6, a, l, w, 4));
 
-  // ---------- 葉子位置（依生長順序排好） ----------
-  const CROWN = { x: CX, y: 470, rx: 400, ry: 330 };
-  const inCrown = (x, y) => ((x - CROWN.x) / CROWN.rx) ** 2 + ((y - CROWN.y) / CROWN.ry) ** 2 < 1;
+  // ---------- 葉子：在圓形樹冠內均勻鋪滿（由內往外長出） ----------
   const leafSpots = [];
-  tips.concat(mids).forEach((t, ti) => {
-    const n = ti < tips.length ? 6 : 3;
-    for (let k = 0; k < n; k++) {
-      const a = r() * Math.PI * 2, d = 4 + r() * 40;
-      const x = t.x + Math.cos(a) * d, y = t.y + Math.sin(a) * d * .9;
-      if (y > GROUND - 240 || !inCrown(x, y)) continue;
-      leafSpots.push({ x, y, rot: (t.ang * 180 / Math.PI) + 90 + (r() - .5) * 70, s: .75 + r() * .5, g: Math.floor(r() * 5), o: r() });
+  const STEP = 31;
+  for (let y = CROWN.y - CROWN.R; y <= CROWN.y + CROWN.R; y += STEP * .86) {
+    const row = Math.round((y - CROWN.y) / (STEP * .86));
+    for (let x = CROWN.x - CROWN.R; x <= CROWN.x + CROWN.R; x += STEP) {
+      const jx = x + (row % 2 ? STEP / 2 : 0) + (r() - .5) * 14, jy = y + (r() - .5) * 12;
+      // 邊緣略微參差，像手指印蓋出來的樹冠
+      if (!inCrown(jx, jy, .96 + r() * .1)) continue;
+      if (jy > TOPY - 20 && Math.abs(jx - CX) < 70) continue;   // 樹幹分岔處留白
+      const ang = Math.atan2(jy - (TOPY + 40), jx - CX);           // 由樹幹往外的方向
+      const dist = Math.hypot(jx - CX, jy - (TOPY + 40));
+      leafSpots.push({ x: jx, y: jy, rot: ang * 180 / Math.PI + 90 + (r() - .5) * 50, s: .9 + r() * .38, g: Math.floor(r() * 5), o: dist + r() * 160 });
     }
-  });
+  }
   leafSpots.sort((a, b) => a.o - b.o);
-  // 均勻抽樣，最多約 420 片，接近指紋樹的密度，也讓畫面流暢
-  if (leafSpots.length > 420) leafSpots.length = 420;
   const MAX_LEAVES = leafSpots.length;
-  // 果實（句子）位置：在樹冠上均勻分布（依角度排序後等距挑選）
-  const fruitPool = forks.concat(tips).filter((p) => p.y < GROUND - 280 && inCrown(p.x, p.y))
-    .map((p) => ({ ...p, a: Math.atan2(p.y - (GROUND - 200), p.x - CX) }))
-    .sort((a, b) => a.a - b.a);
+  // 果實（句子）位置：樹冠上層、分散
+  const fruitPool = leafSpots.filter((p) => p.y < CROWN.y + 120 && inCrown(p.x, p.y, .82))
+    .map((p) => ({ ...p, a: Math.atan2(p.y - TOPY, p.x - CX) }));
   function fruitSpotsFor(n) {
-    // 先選上層（票多），再往外圍
-    const out = [], used = new Set();
-    const order = [];
-    for (let i = 0; i < n; i++) order.push(i);
     const center = -Math.PI / 2;
-    // 依與正上方的角度距離交錯：中、左、右、左、右…
-    const ranked = fruitPool.slice().sort((a, b) => Math.abs(a.a - center) - Math.abs(b.a - center));
-    const minD = n > 24 ? 38 : 60;
-    for (const p of ranked) {
-      if (out.length >= n) break;
-      if (out.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < minD)) continue;
-      out.push(p);
-    }
+    const ranked = fruitPool.slice().sort((a, b) => (Math.abs(a.a - center) + (a.y / 900)) - (Math.abs(b.a - center) + (b.y / 900)));
+    const minD = n > 24 ? 44 : n > 12 ? 62 : 80;
+    const out = [];
+    for (const p of ranked) { if (out.length >= n) break; if (!out.some((q) => Math.hypot(q.x - p.x, q.y - p.y) < minD)) out.push(p); }
     for (const p of ranked) { if (out.length >= n) break; if (!out.includes(p)) out.push(p); }
     return out;
+  }
+  // 停在樹枝上的一對鳥：右側中層的分岔點
+  const perch = forks.filter((f) => f.x > CX + 90 && f.x < CX + 230 && f.y > CROWN.y - 60 && f.y < CROWN.y + 90)
+    .sort((a, b) => Math.abs(a.y - CROWN.y) - Math.abs(b.y - CROWN.y))[0] || { x: CX + 160, y: CROWN.y + 20 };
+  const perch2 = forks.filter((f) => f.x < CX - 120 && f.y > CROWN.y - 160 && f.y < CROWN.y)
+    .sort((a, b) => a.y - b.y)[0] || { x: CX - 200, y: CROWN.y - 80 };
+
+  // ---------- 鳥（原創圖形）----------
+  function birdSvg(c1, c2, flip, flap) {
+    return `<g transform="scale(${flip ? -1 : 1} 1)">
+      <path d="M-20,6 L-34,-2 L-31,10 Z" fill="${c1}"/>
+      <path d="M-20,6 C-14,-10 6,-14 16,-6 C22,4 14,14 0,15 C-10,16 -17,12 -20,6 Z" fill="${c1}"/>
+      <circle cx="14" cy="-8" r="8" fill="${c1}"/>
+      <path d="M21,-10 L29,-7 L21,-5 Z" fill="#F2B53A"/>
+      <circle cx="16" cy="-10" r="1.6" fill="#fff"/>
+      <g class="${flap ? "wing flap" : "wing"}"><path d="M-6,0 C-2,-18 12,-20 12,-4 C6,2 -2,4 -6,0 Z" fill="${c2}"/></g>
+      <path d="M-8,8 C-4,4 2,4 4,8 M-2,11 C0,8 4,8 6,11" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>
+    </g>`;
   }
 
   const GREENS = ["#7DBE6E", "#5FAE63", "#9BCF7E", "#6DB97A", "#4E9E5C"];
   function leafSvg(l, i) {
     const c = GREENS[l.g];
     return `<g class="leaf" transform="translate(${l.x.toFixed(1)} ${l.y.toFixed(1)}) rotate(${l.rot.toFixed(0)}) scale(${l.s.toFixed(2)})" style="animation-delay:${(i % 12) * 40}ms">
-      <ellipse rx="13" ry="19" fill="${c}" fill-opacity=".55"/>
-      <ellipse rx="9.5" ry="14.5" fill="none" stroke="${c}" stroke-opacity=".75" stroke-width="1.2"/>
-      <ellipse rx="6" ry="10" cy="1" fill="none" stroke="${c}" stroke-opacity=".75" stroke-width="1.1"/>
-      <ellipse rx="2.2" ry="4.5" cy="2" fill="none" stroke="${c}" stroke-opacity=".8" stroke-width="1"/>
+      <ellipse rx="14" ry="20" fill="${c}" fill-opacity=".5"/>
+      <ellipse rx="11" ry="16.5" fill="none" stroke="${c}" stroke-opacity=".7" stroke-width="1.2"/>
+      <ellipse rx="7.5" ry="12" cy="1" fill="none" stroke="${c}" stroke-opacity=".75" stroke-width="1.1"/>
+      <ellipse rx="4" ry="7.5" cy="2" fill="none" stroke="${c}" stroke-opacity=".8" stroke-width="1"/>
+      <ellipse rx="1.2" ry="3" cy="3" fill="${c}" fill-opacity=".8"/>
     </g>`;
   }
 
@@ -104,9 +119,24 @@
               <path d="M0,-34 C-10,-46 -26,-46 -30,-38 C-22,-30 -10,-30 0,-34Z" fill="#7DBE6E"/><path d="M0,-40 C10,-54 28,-54 32,-46 C24,-38 10,-38 0,-40Z" fill="#6DB97A"/></g>
           </g>
           <g class="grow">
-            <g class="branches">${branches.map((b) => b.fill ? `<path data-d="9" d="${b.d}" fill="#7C7F86"/>` : `<path data-d="${b.depth}" d="${b.d}" fill="none" stroke="#7C7F86" stroke-width="${Math.max(1.4, b.w).toFixed(1)}" stroke-linecap="round"/>`).join("")}</g>
             <g class="leaves"></g>
+            <g class="branches">${branches.map((b) => b.fill ? `<path data-d="9" d="${b.d}" fill="#7C7F86"/>` : `<path data-d="${b.depth}" d="${b.d}" fill="none" stroke="#7C7F86" stroke-width="${Math.max(1.4, b.w).toFixed(1)}" stroke-linecap="round"/>`).join("")}</g>
             <g class="fruits"></g>
+            <g class="perched">
+              <g transform="translate(${(perch.x - 18).toFixed(1)} ${(perch.y - 16).toFixed(1)})">${birdSvg("#6E6BB8", "#8C89D0", false, false)}</g>
+              <g transform="translate(${(perch.x + 26).toFixed(1)} ${(perch.y - 20).toFixed(1)}) scale(1.08)">${birdSvg("#5A57A6", "#7F7CC6", true, false)}</g>
+            </g>
+          </g>
+          <g class="flyers">
+            <g><g class="bird-scale">${birdSvg("#6E6BB8", "#8C89D0", false, true)}</g>
+              <animateMotion dur="18s" repeatCount="indefinite" rotate="0" keyPoints="0;0.5;0.5;1" keyTimes="0;0.38;0.62;1" calcMode="linear"
+                path="M-80,${(CROWN.y - 300).toFixed(0)} C150,${(CROWN.y - 360).toFixed(0)} ${(perch2.x - 120).toFixed(0)},${(perch2.y - 140).toFixed(0)} ${(perch2.x).toFixed(0)},${(perch2.y - 16).toFixed(0)} C${(perch2.x + 160).toFixed(0)},${(perch2.y - 200).toFixed(0)} 700,40 1100,${(CROWN.y - 330).toFixed(0)}"/></g>
+            <g><g class="bird-scale" transform="scale(.8)">${birdSvg("#E5704F", "#F2A48A", true, true)}</g>
+              <animateMotion dur="23s" begin="6s" repeatCount="indefinite" rotate="0"
+                path="M1100,180 C900,120 760,260 560,150 C380,60 220,210 -100,140"/></g>
+            <g><g class="bird-scale" transform="scale(.7)">${birdSvg("#2E9C8F", "#7FCFC4", false, true)}</g>
+              <animateMotion dur="27s" begin="13s" repeatCount="indefinite" rotate="0"
+                path="M-100,260 C120,190 300,320 520,230 C720,150 860,280 1100,210"/></g>
           </g>
           <g class="drips"></g>
           <g class="ground"></g>
@@ -154,8 +184,10 @@
     const sp = seed.querySelector(".sprout");
     const spk = g <= 0 ? 0 : Math.min(1, g / .03) * Math.max(0, 1 - (g - .07) / .05);
     sp.style.opacity = spk; sp.setAttribute("transform", `scale(${(.3 + .7 * Math.min(1, g / .04)).toFixed(2)})`);
-    setLeaves(Math.round(MAX_LEAVES * Math.max(0, Math.min(1, (g - .25) / .75))));
+    setLeaves(Math.round(MAX_LEAVES * Math.max(0, Math.min(1, (g - .2) / .75))));
     fruitLayer.style.opacity = Math.max(0, Math.min(1, (g - .45) / .1));
+    svg.querySelector(".perched").style.opacity = g >= .7 ? 1 : 0;      // 樹長茂密後，一對鳥停在枝頭
+    svg.querySelector(".flyers").style.opacity = g >= .3 ? 1 : 0;       // 長出樹枝後，開始有鳥飛來
   }
   // 每次有人澆水，從上方落下水滴
   function drip(n) {
@@ -172,12 +204,12 @@
 
   // ---------- 對外 ----------
   window.BigTree = {
-    init(container) { if (!root) build(container); },
+    init(container, opts = {}) { if (!root) { build(container); if (opts.inline) { root.classList.add("inline"); root.classList.remove("hide"); } } },
     show(on) { if (root) root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on); if (window.World) World.skipRender = !!on; },
     get visible() { return root && !root.classList.contains("hide"); },
-    update({ sents, totals, people, edits, phase, drops, possible }) {
+    update({ sents, totals, people, edits, phase, drops, possible, full: needed }) {
       if (!root) return;
-      const full = Math.max(1, (window.ISLAND_CONFIG && ISLAND_CONFIG.treeFullDrops) || 140);
+      const full = Math.max(1, needed || Math.ceil(Object.keys(people || {}).length * ((window.ISLAND_CONFIG && ISLAND_CONFIG.treeDropsPerPerson) || 1)) || 1);
       const g = Math.min(1, drops / full);
       if (lastDrops !== null && drops > lastDrops) drip(drops - lastDrops);
       lastDrops = drops;

@@ -446,10 +446,11 @@
     const showTree = ME ? false : (treeOverride !== null ? treeOverride : ((phase === "water" || phase === "harvest") && sents.length > 0 && !spotId));
     BigTree.show(showTree);
     document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
-    if (showTree) BigTree.update({ sents, totals, people, edits: S.edits, phase, drops, possible: Object.keys(people).length * CFG.dropsPerPerson });
+    if (showTree) BigTree.update({ sents, totals, people, edits: S.edits, phase, drops, possible: Object.keys(people).length * CFG.dropsPerPerson, full: treeNeed(people) });
     renderPhase(phase, sents, totals, showTree);
   }
 
+  function treeNeed(people) { return Math.max(1, Math.ceil(Object.keys(people || {}).length * (CFG.treeDropsPerPerson || 1))); }
   function renderSpot(sp, n) {
     const people = S.people || {}, p = people[sp.pid] || {};
     const sc = SC(sp.scope);

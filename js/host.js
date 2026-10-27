@@ -22,7 +22,11 @@
     gate.classList.add("hide"); $main.classList.remove("hide");
     $main.innerHTML = "<p>連線中…</p>";
     Store.onConnection = () => render();
-    Store.init().then(() => Store.subscribe((st) => { S = st || {}; render(); }))
+    document.getElementById("treewrap").classList.remove("hide");
+    BigTree.init(document.getElementById("treebox"), { inline: true });
+    document.getElementById("tree-sim").onclick = async () => { if (!sents().length) { const r = await doBuild(); if (!r) return; } await simulateVotes(); };
+    document.getElementById("tree-clear").onclick = async () => { await Store.set("votes", null); msg = "已清除所有澆水"; render(); };
+    Store.init().then(() => Store.subscribe((st) => { S = st || {}; render(); renderTree(); }))
       .catch((e) => ($main.innerHTML = `<p>無法連線：${escapeHtml(e.message)}</p>`));
   }
 
@@ -136,6 +140,15 @@
         <p class="note">正式活動前請按「重置整場活動」清空彩排資料。</p>
       </div>
     </div>`;
+  }
+
+  // ---------- 共識大樹預覽（依報到人數調整） ----------
+  const treeNeed = () => Math.max(1, Math.ceil(people().length * (CFG.treeDropsPerPerson || 1)));
+  function renderTree() {
+    const totals = voteTotals(S), drops = Object.values(totals).reduce((a, b) => a + b, 0), need = treeNeed();
+    document.getElementById("treenote").innerHTML = `目前報到 <b>${people().length}</b> 人 → 需要 <b>${need}</b> 滴長成大樹（每人 ${CFG.treeDropsPerPerson || 1} 滴；每人可澆 ${CFG.dropsPerPerson} 滴，超過也沒關係）。已澆 <b>${drops}</b> 滴。` +
+      (sents().length ? "" : "<br>尚未產生揭曉清單，按「模擬澆水」會自動挑選句子並產生清單。");
+    BigTree.update({ sents: sents(), totals, people: S.people || {}, edits: S.edits, phase: phase() === "harvest" ? "harvest" : "water", drops, possible: people().length * CFG.dropsPerPerson, full: need });
   }
 
   // ---------- 動作 ----------
