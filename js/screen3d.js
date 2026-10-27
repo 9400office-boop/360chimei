@@ -291,16 +291,20 @@
     const sc = p.scope ? SC(p.scope) : null;
     const plaza = p.plaza === "B" ? "社會情緒學習廣場" : p.plaza === "C" ? "復原力廣場" : "";
     const body = personDone(p)
-      ? `<div class="wsent">${sentenceRich({ pid }, S.people, S.edits, true)}</div>`
-      : `<div class="ln">還在填寫行動句中…</div>`;
-    const wasSpot = S.state && S.state.spotlight;
-    if (wasSpot) return;
-    $("info").innerHTML = `<button class="x" data-x>×</button>
-      <div class="eyebrow">${kind === "flower" ? `🌸 ${plaza}的一朵花` : "🧑‍⚕️ 院區夥伴"}</div>
-      <div class="writer">${Avatar.svg(p.avatar)}<div><b>${escapeHtml(p.name || "")}</b><span>${escapeHtml(p.dept || "")}</span>${sc ? `<span class="tag" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>` : ""}</div></div>${body}`;
-    $("info").classList.remove("hide");
-    $("log").classList.add("hide");
+      ? `<p class="wtext">${sentenceRich({ pid }, S.people, S.edits, false)}</p>`
+      : `<p class="wtext muted">還在填寫行動句中…</p>`;
+    if (S.state && S.state.spotlight) return;
+    const where = kind === "flower" ? `🌸 ${plaza}` : "🧑‍⚕️ 院區夥伴";
+    const w = $("writer");
+    w.style.setProperty("--sc", sc ? sc.color : "#6B7772");
+    w.style.setProperty("--scs", sc ? sc.soft : "#EEF0EE");
+    w.innerHTML = `<button class="x" data-wx aria-label="關閉">×</button>
+      <div class="who">${Avatar.svg(p.avatar)}<div class="id"><b>${escapeHtml(p.name || "")}</b><span>${escapeHtml(p.dept || "")}</span></div></div>
+      <div class="said"><div class="meta"><span class="where">${where}</span>${sc ? `<span class="scope">${sc.tag}・${escapeHtml(sc.name)}</span>` : ""}</div>${body}</div>`;
+    w.classList.remove("hide");
+    hideInfo(); $("log").classList.add("hide");
   }
+  $("writer").addEventListener("click", (e) => { if (e.target.closest("[data-wx]")) $("writer").classList.add("hide"); });
   cv.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
   cv.addEventListener("pointerup", (e) => {
     if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;

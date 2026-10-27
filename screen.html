@@ -167,12 +167,32 @@
   .harvest .vt { color: #2F6FC4; font-weight: 700; white-space: nowrap; }
 
   /* 日誌 */
-  .info .writer { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
-  .info .writer svg { width: 52px; height: 62px; flex: none; }
-  .info .writer b { display: block; font-size: 18px; }
-  .info .writer span { display: block; font-size: 13px; color: var(--ink-soft); }
-  .info .writer .tag { display: inline-block; margin-top: 4px; }
-  .info .wsent { font-size: 16px; line-height: 1.75; background: #FFFBEF; border-radius: 12px; padding: 10px 12px; }
+  /* 點花／人物：作者卡（大螢幕為底部長條） */
+  .writer { position: absolute; z-index: 6; left: 22px; right: calc(var(--panel) + 350px); bottom: 22px; max-width: 1000px; display: flex; align-items: center; gap: 20px;
+    background: rgba(255,253,249,.98); border-radius: 18px; padding: 14px 52px 14px 18px; box-shadow: 0 10px 34px rgba(30,50,45,.2);
+    border-left: 6px solid var(--sc); animation: rise .35s; }
+  body.nopanel .writer { right: 350px; }
+  .writer.hide { display: none; }
+  .writer .x { position: absolute; right: 12px; top: 10px; border: 0; background: none; font-size: 22px; color: var(--ink-soft); }
+  .writer .who { display: flex; align-items: center; gap: 10px; flex: none; padding-right: 20px; border-right: 1px solid var(--line); }
+  .writer .who svg { width: 54px; height: 65px; }
+  .writer .id b { display: block; font-size: 20px; letter-spacing: .04em; }
+  .writer .id span { display: block; font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .writer .said { flex: 1; min-width: 0; }
+  .writer .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; }
+  .writer .where { color: var(--ink-soft); letter-spacing: .08em; }
+  .writer .scope { color: var(--sc); background: var(--scs); border-radius: 999px; padding: 2px 10px; font-weight: 700; }
+  .writer .wtext { margin: 6px 0 0; font-size: 19px; line-height: 1.7; color: var(--ink); }
+  .writer .wtext .w { font-weight: 700; background: linear-gradient(transparent 62%, var(--scs) 62%); padding: 0 1px; }
+  .writer .wtext.muted { color: var(--ink-soft); font-size: 15px; }
+  /* 手機：底部卡片，直式排版 */
+  body.memode .writer { left: 10px; right: 10px; max-width: none; bottom: calc(80px + env(safe-area-inset-bottom));
+    flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 16px 16px; border-left: 0; border-top: 5px solid var(--sc); animation: rise .3s; }
+  body.memode .writer .who { padding-right: 40px; border-right: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  body.memode .writer .who svg { width: 42px; height: 50px; }
+  body.memode .writer .id b { font-size: 17px; }
+  body.memode .writer .wtext { font-size: 16px; }
+  body.treemode .writer { display: none; }
   /* 院區直播（右側） */
   body.memode .feed { display: none; }
   .feed { position: absolute; right: calc(var(--panel) + 18px); bottom: 22px; width: 310px; z-index: 4; pointer-events: none; transition: right .4s; }
@@ -299,6 +319,7 @@
 </aside>
 
 <div class="info hide" id="info"></div>
+<div class="writer hide" id="writer"></div>
 <div class="spot hide" id="spot"></div>
 <div class="harvest hide" id="harvest"></div>
 <div class="feed" id="feed"><div class="fh"><span class="live-dot">LIVE</span><b>院區直播</b></div><div class="list" id="feedList"></div></div>
