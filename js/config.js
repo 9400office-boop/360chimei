@@ -15,6 +15,9 @@ window.ISLAND_CONFIG = {
   // 每人可澆的水滴數
   dropsPerPerson: 3,
 
+  // 共識大樹：全場累積澆幾滴水，會從種子長成滿樹（70 人 × 3 滴 = 210，約 2/3 的水就長滿）
+  treeFullDrops: 140,
+
   // Firebase 設定：貼上 Firebase 主控台提供的 firebaseConfig。
   // 留空（null）時會自動進入「本機示範模式」：
   // 同一台電腦同一個瀏覽器的分頁之間會同步，適合彩排與試玩。

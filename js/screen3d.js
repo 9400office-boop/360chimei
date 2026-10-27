@@ -14,6 +14,9 @@
   W.capture = /capture/.test(location.search);
   W.init(stage);
   Life.init();
+  Balloons.init(7);
+  Balloons.onDrop = (scope, avatar) => addEvent(`🎈 人資熱氣球空投人力，支援 <b style="color:${SC(scope).color}">${SC(scope).tag}</b>`, avatar);
+  BigTree.init(document.body);
   W.flyTo({ x: 0, y: 0, z: 30 }, 345, .72, 0, .01);
   if (!W.capture) W.start();
 
@@ -101,7 +104,11 @@
     if (!r.care) return;   // 只標連續照護大道
     pts.forEach(([x, z]) => tileLabels.push({ ...mkLabel("tl road care", escapeHtml(r.name), new THREE.Vector3(x, .5, z), () => showSupport("careRoad")), id: "road" }));
   });
-  (W.PLAZAS || []).forEach((pz) => tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza", pz.info ? `📡 ${escapeHtml(pz.name)}` : `🌱 ${escapeHtml(pz.name)}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), pz.info ? () => { W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport("infoPlaza"); } : null), id: "plaza" }));
+  (W.PLAZAS || []).forEach((pz) => {
+    const key = pz.info ? "infoPlaza" : pz.key === "B" ? "selPlaza" : "resPlaza";
+    const icon = C.supports[key].icon;
+    tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza", `${icon} ${escapeHtml(pz.name)}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => { W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }), id: "plaza" });
+  });
   W.stages.forEach((st) => { if (st.bridgeMid) tileLabels.push({ ...mkLabel("tl sup small", `🌉 採購橋`, st.bridgeMid, () => showSupport("purchaseBridge")), id: "bridge" }); });
   [-137.5, -47.5, 0, 180].map((d) => d * Math.PI / 180).forEach((a) => {
     const x = Math.cos(a) * W.RX, z = Math.sin(a) * W.RZ;
@@ -174,9 +181,9 @@
     const sb2 = e.target.closest("[data-sup]");
     if (sb2) {
       const k = sb2.dataset.sup;
-      const target = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, hrDock: () => W.docks.find((d) => d.key === "hrDock").pos, accountBoat: () => W.vehicles.find((v) => v.key === k).obj.position, purchaseBridge: () => W.stages[1].bridgeMid, careRoad: () => ({ x: 0, z: 0 }), infoCar: () => W.vehicles.find((v) => v.key === k).obj.position, hrBoat: () => W.vehicles.find((v) => v.key === k).obj.position }[k];
+      const target = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), hrBalloon: () => W.vehicles.find((v) => v.key === k).obj.position, accountBoat: () => W.vehicles.find((v) => v.key === k).obj.position, purchaseBridge: () => W.stages[1].bridgeMid, careRoad: () => ({ x: 0, z: 0 }), infoCar: () => W.vehicles.find((v) => v.key === k).obj.position }[k];
       const p = target && target();
-      if (p) W.flyTo({ x: p.x, y: 0, z: p.z }, k === "careRoad" ? 330 : 55, k === "careRoad" ? .3 : .85);
+      if (p) W.flyTo({ x: p.x, y: k === "hrBalloon" ? p.y : 0, z: p.z }, k === "careRoad" ? 330 : k === "hrBalloon" ? 45 : 55, k === "careRoad" ? .3 : k === "hrBalloon" ? 1.1 : .85);
       showSupport(k); return;
     }
     if (e.target.closest("[data-stages]")) { clearFocus(); W.top(); return; }
@@ -253,6 +260,7 @@
     if (m === "links") setLinks(!linksOn);
     if (m === "pause") { People.paused = !People.paused; b.classList.toggle("on", People.paused); }
     if (m === "top") { topView = !topView; topView ? W.top() : W.home(); b.classList.toggle("on", topView); }
+    if (m === "tree") { treeOverride = BigTree.visible ? false : true; apply(); return; }
     if (m === "log") { const lg = $("log"); lg.classList.toggle("hide"); b.classList.toggle("on", !lg.classList.contains("hide")); renderLog(); if (!lg.classList.contains("hide")) hideInfo(); }
   }));
   document.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => {
@@ -287,26 +295,28 @@
   let treePos = {};
 
   function refreshSentLinks(force) {
-    const sents = sentsSorted(), spot = S.state && S.state.spotlight;
-    const key = JSON.stringify([sents.map((s) => s.id), spot, linksOn]);
+    const key = JSON.stringify([linksOn]);
     if (!force && key === sentKey) return;
     sentKey = key;
-    Links.buildSent(sents, treePos, spot && S.sentences && S.sentences[spot] ? spot : null, linksOn || !!spot);
+    Links.buildSent([], {}, null, false);
   }
+  let treeOverride = null, flowerFirst = true;
 
   function apply() {
     const people = S.people || {};
     const phase = (S.state && S.state.phase) || "join";
     const settling = Date.now() - loadedAt < 2500;
     People.sync(people, firstSync || settling);
-    if (Object.keys(people).length) firstSync = false;
+    Life.Flowers.sync(people, flowerFirst || settling);
+    if (Object.keys(people).length) { firstSync = false; flowerFirst = false; }
 
     // 日誌
     if (prevPeople && !settling) {
       Object.entries(people).forEach(([id, p]) => {
         const o = prevPeople[id];
-        if (!o) addEvent(`<b>${escapeHtml(p.name)}</b> 報到了`, p.avatar);
-        else if (p.text && !o.text) addEvent(`<b>${escapeHtml(p.name)}</b> 種下了一顆 <span style="color:${F(p.field).color}">0${p.field} ${F(p.field).title}</span> 種子`, p.avatar);
+        const nm = `<b>${escapeHtml(p.name)}</b>${p.dept ? `<small>（${escapeHtml(p.dept)}）</small>` : ""}`;
+        if (!o) addEvent(`${nm} 報到了`, p.avatar);
+        else if (personDone(p) && !personDone(o)) addEvent(`${nm} 種下行動句，在${p.plaza === "B" ? "社會情緒學習廣場" : "復原力廣場"}開了一朵花 🌸`, p.avatar);
       });
     }
     prevPeople = JSON.parse(JSON.stringify(people));
@@ -319,44 +329,29 @@
     });
     Object.keys(nameTags).forEach((id) => { if (!people[id]) { nameTags[id].el.remove(); delete nameTags[id]; } });
 
-    // 幼苗
     const sents = sentsSorted();
     const totals = voteTotals(S);
     const spotId = S.state && S.state.spotlight && S.sentences && S.sentences[S.state.spotlight] ? S.state.spotlight : null;
-    const top3 = phase === "harvest" ? sents.slice().sort((a, b) => (totals[b.id] || 0) - (totals[a.id] || 0)).slice(0, 3).filter((s) => totals[s.id]).map((s) => s.id) : [];
-    treePos = Trees.sync(sents, totals, spotId, top3);
-    if (sents.length && sents.length !== prevSentCount && !settling) addEvent(`🌱 全場拼出 <b>${sents.length}</b> 句話，行動廣場長出了幼苗`);
+    if (sents.length && sents.length !== prevSentCount && !settling) addEvent(`📣 揭曉 <b>${sents.length}</b> 句行動句`);
     prevSentCount = sents.length;
-    sents.forEach((s) => {
-      if (!treeTags[s.id]) treeTags[s.id] = mkLabel("tr", "", null);
-      const sc = SC(s.scope), v = totals[s.id] || 0;
-      treeTags[s.id].inner.style.borderColor = sc.color;
-      treeTags[s.id].inner.innerHTML = `<span style="color:${sc.color}">🌱 ${s.order}</span>${(phase === "water" || phase === "harvest") ? `<span class="d">💧${v}</span>` : ""}`;
-      treeTags[s.id].el.style.opacity = spotId && spotId !== s.id ? .3 : 1;
-    });
-    Object.keys(treeTags).forEach((id) => { if (!S.sentences || !S.sentences[id]) { treeTags[id].el.remove(); delete treeTags[id]; } });
 
-    // 聚光
-    const spotKey = spotId ? spotId + JSON.stringify(S.sentences[spotId].members) : null;
+    // 聚光：鏡頭飛到作者身邊
+    const author = spotId ? S.sentences[spotId].pid : null;
+    const spotKey = spotId ? spotId + "|" + author : null;
     if (spotKey !== lastSpot) {
       lastSpot = spotKey;
       if (spotId) {
-        const sp = { id: spotId, ...S.sentences[spotId] };
-        People.setSpot(sp, treePos[spotId]);
-        const p = treePos[spotId];
-        W.flyTo({ x: p.x, y: 1.5, z: p.z + 3 }, 52, .86);
+        const e = People.ents[author];
+        if (e) { const p = e.grp.position; W.flyTo({ x: p.x, y: 1.5, z: p.z + 2 }, 30, .9); }
         hideInfo(); dimLabels(null, null);
-        renderSpot(sp, sents.length);
       } else {
-        People.setSpot(null);
         $("spot").classList.add("hide");
         if (phase !== "join" && !openScope) W.home();
       }
     }
-    const members = spotId ? new Set(Object.values(S.sentences[spotId].members)) : null;
-    Object.entries(nameTags).forEach(([id, l]) => { l.inner.classList.toggle("me", id === ME); l.inner.classList.toggle("big", (!!members && members.has(id)) || id === ME); l.inner.classList.toggle("dim", !!members && !members.has(id) && id !== ME); });
+    if (spotId) renderSpot({ id: spotId, ...S.sentences[spotId] }, sents.length);
+    Object.entries(nameTags).forEach(([id, l]) => { l.inner.classList.toggle("me", id === ME); l.inner.classList.toggle("big", id === author || id === ME); l.inner.classList.toggle("dim", !!author && id !== author && id !== ME); });
     renderMeBar();
-    refreshSentLinks();
 
     // 主持人導覽
     const tour = (S.state && S.state.tour) || null;
@@ -368,25 +363,22 @@
     lastTour = tour;
 
     // 階段
-    if (phase !== lastPhase) {
-      if (lastPhase && phase === "harvest") { W.home(); }
-      lastPhase = phase;
-    }
-    renderPhase(phase, sents, totals);
+    if (phase !== lastPhase) { treeOverride = null; lastPhase = phase; }
+    const drops = Object.values(totals).reduce((a, b) => a + b, 0);
+    const showTree = treeOverride !== null ? treeOverride : ((phase === "water" || phase === "harvest") && sents.length > 0 && !spotId);
+    BigTree.show(showTree);
+    document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
+    if (showTree) BigTree.update({ sents, totals, people, edits: S.edits, phase, drops, possible: Object.keys(people).length * CFG.dropsPerPerson });
+    renderPhase(phase, sents, totals, showTree);
   }
 
   function renderSpot(sp, n) {
-    const people = S.people || {};
+    const people = S.people || {}, p = people[sp.pid] || {};
     const sc = SC(sp.scope);
-    const sentence = SENTENCE_ORDER.map((x) => typeof x === "number"
-      ? `<span class="w" style="background:${F(x).color}">${escapeHtml(cleanWord(x, (people[sp.members[x]] || {}).text) || "＿＿")}</span>` : x).join("");
-    const uniq = new Set(Object.values(sp.members)).size;
-    const pp = [1, 2, 3, 4, 5, 6].map((f) => {
-      const p = people[sp.members[f]] || {};
-      return `<div class="pp">${p.avatar ? Avatar.svg(p.avatar) : ""}<span class="fn" style="background:${F(f).color}">0${f} ${F(f).title}</span><div class="nmm">${escapeHtml(p.name || "")}</div></div>`;
-    }).join("");
-    $("spot").innerHTML = `<div class="hd"><span><span class="no">${sp.order}</span>/ ${n} 棵幼苗</span><span><span class="tag" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>${(sp.links || []).map((l) => `<span class="tag" style="background:${SC(l).color}">↔ ${SC(l).tag}</span>`).join("")}</span><span>${uniq} 位夥伴合力完成</span></div>
-      <div class="sentence">${sentence}</div><div class="people">${pp}</div>`;
+    const html = `<div class="hd"><span><span class="no">${sp.order}</span>/ ${n} 句行動句</span><span class="tag" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span></div>
+      <div class="sentence">${sentenceRich(sp, people, S.edits, true)}</div>
+      <div class="author">${p.avatar ? Avatar.svg(p.avatar) : ""}<div><b>${escapeHtml(p.name || "")}</b><span>${escapeHtml(p.dept || "")}</span></div></div>`;
+    if ($("spot").dataset.h !== html) { $("spot").dataset.h = html; $("spot").innerHTML = html; }
     $("spot").classList.remove("hide");
   }
 
@@ -394,31 +386,31 @@
   let qrSvg = "";
   try { const qr = qrcode(0, "M"); qr.addData(joinUrl); qr.make(); qrSvg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) {}
 
-  function renderPhase(phase, sents, totals) {
+  function renderPhase(phase, sents, totals, treeShown) {
     const ps = Object.values(S.people || {});
-    const seeds = ps.filter((p) => p.text && p.field);
+    const doneN = ps.filter(personDone).length;
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
-      join: ME ? `🏥 <b>報到中</b>・你的人物正在院區散步，金色箭頭就是你` : `🏥 <b>報到中</b>・掃描右側 QR Code，選一位捏捏人、抽一張詞卡`,
-      reveal: `🌱 <b>揭曉</b>・全場的詞拼成了 ${sents.length} 句話`,
+      join: ME ? `🏥 <b>報到中</b>・你的人物正在院區散步，金色箭頭就是你` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
+      reveal: `📣 <b>揭曉</b>・${sents.length} 句行動句`,
       water: `💧 <b>澆水共識</b>・全場已澆 ${drops} / ${ps.length * CFG.dropsPerPerson} 滴`,
       harvest: `🌳 <b>收成</b>・我們的共識大樹`
     }[phase];
-    const fc = {}; seeds.forEach((p) => (fc[p.field] = (fc[p.field] || 0) + 1));
-    const nums = `報到 <b>${ps.length}</b> 人　種子 <b>${seeds.length}</b> 顆${sents.length ? `　幼苗 <b>${sents.length}</b> 棵` : ""}`;
-    const key = phase + nums + JSON.stringify(fc);
+    const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
+    const nums = `報到 <b>${ps.length}</b> 人　行動句 <b>${doneN}</b> 句　花朵 <b>${doneN}</b> 朵`;
+    const key = phase + nums + JSON.stringify(sc);
     if ($("live").dataset.key !== key) {
       $("live").dataset.key = key;
       $("live").innerHTML = (phase === "join"
         ? `<div class="live"><div class="qr">${qrSvg}</div><div><div class="t">掃描報到</div><div class="u">${escapeHtml(joinUrl.replace(/^https?:\/\//, ""))}</div><div class="nums">${nums}</div></div></div>`
         : `<div class="live"><div class="nums">${nums}</div></div>`) +
-        `<div class="fbar">${C.fields.map((f) => `<div style="background:${f.color}" title="0${f.n} ${f.title}"><b>${fc[f.n] || 0}</b>${f.title}</div>`).join("")}</div>`;
+        `<div class="fbar" style="grid-template-columns:repeat(4,1fr)">${C.scopes.map((s) => `<div style="background:${s.color}" title="${s.tag}・${s.name}"><b>${sc[s.id] || 0}</b>${s.tag}</div>`).join("")}</div>`;
     }
-    // 收成排名
+    // 大樹沒開時，收成名單用側欄顯示
     const $h = $("harvest");
-    if (phase === "harvest" && sents.length && !(S.state && S.state.spotlight)) {
+    if (phase === "harvest" && sents.length && !treeShown && !(S.state && S.state.spotlight)) {
       const top = sents.slice().sort((a, b) => (totals[b.id] || 0) - (totals[a.id] || 0)).slice(0, 5);
-      const html = `<h2>🌳 全場共識前五名</h2>` + top.map((s, i) => `<div class="row"><div class="rk">${i + 1}</div><div style="flex:1">${escapeHtml(sentenceText(s, S.people || {}))}<br><span class="tag" style="background:${SC(s.scope).color}">🌱${s.order}・${SC(s.scope).tag}</span></div><div class="vt">💧${totals[s.id] || 0}</div></div>`).join("");
+      const html = `<h2>🌳 全場共識前五名</h2>` + top.map((s, i) => `<div class="row"><div class="rk">${i + 1}</div><div style="flex:1">${escapeHtml(sentenceText(s, S.people, S.edits))}<br><span class="tag" style="background:${SC(s.scope).color}">${s.order}・${SC(s.scope).tag}</span></div><div class="vt">💧${totals[s.id] || 0}</div></div>`).join("");
       if ($h.innerHTML !== html) $h.innerHTML = html;
       $h.classList.remove("hide"); hideInfo();
     } else $h.classList.add("hide");

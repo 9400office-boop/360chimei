@@ -123,61 +123,30 @@
 })();
 
 /* =========================================================
- * 拼句：把全場的詞拼成一句句「跨職類」的話
+ * 行動句：每人一句（六欄全填），主持人可修改文字、挑選展示
  * ========================================================= */
-window.buildSentences = function (people, round) {
-  const subs = Object.entries(people || {})
-    .map(([id, p]) => ({ id, ...p }))
-    .filter((p) => p.field && p.text && p.text.trim());
-  const byField = {};
-  for (let f = 1; f <= 6; f++) byField[f] = [];
-  subs.forEach((p) => byField[p.field].push(p));
-  const missing = Object.keys(byField).filter((f) => byField[f].length === 0);
-  if (missing.length) return { error: "還缺第 " + missing.map((m) => "0" + m).join("、") + " 欄的詞，至少每欄要有一人填寫才能拼句。" };
-
-  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const G = Math.max(...Object.values(byField).map((l) => l.length));
-
-  // 每欄的「池」：每個人至少出現一次，不足 G 的欄位重複使用部分詞補齊
-  const pools = {};
-  for (let f = 1; f <= 6; f++) {
-    const base = shuffle(byField[f].slice());
-    const pool = base.slice();
-    let i = 0;
-    while (pool.length < G) { pool.push(base[i % base.length]); i++; }
-    pools[f] = shuffle(pool);
-  }
-
-  const roleOf = (p) => (window.Avatar && Avatar.get(p.avatar) ? Avatar.get(p.avatar).role : -1);
-  const groups = [];
-  for (let g = 0; g < G; g++) {
-    const members = {}; const roles = new Set(); const used = new Set();
-    // 從選擇最少的欄位開始，盡量讓同一句的職類不重複
-    for (const f of shuffle([1, 2, 3, 4, 5, 6])) {
-      const pool = pools[f];
-      let idx = pool.findIndex((p) => !roles.has(roleOf(p)) && !used.has(p.id));
-      if (idx < 0) idx = pool.findIndex((p) => !used.has(p.id));
-      if (idx < 0) idx = 0;
-      const p = pool.splice(idx, 1)[0];
-      members[f] = p.id; roles.add(roleOf(p)); used.add(p.id);
-    }
-    // 範疇：多數決，平手看「03 受詞」
-    const tally = {};
-    Object.values(members).forEach((pid) => { const s = people[pid].scope; if (s) tally[s] = (tally[s] || 0) + 1; });
-    let scope = people[members[3]].scope || 1, best = -1;
-    Object.entries(tally).forEach(([s, n]) => { if (n > best || (n === best && Number(s) === people[members[3]].scope)) { best = n; scope = Number(s); } });
-    const links = Object.keys(tally).map(Number).filter((s) => s !== scope);
-    groups.push({ members, scope, links, roles: roles.size });
-  }
-  const out = {};
-  groups.forEach((g, i) => { out["r" + round + "g" + String(i + 1).padStart(2, "0")] = { ...g, order: i + 1 }; });
-  return { sentences: out };
+window.personWords = function (p) { return (p && p.words) || {}; };
+window.personDone = function (p) {
+  const w = personWords(p);
+  return !!(p && p.scope && [1, 2, 3, 4, 5, 6].every((n) => (w[n] || "").trim()));
 };
-
-window.sentenceText = function (s, people) {
-  const w = {};
-  for (let f = 1; f <= 6; f++) w[f] = (people[s.members[f]] || {}).text || "＿＿";
-  return composeSentence(w);
+window.personSentence = function (p, edits, pid) {
+  if (edits && pid && edits[pid] && edits[pid].trim()) return edits[pid].trim();
+  return composeSentence(personWords(p));
+};
+/* 揭曉清單中的一句：{ pid, scope, order, text? } */
+window.sentenceText = function (s, people, edits) {
+  if (s.text && s.text.trim()) return s.text.trim();
+  return personSentence((people || {})[s.pid], edits, s.pid);
+};
+/* 依欄位著色的 HTML（未被修改時）；被修改過則回傳純文字 */
+window.sentenceRich = function (s, people, edits, highlight) {
+  const p = (people || {})[s.pid];
+  const edited = (s.text && s.text.trim()) || (edits && edits[s.pid] && edits[s.pid].trim());
+  if (edited || !p) return escapeHtml(sentenceText(s, people, edits));
+  const w = personWords(p);
+  return SENTENCE_ORDER.map((x) => typeof x === "number"
+    ? `<span class="w" style="${highlight ? `background:${ISLAND_CONTENT.fields[x - 1].color};color:#fff;border-radius:6px;padding:0 4px` : ""}">${escapeHtml(cleanWord(x, w[x]) || "＿＿")}</span>` : x).join("");
 };
 
 window.voteTotals = function (state) {

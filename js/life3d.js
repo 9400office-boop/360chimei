@@ -125,10 +125,10 @@
         if (e.avatar !== p.avatar) { e.body.geometry = buildChar(p.avatar); e.avatar = p.avatar; }
         const nt = homeTile(p, id);
         if (nt !== e.tile) { e.tile = nt; e.target = randInTile(nt); e.wait = 0; }
-        e.name = p.name; e.field = p.field;
-        const has = !!(p.text && p.field);
+        e.name = p.name;
+        const has = personDone(p);
         e.seed.visible = has;
-        if (has) e.seed.material.color.set(C.fields[p.field - 1].color);
+        if (has) e.seed.material.color.set(C.scopes[p.scope - 1].color);
       });
       Object.keys(ents).forEach((id) => { if (!seen.has(id)) { W.scene.remove(ents[id].grp); delete ents[id]; } });
     },
@@ -339,9 +339,75 @@
     }
   };
 
+  // ---------- 花朵：每完成一句行動，就在社會情緒學習廣場或復原力廣場開一朵 ----------
+  const PETALS = ["#F4A7B9", "#FFD86B", "#B9A4E3", "#FF9F80", "#8FD6E8", "#F7F0E6", "#E98AA0", "#FFB347", "#C9E265", "#F28CC8"];
+  const flowerGeoCache = {};
+  const flowerMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
+  function flowerGeo(ci, kind) {
+    const k = ci + "_" + kind;
+    if (flowerGeoCache[k]) return flowerGeoCache[k];
+    const I = new M4(), parts = [], put = (g, col, m) => parts.push(colored(GEO[g], col, m));
+    const col = PETALS[ci];
+    put("cyl", "#5E9E5A", L(I, 0, .55, 0, .06, 1.1, .06));
+    put("sph", "#6DB06A", L(I, .22, .35, 0, .22, .07, .12, 0, 0, -.5));
+    put("sph", "#6DB06A", L(I, -.2, .55, 0, .2, .07, .11, 0, 0, .5));
+    const n = kind === 0 ? 5 : kind === 1 ? 6 : 8, pr = kind === 2 ? .2 : .26;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2;
+      put("sph", col, L(I, Math.cos(a) * .26, 1.15, Math.sin(a) * .26, pr, .07, .14, -a));
+    }
+    put("sph", kind === 2 ? "#8A5A2B" : "#FFD34D", L(I, 0, 1.18, 0, .14, .1, .14));
+    return (flowerGeoCache[k] = merge(parts));
+  }
+  const flowers = {};
+  const plazaSlots = {};
+  function slotsFor(pz) {
+    if (plazaSlots[pz.key]) return plazaSlots[pz.key];
+    const sp = 2.3, cols = Math.max(1, Math.floor((pz.w - 1.2) / sp)), rows = Math.max(1, Math.floor((pz.d - 1.2) / sp));
+    const rr = ((sd) => () => (sd = (sd * 9301 + 49297) % 233280) / 233280)(pz.key.charCodeAt(0) * 97);
+    const out = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+      out.push(new V3(pz.x - pz.w / 2 + .6 + (c + .5) * (pz.w - 1.2) / cols + (rr() - .5) * .8, TOP, pz.z - pz.d / 2 + .6 + (r + .5) * (pz.d - 1.2) / rows + (rr() - .5) * .8));
+    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rr() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    return (plazaSlots[pz.key] = out);
+  }
+  const Flowers = {
+    flowers,
+    sync(people, instant) {
+      const plazas = (W.PLAZAS || []).filter((p) => p.flower);
+      const seen = new Set();
+      plazas.forEach((pz) => {
+        const list = Object.entries(people || {}).filter(([, p]) => p.plaza === pz.key && personDone(p))
+          .sort((a, b) => (a[1].submittedAt || 0) - (b[1].submittedAt || 0));
+        const slots = slotsFor(pz);
+        list.forEach(([id, p], i) => {
+          seen.add(id);
+          let f = flowers[id];
+          const h = hash(id), ci = h % PETALS.length, kind = (h >> 3) % 3;
+          if (!f) {
+            const m = new THREE.Mesh(flowerGeo(ci, kind), flowerMat); m.castShadow = true;
+            W.scene.add(m);
+            f = flowers[id] = { m, s: instant ? 1 : 0, ph: (h % 100) / 10 };
+          }
+          const pos = slots[i % slots.length], lap = Math.floor(i / slots.length);
+          f.m.position.set(pos.x + lap * .7, pos.y, pos.z + lap * .5);
+          f.m.rotation.y = (h % 628) / 100;
+        });
+      });
+      Object.keys(flowers).forEach((id) => { if (!seen.has(id)) { W.scene.remove(flowers[id].m); delete flowers[id]; } });
+    },
+    update(dt, t) {
+      Object.values(flowers).forEach((f) => {
+        if (f.s < 1) f.s = Math.min(1, f.s + dt * 1.2);
+        const e = 1 - Math.pow(1 - f.s, 3);
+        f.m.scale.setScalar(1.7 * e * (1 + Math.sin(t * 1.8 + f.ph) * .03));
+      });
+    }
+  };
+
   function init() {
     W.scene.add(beadMesh); W.scene.add(linkGroup); W.scene.add(sentGroup);
-    W.onFrame((dt, t) => { People.update(dt, t); Trees.update(dt, t); Flow.update(dt, t); });
+    W.onFrame((dt, t) => { People.update(dt, t); Trees.update(dt, t); Flow.update(dt, t); Flowers.update(dt, t); });
   }
-  window.Life = { init, People, Trees, Links, buildChar };
+  window.Life = { init, People, Trees, Links, Flowers, buildChar };
 })();

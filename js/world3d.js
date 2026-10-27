@@ -416,11 +416,11 @@
   };
   const PLAZAS = [
     { name: "資訊廣場", x: -6, z: 14, w: 16, d: 10, info: true },
-    { name: "行動廣場 B", x: 22, z: 31, w: 22, d: 10 },
-    { name: "行動廣場 C", x: 52, z: 20, w: 18, d: 12 }
+    { name: "社會情緒學習廣場", key: "B", flower: true, x: 22, z: 31, w: 26, d: 12 },
+    { name: "復原力廣場", key: "C", flower: true, x: 52, z: 20, w: 20, d: 14 }
   ];
   const CAMPUS = { x0: -72, x1: 72, z0: -40, z1: 46 };
-  const RIVER = { z: 101, d: 22, docks: [{ key: "accountDock", x: 0 }, { key: "hrDock", x: -58 }] };
+  const RIVER = { z: 101, d: 22, docks: [{ key: "accountDock", x: 0 }] };
   const ROADS = [
     { name: "中華路", x: -80, z: 3, w: 9, d: 220, vertical: true },
     { name: "連續照護大道", x: 0, z: 54, w: 220, d: 9, care: true },
@@ -777,15 +777,10 @@
       { kind: "accountBoat", build: (g) => { hull(g, 3, 1, 7, 0xFFFFFF, 0xD8B65E); bx(g, 2.6, .1, 6.6, 0, 1.05, 0, 0xC9A27A); for (let i = 0; i < 3; i++) bx(g, .8, .7, .8, -.6 + (i % 2) * 1.2, 1.45, -1.6 + i * 1.3, 0xD7B07A); bx(g, 2, 1.3, 1.8, 0, 1.7, -2.4, 0xF2C94C); cy(g, .35, .35, .1, 0, 2.6, -2.4, 0xF2C94C, Math.PI / 2); } },     // 金色貨船
       { kind: "accountBoat", build: (g) => { hull(g, 2.6, .9, 6, 0x1F3550, 0xF2C94C); bx(g, 1.8, 1.1, 2.2, 0, 1.45, -.8, 0xFFFFFF); cy(g, .3, .35, 1.4, 0, 2.6, -1.4, 0xF2C94C); bx(g, 1.6, .3, .05, 0, 1.6, .35, 0xBFE3F5, true); } },   // 拖船
       { kind: "accountBoat", build: (g) => { hull(g, 2.4, .8, 6.4, 0xF7F2E8, 0xB8862E); cy(g, .07, .07, 6, 0, 3.8, 0, 0xEDEDED); const sail = new THREE.Mesh(new THREE.ConeGeometry(1.6, 4.6, 3), mat(0xF2C94C)); sail.scale.set(.06, 1, 1); sail.position.set(0, 3.8, -1); g.add(sail); passengers(g, 2, .85, .8); } },     // 帆船
-      { kind: "hrBoat", build: (g) => { hull(g, 3.4, 1.1, 8, 0xFFFFFF, 0xE5704F); bx(g, 3.1, .1, 7.6, 0, 1.12, 0, 0xC9A27A); bx(g, 2.4, 1.4, 2.6, 0, 1.85, -1.8, 0xF2B48A); bx(g, 2.8, .2, 3, 0, 2.65, -1.8, 0xFFFFFF); passengers(g, 5, 1.17, .4); } },   // 渡輪
-      { kind: "hrBoat", build: (g) => { hull(g, 3.6, 1, 8.6, 0x2E9C8F, 0xFFFFFF); bx(g, 3.2, 1.6, 4.6, 0, 1.8, -.8, 0xFFFFFF); bx(g, 3.24, .6, 4.2, 0, 2, -.8, 0xBFE3F5, true); bx(g, 2.6, 1, 2.4, 0, 3.1, -1.4, 0xFFFFFF); passengers(g, 2, 1.05, 2.4); } },     // 雙層客船
-      { kind: "hrBoat", build: (g) => { hull(g, 2.2, .8, 5.4, 0xE5704F, 0xFFFFFF); bx(g, 1.8, .7, 1.4, 0, 1.15, -.6, 0xBFE3F5, true); passengers(g, 2, .8, .9); } },                                                               // 快艇
-      { kind: "hrBoat", build: (g) => { hull(g, 3.2, 1, 7, 0xF4A7B9, 0xFFFFFF); bx(g, 2.8, .1, 6.6, 0, 1.02, 0, 0xEFE6D6); for (const z of [-2.4, 2.4]) cy(g, .06, .06, 2, 0, 2, z, 0xFFFFFF); bx(g, 3, .1, 5.4, 0, 3, 0, 0xFFFFFF); passengers(g, 6, 1.07, -2); } },  // 遮陽觀光船
-      { kind: "hrBoat", build: (g) => { hull(g, 3, 1, 7.4, 0x8FD6C2, 0x2E9C8F); bx(g, 2.2, 1.3, 2.4, 0, 1.65, -.6, 0xFFFFFF); cy(g, .3, .3, 1.3, 0, 2.9, -1.2, 0xE5704F); for (const sx of [-1, 1]) { const w = cy(g, 1.1, 1.1, .4, sx * 1.75, 1.1, -2.2, 0xE5704F, Math.PI / 2); W.anim.push((dt) => (w.rotation.x += dt * 2)); } passengers(g, 2, 1.02, 1.8); } } // 明輪船
     ];
     const LANES = [{ z: RIVER.z + 1.5, dir: 1 }, { z: RIVER.z + 5.5, dir: -1 }, { z: RIVER.z + 9.2, dir: 1 }];
     const XMIN = -180, XMAX = 180, SPAN = XMAX - XMIN;
-    const laneOf = [0, 1, 2, 0, 1, 2, 0, 1];
+    const laneOf = BOATS.map((_, i) => i % 3);
     const laneCount = [0, 0, 0]; laneOf.forEach((l) => laneCount[l]++);
     const laneIdx = [0, 0, 0];
     const dockX = (k) => (W.docks.find((d) => d.key === (k === "hrBoat" ? "hrDock" : "accountDock")) || {}).x;
@@ -805,7 +800,7 @@
         }
         g.position.x = x; g.position.z = lane.z;
       });
-      W.vehicles.push({ key: bt.kind, obj: g, h: bt.kind === "accountBoat" && i === 2 ? 6.6 : 4.2, main: i === 0 || i === 1 || i === 3 || i === 5 });
+      W.vehicles.push({ key: bt.kind, obj: g, h: bt.kind === "accountBoat" && i === 2 ? 6.6 : 4.2, main: i === 0 || i === 1 });
     });
     W.beam = new THREE.PointLight(0xFFE58A, 0, 70); W.beam.position.set(0, TOP + 20, -20); scene.add(W.beam);
 

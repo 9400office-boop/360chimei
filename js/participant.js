@@ -8,7 +8,7 @@
 
   let pid = null;
   try { pid = localStorage.getItem(ME_KEY); } catch (e) {}
-  let local = { view: null, name: "", avatar: null, filter: -1, draft: null, scope: null, editing: false, drawing: false };
+  let local = { view: null, name: "", dept: "", avatar: null, words: null, scope: null, editing: false, rescope: false };
   let lastKey = "";
   let S = {};
 
@@ -22,10 +22,9 @@
   function decideView() {
     const m = me();
     if (!m) return local.view === "pick" ? "pick" : "welcome";
-    if (local.drawing) return "draw";
     if (phase() === "join") {
-      if (!m.field) return "draw";
-      if (!m.text || local.editing) return "write";
+      if (!m.scope || local.rescope) return "scope";
+      if (!personDone(m) || local.editing) return "write";
     }
     return "home";
   }
@@ -33,11 +32,11 @@
   function render(force) {
     const view = decideView();
     // 填寫、選人物畫面避免打字中被重繪
-    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), S.sentences ? Object.keys(S.sentences).length : 0, (S.votes || {})[pid], me() && me().text, S.state && S.state.round]) : "");
-    if (!force && key === lastKey && (view === "pick" || view === "write" || view === "draw")) return;
+    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), S.sentences || null, (S.votes || {})[pid], me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
+    if (!force && key === lastKey && (view === "pick" || view === "write" || view === "scope")) return;
     if (!force && key === lastKey && view === "home" && phase() !== "harvest") return;
     lastKey = key;
-    const fn = { welcome: vWelcome, pick: vPick, draw: vDraw, write: vWrite, home: vHome }[view];
+    const fn = { welcome: vWelcome, pick: vPick, scope: vScope, write: vWrite, home: vHome }[view];
     $app.innerHTML = header() + fn();
     bind(view);
   }
@@ -46,13 +45,13 @@
     const m = me();
     const off = Store.online ? "" : `<div class="offline">連線中斷，正在重新連線…</div>`;
     return off + `<div class="top"><div class="brand">${escapeHtml(CFG.title)}<small>${escapeHtml(CFG.subtitle)}</small></div>` +
-      (m ? `<div class="me-pill">${Avatar.svg(m.avatar)}<span>${escapeHtml(m.name)}</span></div>` : "") + `</div>`;
+      (m ? `<div class="me-pill">${Avatar.svg(m.avatar)}<span>${escapeHtml(m.name)}${m.dept ? `<small style="display:block;font-size:10px;color:var(--ink-soft)">${escapeHtml(m.dept)}</small>` : ""}</span></div>` : "") + `</div>`;
   }
 
   // ---------- 歡迎 ----------
   function vWelcome() {
     return `<div class="hero"><div class="ttl"><h1>360°深耕奇美</h1><p>${escapeHtml(C.vision)}・一起讓院區長出新的連結</p></div></div>
-      <div class="steps"><div><b>🧑‍⚕️</b>點一位捏捏人</div><div><b>🎴</b>抽一張詞卡</div><div><b>🌱</b>種下一個詞</div><div><b>💧</b>澆水共識</div></div>
+      <div class="steps"><div><b>🧑‍⚕️</b>選人物報到</div><div><b>🧭</b>選一個範疇</div><div><b>🌸</b>寫一句行動種下花</div><div><b>💧</b>澆水長成大樹</div></div>
       <button class="btn" style="width:100%" data-act="start">我要報到</button>
       <p style="text-align:center"><button class="link-btn" data-act="explore">先看看院區有什麼</button></p>`;
   }
@@ -67,88 +66,89 @@
     }
     const grid = local.order.map((id) => `<button class="av ${local.avatar === id ? "on" : ""}" data-av="${id}" aria-label="捏捏人">${taken[id] ? `<span class="taken">${taken[id]}</span>` : ""}${Avatar.svg(id)}</button>`).join("");
     const pv = local.avatar ? `<div class="preview">${Avatar.svg(local.avatar)}</div>` : "";
-    return `<label class="label">你的暱稱或姓名</label>
-      <input class="name-input" id="name" maxlength="12" placeholder="例：小美、王醫師" value="${escapeHtml(local.name)}" autocomplete="off">
+    return `<label class="label">部門</label>
+      <input class="name-input" id="dept" maxlength="16" placeholder="例：護理部、資訊室、內科部" value="${escapeHtml(local.dept)}" autocomplete="off">
+      <label class="label">姓名或暱稱</label>
+      <input class="name-input" id="name" maxlength="12" placeholder="例：王小美" value="${escapeHtml(local.name)}" autocomplete="off">
       <label class="label">點一位你喜歡的捏捏人</label>
       <p class="muted" style="margin:-4px 0 8px;font-size:13px">右上角的數字是已經有幾位夥伴選了他</p>
       <div class="grid">${grid}</div>
-      <div class="sticky"><div class="inner">${pv}<button class="btn" id="join" ${local.avatar && local.name.trim() ? "" : "disabled"}>報到！</button></div></div>`;
+      <div class="sticky"><div class="inner">${pv}<button class="btn" id="join" ${local.avatar && local.name.trim() && local.dept.trim() ? "" : "disabled"}>報到！</button></div></div>`;
   }
 
-  // ---------- 抽卡 ----------
-  function vDraw() {
-    const m = me(); const f = m.field ? F(m.field) : null;
-    return `<div class="stage">
-      <h2 style="margin:6px 0 0">抽一張詞卡</h2>
-      <p class="muted" style="margin:6px 0">六張卡裡會隨機派給你一張，<br>和全場來自不同角落的夥伴拼成一句話</p>
-      <div class="flip ${f && !local.anim ? "done" : ""}" id="flip" ${f ? "" : `data-act="draw"`}><div class="in">
-        <div class="face back ${f ? "" : "wiggle"}">?<small>點我抽卡</small></div>
-        <div class="face front" style="background:${f ? f.color : "#999"}">${f ? `<div class="no">0${f.n}</div><div class="t">${f.title}</div><div class="s">${f.sub}</div>` : ""}</div>
-      </div></div>
-      ${f ? `<button class="btn" data-act="towrite" style="min-width:220px">開始填寫</button>` : `<button class="btn" data-act="draw" style="min-width:220px">抽卡</button>`}
-    </div>`;
+  // ---------- 選範疇 ----------
+  function vScope() {
+    const m = me(); const cur = local.scope || m.scope || null;
+    return `<h2 style="margin:6px 0 4px">選一個你想深耕的範疇</h2>
+      <p class="muted" style="margin:0 0 12px">你的人物會走到這個範疇的大樓前，等一下要寫的行動句也以它為主</p>
+      ${C.scopes.map((s) => `<button class="scope-big ${cur === s.id ? "on" : ""}" data-pickscope="${s.id}" style="--c:${s.color};--soft:${s.soft}">
+        <span class="em">${s.emoji}</span><span><b>${s.tag}</b>${escapeHtml(s.name)}<small>${s.items.map((i) => escapeHtml(i.short)).join("・")}</small></span></button>`).join("")}
+      <div class="sticky"><div class="inner"><button class="btn" id="toscope" ${cur ? "" : "disabled"}>下一步：寫行動句 ✍️</button></div></div>`;
   }
 
-  // ---------- 填寫 ----------
-  function scaffold(n, word) {
-    const mine = `<span class="mine" style="background:${F(n).color}">${escapeHtml(word || F(n).title)}</span>`;
-    const s = (k) => (k === n ? mine : `<span class="slot">${F(k).title}</span>`);
-    return SENTENCE_ORDER.map((x) => (typeof x === "number" ? s(x) : x)).join("");
+  // ---------- 六欄填寫 ----------
+  function preview() {
+    const w = local.words || {};
+    return SENTENCE_ORDER.map((x) => typeof x === "number"
+      ? `<span class="pv" style="${(w[x] || "").trim() ? `background:${F(x).color};color:#fff` : ""}">${escapeHtml(cleanWord(x, w[x]) || F(x).title)}</span>` : x).join("");
   }
   function vWrite() {
-    const m = me(); const f = F(m.field);
-    if (local.draft === null) { local.draft = m.text || ""; local.scope = m.scope || null; }
-    const hints = f.hints.map((h) => `<button class="chip" data-hint="${escapeHtml(h)}">${escapeHtml(h)}</button>`).join("");
-    const scopes = C.scopes.map((s) => `<button class="scope-btn ${local.scope === s.id ? "on" : ""}" data-scope="${s.id}" style="${local.scope === s.id ? `background:${s.color};border-color:${s.color}` : `border-color:${s.soft};background:${s.soft}`}"><b>${s.tag}</b>${s.name}</button>`).join("");
-    return `<div class="fieldhead" style="background:${f.color}"><div class="no">0${f.n}</div><div><div class="t">${f.title}・${f.sub}</div><div class="q">${f.question}</div></div></div>
-      <div class="scaffold" id="scaf">${scaffold(f.n, local.draft)}</div>
-      <p class="muted" style="font-size:13px;margin:4px 2px 10px">其他五個空格，會由全場其他夥伴填上</p>
-      <textarea class="word" id="word" maxlength="20" placeholder="寫下你的詞（20 字內）">${escapeHtml(local.draft)}</textarea>
-      <div class="count"><span id="cnt">${local.draft.length}</span>/20</div>
-      <label class="label" style="margin-top:4px">想不到嗎？點一下參考詞</label>
-      <div class="hints">${hints}</div>
-      <label class="label">你的詞最貼近哪個範疇？</label>
-      <div class="scopes">${scopes}</div>
-      <div class="sticky"><div class="inner"><button class="btn" id="plant">種下這個詞 🌱</button></div></div>`;
+    const m = me(); const sc = SC(m.scope);
+    if (!local.words) local.words = { ...(personWords(m)) };
+    const ex = C.examples[m.scope] || C.examples[1];
+    const exHtml = SENTENCE_ORDER.map((x) => typeof x === "number" ? `<b style="color:${F(x).color}">${escapeHtml(ex[x])}</b>` : x).join("");
+    const order = [1, 2, 3, 4, 5, 6];
+    const blocks = order.map((n) => {
+      const f = F(n), v = local.words[n] || "";
+      return `<div class="fblock" style="--c:${f.color}">
+        <div class="fh"><span class="fn">0${n}</span><span class="ft">${f.title}</span><span class="fs">${f.sub}</span></div>
+        <input class="finput" data-w="${n}" maxlength="20" placeholder="${escapeHtml(f.question)}" value="${escapeHtml(v)}" autocomplete="off">
+        <div class="hints">${f.hints.map((h) => `<button class="chip ${v === h ? "on" : ""}" data-hint="${escapeHtml(h)}" data-n="${n}">${escapeHtml(h)}</button>`).join("")}</div>
+      </div>`;
+    }).join("");
+    return `<div class="scopebar" style="background:${sc.color}">${sc.emoji} ${sc.tag}・${escapeHtml(sc.name)} <button class="link-btn" data-act="rescope" style="color:#fff">換範疇</button></div>
+      <div class="example"><div class="exh">💡 參考範例</div>${exHtml}</div>
+      <label class="label">你的行動句（填完六欄會自動組成）</label>
+      <div class="scaffold" id="scaf">${preview()}</div>
+      ${blocks}
+      <div class="sticky"><div class="inner"><button class="btn" id="plant">種下行動句 🌸</button></div></div>`;
   }
 
   // ---------- 首頁（依活動階段） ----------
-  function sentenceHtml(s, highlightPid) {
-    return SENTENCE_ORDER.map((x) => {
-      if (typeof x !== "number") return x;
-      const id = s.members[x];
-      const w = escapeHtml(cleanWord(x, (S.people[id] || {}).text) || "＿＿");
-      return id === highlightPid ? `<mark>${w}</mark>` : w;
-    }).join("");
-  }
+  function sentenceHtml(s) { return sentenceRich(s, S.people, S.edits, false); }
+  const PLAZA_NAME = { B: "社會情緒學習廣場", C: "復原力廣場" };
   function sentencesSorted() {
     return Object.entries(S.sentences || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => a.order - b.order);
   }
 
+  function authorOf(s) { const p = (S.people || {})[s.pid] || {}; return (p.dept ? p.dept + " " : "") + (p.name || ""); }
+  function sentCard(s) {
+    return `<div class="sent ${s.pid === pid ? "minebox" : ""}"><div class="text">${sentenceHtml(s)}</div><div class="meta"><span>${s.order}・${SC(s.scope).tag}</span><span>${escapeHtml(authorOf(s))}</span></div></div>`;
+  }
   function vHome() {
     const m = me(); const ph = phase();
     let html = "";
-    if (m.field && m.text) {
-      const f = F(m.field), sc = SC(m.scope);
+    if (personDone(m)) {
+      const sc = SC(m.scope);
       html += `<div class="card seed">${Avatar.svg(m.avatar)}<div style="min-width:0">
-        <span class="tagf" style="background:${f.color}">0${f.n} ${f.title}</span>
-        ${sc ? `<span class="tagf" style="background:${sc.color}">${sc.tag}</span>` : ""}
-        <div class="word-big">${escapeHtml(m.text)}</div>
+        <span class="tagf" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>
+        <div class="mysent">${sentenceRich({ pid }, S.people, S.edits, true)}</div>
         ${ph === "join" ? `<button class="btn small ghost" data-act="edit">修改</button>` : ""}
       </div></div>`;
+      if (m.plaza) html += `<p class="status" style="margin:8px 0">🌸 你的花開在「<b>${PLAZA_NAME[m.plaza]}</b>」</p>`;
     } else if (ph !== "join") {
-      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">這一輪填寫已經結束，你可以一起看大螢幕${ph === "water" ? "、幫喜歡的句子澆水" : ""}。</p></div>`;
+      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">填寫時間已經結束，你可以一起看大螢幕${ph === "water" ? "、幫喜歡的句子澆水" : ""}。</p></div>`;
     }
 
     if (ph === "join") {
-      html += `<p class="status">你的種子已種在院區 🌱<br><b>請看大螢幕</b>，等待主持人揭曉</p>`;
+      html += `<p class="status"><b>請看大螢幕</b>，等待主持人揭曉全場的行動句</p>`;
     } else if (ph === "reveal") {
-      const mine = sentencesSorted().filter((s) => Object.values(s.members).includes(pid));
-      if (!Object.keys(S.sentences || {}).length) html += `<p class="status">主持人正在拼句，請稍候…</p>`;
+      const list = sentencesSorted();
+      if (!list.length) html += `<p class="status">主持人正在挑選要展示的句子，請稍候…</p>`;
       else {
-        html += `<p class="status">🎉 你的詞長成了這${mine.length > 1 ? "些" : "句"}話</p>`;
-        html += mine.map((s) => `<div class="sent"><div class="text">${sentenceHtml(s, pid)}</div><div class="meta"><span>幼苗 ${s.order}・${SC(s.scope).tag}</span><span>${new Set(Object.values(s.members)).size} 位夥伴合力完成</span></div></div>`).join("") ||
-          `<p class="muted" style="text-align:center">請看大螢幕，一起看看全場拼出了什麼</p>`;
+        const mine = list.find((s) => s.pid === pid);
+        html += `<p class="status">${mine ? "🎉 你的行動句入選展示了！" : "🎉 一起看看大家的行動句"}</p>`;
+        html += list.map((s) => sentCard(s)).join("");
       }
     } else if (ph === "water") {
       const total = CFG.dropsPerPerson;
@@ -158,15 +158,15 @@
       html += `<div class="drops">剩下的水滴 <span class="d">${"💧".repeat(left)}${"<span style='opacity:.2'>💧</span>".repeat(total - left)}</span><br><span class="muted" style="font-size:13px">把水滴給最想實現的句子，可以集中在同一句</span></div>`;
       html += sentencesSorted().map((s) => {
         const n = mv[s.id] || 0;
-        return `<div class="sent"><div class="text">${sentenceHtml(s, pid)}</div>
-          <div class="meta"><span>幼苗 ${s.order}・${SC(s.scope).tag}</span>
+        return `<div class="sent ${s.pid === pid ? "minebox" : ""}"><div class="text">${sentenceHtml(s)}</div>
+          <div class="meta"><span>${s.order}・${SC(s.scope).tag}・${escapeHtml(authorOf(s))}</span>
           <span class="water"><button data-vote="${s.id}" data-d="-1" ${n ? "" : "disabled"}>−</button><span class="n">${"💧".repeat(n) || "0"}</span><button data-vote="${s.id}" data-d="1" ${left ? "" : "disabled"}>＋</button></span></div></div>`;
       }).join("");
     } else if (ph === "harvest") {
       const tot = voteTotals(S);
       const top = sentencesSorted().sort((a, b) => (tot[b.id] || 0) - (tot[a.id] || 0)).slice(0, 3);
-      html += `<p class="status">🌳 收成時間！全場共識最高的三棵大樹</p>`;
-      html += top.map((s, i) => `<div class="sent"><div class="text"><span class="rank">${i + 1}</span>${sentenceHtml(s, pid)}</div><div class="meta"><span>${SC(s.scope).tag}</span><span>💧 ${tot[s.id] || 0}</span></div></div>`).join("");
+      html += `<p class="status">🌳 收成時間！共識大樹上最受期待的三句行動</p>`;
+      html += top.map((s, i) => `<div class="sent"><div class="text"><span class="rank">${i + 1}</span>${sentenceHtml(s)}</div><div class="meta"><span>${SC(s.scope).tag}・${escapeHtml(authorOf(s))}</span><span>💧 ${tot[s.id] || 0}</span></div></div>`).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
     html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a>`;
@@ -208,9 +208,8 @@
         const act = a.dataset.act;
         if (act === "start") { local.view = "pick"; render(true); window.scrollTo(0, 0); }
         if (act === "explore") openExplore();
-        if (act === "edit") { local.editing = true; local.draft = null; render(true); }
-        if (act === "draw") doDraw(a);
-        if (act === "towrite") { local.drawing = false; render(true); window.scrollTo(0, 0); }
+        if (act === "edit") { local.editing = true; local.words = null; render(true); window.scrollTo(0, 0); }
+        if (act === "rescope") { local.rescope = true; local.scope = me().scope; render(true); window.scrollTo(0, 0); }
         return;
       }
       const av = e.target.closest("[data-av]");
@@ -223,77 +222,76 @@
         updateJoinBtn(); return;
       }
       const h = e.target.closest("[data-hint]");
-      if (h) { local.draft = h.dataset.hint; const w = document.getElementById("word"); w.value = local.draft; onWord(); return; }
-      const sb = e.target.closest("[data-scope]");
-      if (sb) { local.scope = Number(sb.dataset.scope); render(true); return; }
+      if (h) {
+        const n = h.dataset.n; local.words[n] = h.dataset.hint;
+        const inp = $app.querySelector(`[data-w="${n}"]`); inp.value = h.dataset.hint;
+        h.parentElement.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c === h));
+        updatePreview(); return;
+      }
+      const ps = e.target.closest("[data-pickscope]");
+      if (ps) {
+        local.scope = Number(ps.dataset.pickscope);
+        $app.querySelectorAll(".scope-big").forEach((x) => x.classList.toggle("on", x === ps));
+        document.getElementById("toscope").disabled = false; return;
+      }
       const v = e.target.closest("[data-vote]");
       if (v) vote(v.dataset.vote, Number(v.dataset.d));
     };
     if (view === "pick") {
-      const n = document.getElementById("name");
+      const n = document.getElementById("name"), d = document.getElementById("dept");
       n.oninput = () => { local.name = n.value; updateJoinBtn(); };
+      d.oninput = () => { local.dept = d.value; updateJoinBtn(); };
       document.getElementById("join").onclick = doJoin;
     }
-    if (view === "draw" && local.anim) {
-      local.anim = false;
-      setTimeout(() => { const fl = document.getElementById("flip"); if (fl) fl.classList.add("done"); }, 60);
-    }
+    if (view === "scope") document.getElementById("toscope").onclick = doScope;
     if (view === "write") {
-      const w = document.getElementById("word");
-      w.oninput = onWord;
+      $app.querySelectorAll(".finput").forEach((inp) => {
+        inp.oninput = () => {
+          local.words[inp.dataset.w] = inp.value; updatePreview();
+          inp.parentElement.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.hint === inp.value));
+        };
+      });
       document.getElementById("plant").onclick = doPlant;
     }
   }
   function updateJoinBtn() {
     const b = document.getElementById("join");
-    if (b) b.disabled = !(local.avatar && local.name.trim());
+    if (b) b.disabled = !(local.avatar && local.name.trim() && local.dept.trim());
   }
-  function onWord() {
-    const w = document.getElementById("word");
-    local.draft = w.value;
-    document.getElementById("cnt").textContent = w.value.length;
-    document.getElementById("scaf").innerHTML = scaffold(me().field, local.draft);
-  }
-
+  function updatePreview() { const el = document.getElementById("scaf"); if (el) el.innerHTML = preview(); }
   async function doJoin() {
-    const name = local.name.trim();
-    if (!name || !local.avatar) return;
+    const name = local.name.trim(), dept = local.dept.trim();
+    if (!name || !dept || !local.avatar) return;
     const b = document.getElementById("join"); b.disabled = true; b.textContent = "報到中…";
     pid = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     try { localStorage.setItem(ME_KEY, pid); } catch (e) {}
     try {
-      await Store.set("people/" + pid, { name: name.slice(0, 12), avatar: local.avatar, joinedAt: Date.now() });
-      local.drawing = phase() === "join";
+      await Store.set("people/" + pid, { name: name.slice(0, 12), dept: dept.slice(0, 16), avatar: local.avatar, joinedAt: Date.now() });
       render(true); window.scrollTo(0, 0);
     } catch (err) {
       toast("報到失敗，請再試一次"); b.disabled = false; b.textContent = "報到！";
     }
   }
 
-  async function doDraw() {
-    if (local.busy || (me() && me().field)) return;
-    local.busy = true;
-    const btn = $app.querySelector("button[data-act=draw]");
-    btn.disabled = true; btn.textContent = "抽卡中…";
-    try {
-      const f = await Store.claimField();
-      local.drawing = true; local.anim = true;
-      await Store.update("people/" + pid, { field: f });
-      local.busy = false;
-      render(true);
-    } catch (err) { local.busy = false; toast(err.message || "抽卡失敗，請再試一次"); btn.disabled = false; btn.textContent = "抽卡"; }
+  async function doScope() {
+    if (!local.scope) return;
+    try { await Store.update("people/" + pid, { scope: local.scope }); local.rescope = false; render(true); window.scrollTo(0, 0); }
+    catch (e) { toast("送出失敗，請再試一次"); }
   }
 
   async function doPlant() {
-    const text = (local.draft || "").trim();
-    if (!text) { toast("先寫下你的詞喔"); return; }
-    if (!local.scope) { toast("選一個最貼近的範疇"); return; }
+    const w = local.words || {};
+    const miss = [1, 2, 3, 4, 5, 6].filter((n) => !(w[n] || "").trim());
+    if (miss.length) { toast("還有 " + miss.map((n) => F(n).title).join("、") + " 沒填喔"); const el = $app.querySelector(`[data-w="${miss[0]}"]`); if (el) el.focus(); return; }
     if (phase() !== "join") { toast("填寫時間已結束"); return; }
     const b = document.getElementById("plant"); b.disabled = true;
+    const words = {}; [1, 2, 3, 4, 5, 6].forEach((n) => (words[n] = w[n].trim().slice(0, 20)));
+    const upd = { words, submittedAt: Date.now() };
+    if (!me().plaza) upd.plaza = Math.random() < .5 ? "B" : "C";
     try {
-      await Store.update("people/" + pid, { text: text.slice(0, 20), scope: local.scope, submittedAt: Date.now() });
-      local.editing = false; local.draft = null;
-      toast("種子已種下 🌱"); render(true); window.scrollTo(0, 0);
+      await Store.update("people/" + pid, upd);
+      local.editing = false; local.words = null;
+      toast("行動句已種下，開出一朵花 🌸"); render(true); window.scrollTo(0, 0);
     } catch (e) { toast("送出失敗，請再試一次"); b.disabled = false; }
   }
 
@@ -312,10 +310,9 @@
     Store.subscribe((state) => {
       S = state || {};
       // 活動被重置：回到歡迎頁
-      if (pid && S.people && !S.people[pid] && lastKey && !local.drawing && local.view !== "pick") {
+      if (pid && S.people && !S.people[pid] && lastKey && local.view !== "pick") {
         pid = null; try { localStorage.removeItem(ME_KEY); } catch (e) {}
       }
-      if (S.state && S.state.round !== local.round) { local.round = S.state.round; }
       render(false);
     });
   }).catch((err) => { $app.innerHTML = `<p class="status">無法連線：${escapeHtml(err.message)}</p>`; });

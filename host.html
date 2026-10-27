@@ -33,6 +33,14 @@
   .sent { padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 14px; display: flex; gap: 8px; align-items: center; }
   .sent.on { background: #FFF5D6; border-radius: 8px; }
   .sent .tx { flex: 1; }
+  .plist { max-height: 560px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; }
+  .prow { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-bottom: 1px dashed var(--line); }
+  .prow.on { background: #F1FAF2; }
+  .prow .ck input { width: 20px; height: 20px; }
+  .prow .pmain { flex: 1; min-width: 0; }
+  .prow .edit { width: 100%; font-size: 14px; padding: 6px 8px; border-radius: 8px; border: 1px solid transparent; background: transparent; font-family: inherit; }
+  .prow .edit:hover { border-color: var(--line); background: #fff; }
+  .prow .edit:focus { border-color: var(--leaf); background: #fff; outline: none; }
   .gate { max-width: 360px; margin: 18vh auto; text-align: center; }
   .gate input { font-size: 22px; padding: 12px; border-radius: 12px; border: 2px solid var(--line); width: 100%; text-align: center; margin: 12px 0; }
   .note { font-size: 13px; color: var(--ink-soft); }
