@@ -173,7 +173,7 @@
   // ---------- 對外 ----------
   window.BigTree = {
     init(container) { if (!root) build(container); },
-    show(on) { if (root) root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on); },
+    show(on) { if (root) root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on); if (window.World) World.skipRender = !!on; },
     get visible() { return root && !root.classList.contains("hide"); },
     update({ sents, totals, people, edits, phase, drops, possible }) {
       if (!root) return;

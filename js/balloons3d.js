@@ -58,6 +58,8 @@
     const basket = new THREE.Mesh(new THREE.BoxGeometry(1.2, .85, 1.2), std(0xB98A5E)); basket.position.y = -1.9; basket.castShadow = true; g.add(basket);
     const rim = new THREE.Mesh(new THREE.BoxGeometry(1.3, .14, 1.3), std(0x8A6A4A)); rim.position.y = -1.45; g.add(rim);
     const fire = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xFFB347 })); fire.position.y = -.9; g.add(fire);
+    env.userData.keep = true;   // 彩色球身保留（已是單一網格）
+    W.bake(g, [band, fire, env]);
     W.scene.add(g);
     const b = {
       g, fire, i,

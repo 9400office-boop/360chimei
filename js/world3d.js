@@ -445,8 +445,9 @@
     const scene = new THREE.Scene();
     const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: !!W.capture });
     W.phone = /[?&]me=/.test(location.search) || Math.min(screen.width, screen.height) < 600;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, W.phone ? 1.5 : 2));
-    renderer.shadowMap.enabled = !W.phone; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, W.phone ? 1.25 : 1.5));
+    renderer.shadowMap.enabled = !W.phone; renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
     container.appendChild(renderer.domElement);
     const camera = new THREE.PerspectiveCamera(30, 1, 1, 1600);
     camera.position.set(0, 120, 128);
@@ -462,7 +463,7 @@
     W.hemi = new THREE.HemisphereLight(0xffffff, 0x8fbfb8, .75); scene.add(W.hemi);
     W.sun = new THREE.DirectionalLight(0xffffff, .85);
     W.sun.position.set(-60, 110, 50); W.sun.castShadow = true;
-    W.sun.shadow.mapSize.set(4096, 4096);
+    W.sun.shadow.mapSize.set(2048, 2048);
     Object.assign(W.sun.shadow.camera, { left: -135, right: 135, top: 110, bottom: -110, near: 10, far: 420 });
     W.sun.shadow.bias = -0.0006; W.sun.shadow.normalBias = .04;
     scene.add(W.sun);
@@ -745,7 +746,7 @@
     const TAU = Math.PI * 2;
     const stageAng = () => W.stages.map((st) => (Math.atan2(st.z / RZ, st.x / RX) + TAU) % TAU);
     CARS.forEach((build, i) => {
-      const g = new THREE.Group(); const bulb = build(g);
+      const g = new THREE.Group(); const bulb = build(g); W.bake(g, [bulb]);
       g.traverse((o) => (o.castShadow = true)); scene.add(g);
       let a = (i / CARS.length) * TAU + .15, wait = 0;
       const sa = stageAng();
@@ -785,7 +786,7 @@
     const laneIdx = [0, 0, 0];
     const dockX = (k) => (W.docks.find((d) => d.key === (k === "hrBoat" ? "hrDock" : "accountDock")) || {}).x;
     BOATS.forEach((bt, i) => {
-      const g = new THREE.Group(); bt.build(g);
+      const g = new THREE.Group(); bt.build(g); W.bake(g);
       g.traverse((o) => (o.castShadow = true)); scene.add(g);
       const lane = LANES[laneOf[i]], k = laneIdx[laneOf[i]]++;
       let x = XMIN + SPAN * (k + .5) / laneCount[laneOf[i]] + laneOf[i] * 17, wait = 0;
@@ -813,6 +814,7 @@
     const el = W.renderer.domElement.parentElement;
     const w = el.clientWidth, h = el.clientHeight;
     W.renderer.setSize(w, h); W.camera.aspect = w / h; W.camera.updateProjectionMatrix();
+    W.vw = w; W.vh = h;
   };
 
   // ---------- 晝夜 ----------
@@ -855,8 +857,37 @@
   const _v = new V3();
   W.project = function (x, y, z) {
     _v.set(x, y, z).project(W.camera);
-    const el = W.renderer.domElement;
-    return { x: (_v.x + 1) / 2 * el.clientWidth, y: (1 - _v.y) / 2 * el.clientHeight, vis: _v.z < 1 && _v.z > -1 };
+    // 使用快取的畫布尺寸，避免每個標籤都觸發瀏覽器重新排版
+    return { x: (_v.x + 1) / 2 * (W.vw || 1), y: (1 - _v.y) / 2 * (W.vh || 1), vis: _v.z < 1 && _v.z > -1 };
+  };
+
+  // ---------- 合併：把一個物件群組裡不會動的零件合成一個網格，大幅減少繪製次數 ----------
+  const bakeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .75, flatShading: true });
+  W.bake = function (g, keep = []) {
+    g.updateMatrixWorld(true);
+    const inv = new M4().copy(g.matrixWorld).invert();
+    const parts = [], remove = [];
+    g.traverse((o) => {
+      if (!o.isMesh || keep.includes(o) || o.userData.keep) return;
+      const m = o.material;
+      if (!m || Array.isArray(m) || m.map || m.transparent || !m.color) return;
+      let geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      ["uv", "uv2"].forEach((k) => geo.attributes[k] && geo.deleteAttribute(k));
+      if (!geo.attributes.normal) geo.computeVertexNormals();
+      geo.applyMatrix4(new M4().multiplyMatrices(inv, o.matrixWorld));
+      if (!geo.attributes.color) {
+        const n = geo.attributes.position.count, a = new Float32Array(n * 3), c = m.color;
+        for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
+        geo.setAttribute("color", new THREE.BufferAttribute(a, 3));
+      }
+      parts.push(geo); remove.push(o);
+    });
+    if (parts.length < 2) return g;
+    remove.forEach((o) => o.parent.remove(o));
+    const mesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(parts, false), bakeMat);
+    mesh.castShadow = true; mesh.receiveShadow = false;
+    g.add(mesh);
+    return g;
   };
 
   // ---------- 主迴圈 ----------
@@ -866,36 +897,44 @@
   W.paused = false;
   W.frozen = false;
   const perf = { t: 0, n: 0 };
+  // 降載：不重新編譯材質（避免整個畫面卡住數秒），改為陰影停止即時更新、降低解析度
   W.setLowPower = function (on) {
+    if (W.lowPower === on) return;
     W.lowPower = on;
-    W.renderer.shadowMap.enabled = !on && !W.phone;
-    W.sun.castShadow = !on && !W.phone;
-    W.renderer.setPixelRatio(on ? 1 : Math.min(window.devicePixelRatio, W.phone ? 1.5 : 2));
-    W.scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => (m.needsUpdate = true)); });
+    W.renderer.shadowMap.needsUpdate = true;
+    W.renderer.setPixelRatio(on ? 1 : Math.min(window.devicePixelRatio, W.phone ? 1.25 : 1.5));
     W.resize();
     document.body.classList.toggle("lowpower", on);
   };
+  let started = 0, errCount = 0, frameNo = 0;
   function loop(now) {
-    if (W.frozen) { requestAnimationFrame(loop); return; }
+    requestAnimationFrame(loop);              // 先排下一格：就算某個動畫出錯，畫面也不會停住
+    if (W.frozen) return;
+    if (!started) started = now;
     const rawDt = (now - last) / 1000;
     const dt = Math.min(.05, rawDt); last = now;
-    // 自動效能保護：連續 4 秒低於約 28 fps，就關閉陰影並降低解析度
-    if (!W.lowPower && !W.capture) {
+    // 自動效能保護：開場 6 秒後才開始量；切換分頁等長暫停不算
+    if (!W.lowPower && !W.capture && now - started > 6000 && rawDt < 3 && !document.hidden) {
       perf.t += rawDt; perf.n++;
-      if (perf.t > 4) { if (perf.n / perf.t < 28) W.setLowPower(true); perf.t = 0; perf.n = 0; }
+      if (perf.t > 4) { if (perf.n / perf.t < 24) W.setLowPower(true); perf.t = 0; perf.n = 0; }
     }
-    if (fly) {
-      fly.t += dt / fly.dur; const k = fly.t >= 1 ? 1 : 1 - Math.pow(1 - fly.t, 3);
-      W.controls.target.lerpVectors(fly.from.t, fly.to.t, k);
-      W.camera.position.lerpVectors(fly.from.p, fly.to.p, k);
-      if (fly.t >= 1) fly = null;
-    }
-    if (W.autoRotate && !fly) { W.controls.autoRotate = true; W.controls.autoRotateSpeed = .35; } else W.controls.autoRotate = false;
-    W.controls.update();
-    W.anim.forEach((f) => f(dt, now / 1000));
-    listeners.forEach((f) => f(dt, now / 1000));
+    try {
+      if (fly) {
+        fly.t += dt / fly.dur; const k = fly.t >= 1 ? 1 : 1 - Math.pow(1 - fly.t, 3);
+        W.controls.target.lerpVectors(fly.from.t, fly.to.t, k);
+        W.camera.position.lerpVectors(fly.from.p, fly.to.p, k);
+        if (fly.t >= 1) fly = null;
+      }
+      if (W.autoRotate && !fly) { W.controls.autoRotate = true; W.controls.autoRotateSpeed = .35; } else W.controls.autoRotate = false;
+      W.controls.update();
+    } catch (e) { if (errCount++ < 5) console.error(e); }
+    W.anim.forEach((f) => { try { f(dt, now / 1000); } catch (e) { if (errCount++ < 5) console.error(e); } });
+    listeners.forEach((f) => { try { f(dt, now / 1000); } catch (e) { if (errCount++ < 5) console.error(e); } });
+    if (W.skipRender) return;                 // 全螢幕大樹蓋住 3D 時，不必繪製 3D
+    // 陰影不必每格重算：一般每 3 格、降載時每 12 格更新一次
+    frameNo++;
+    if (W.renderer.shadowMap.enabled && frameNo % (W.lowPower ? 12 : 3) === 0) W.renderer.shadowMap.needsUpdate = true;
     W.renderer.render(W.scene, W.camera);
-    requestAnimationFrame(loop);
   }
   W.start = () => requestAnimationFrame(loop);
   // 測試用：快轉 n 影格後凍結

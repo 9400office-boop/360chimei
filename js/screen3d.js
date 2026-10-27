@@ -145,7 +145,7 @@
   });
   W.onFrame(() => {
     const far = W.camera.position.distanceTo(W.controls.target) > 200;
-    vehLabels.forEach((l) => { if (far && !l.v.main) { l.el.style.display = "none"; return; } l.anchor.copy(l.v.obj.position); l.anchor.y += l.v.h; place(l, l.anchor); });
+    vehLabels.forEach((l) => { if (far && !l.v.main) { if (l._v !== 0) { l.el.style.display = "none"; l._v = 0; } return; } l.anchor.copy(l.v.obj.position); l.anchor.y += l.v.h; place(l, l.anchor); });
   });
   W.stages.forEach((st) => {
     tileLabels.push({ ...mkLabel("tl stage", `<span class="n">${st.n}</span>${st.icon} ${escapeHtml(st.name)}`, new THREE.Vector3(st.x, 1.2, st.z + 6.6), () => W.flyTo({ x: st.x, y: 0, z: st.z }, 38, .9)), id: st.id });
@@ -153,17 +153,20 @@
   const nameTags = {}, treeTags = {};
   function place(l, v3) {
     const p = W.project(v3.x, v3.y, v3.z);
-    if (!p.vis) { l.el.style.display = "none"; return; }
-    l.el.style.display = "";
-    l.el.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) translate(-50%,-100%)`;
+    if (!p.vis) { if (l._v !== 0) { l.el.style.display = "none"; l._v = 0; } return; }
+    if (l._v !== 1) { l.el.style.display = ""; l._v = 1; }
+    const x = Math.round(p.x), y = Math.round(p.y);
+    if (x === l._x && y === l._y) return;
+    l._x = x; l._y = y;
+    l.el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
   }
   const _a = new THREE.Vector3();
   W.onFrame(() => {
     const far = W.camera.position.distanceTo(W.controls.target) > 200;
-    tileLabels.forEach((l) => { if (far && l.scope && !String(l.id).match(/^b|^edu|^lab/) && l.id !== activeItem) { l.el.style.display = "none"; return; } place(l, l.anchor); });
+    tileLabels.forEach((l) => { if (far && l.scope && !String(l.id).match(/^b|^edu|^lab/) && l.id !== activeItem) { l.el.style.display = "none"; l._v = 0; return; } place(l, l.anchor); });
     Object.entries(nameTags).forEach(([id, l]) => {
       const e = People.ents[id]; if (!e) return;
-      if (far && !l.inner.classList.contains("big")) { l.el.style.display = "none"; return; }
+      if (far && !l.inner.classList.contains("big")) { if (l._v !== 0) { l.el.style.display = "none"; l._v = 0; } return; }
       _a.set(e.grp.position.x, e.grp.position.y + (e.seed.visible ? 2.55 : 2.05), e.grp.position.z);
       place(l, _a);
     });
@@ -267,16 +270,21 @@
   let downAt = null;
   function pickAt(ev) {
     const r = cv.getBoundingClientRect();
-    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    ndc.set((mx / r.width) * 2 - 1, -(my / r.height) * 2 + 1);
     ray.setFromCamera(ndc, W.camera);
-    const objs = [];
-    Object.values(Life.Flowers.flowers).forEach((f) => objs.push(f.m));
-    Object.values(People.ents).forEach((e) => objs.push(e.body));
-    const hit = ray.intersectObjects(objs, true)[0];
-    if (!hit) return null;
-    let o = hit.object;
-    while (o && !o.userData.pid) { const pid = Object.keys(People.ents).find((k) => People.ents[k].body === o); if (pid) return { pid, kind: "person" }; o = o.parent; }
-    return o ? { pid: o.userData.pid, kind: "flower" } : null;
+    const hits = Object.values(Life.Flowers.flowers).map((f) => f.m.children[0]).filter(Boolean);
+    const h = ray.intersectObjects(hits, false)[0];
+    if (h) return { pid: h.object.userData.pid, kind: "flower" };
+    // 人物：以螢幕距離判斷（比逐面偵測省很多效能）
+    let best = null, bd = 28;
+    Object.entries(People.ents).forEach(([pid, e]) => {
+      const g = e.grp.position, q = W.project(g.x, g.y + .9, g.z);
+      if (!q.vis) return;
+      const d = Math.hypot(q.x - mx, q.y - my);
+      if (d < bd) { bd = d; best = pid; }
+    });
+    return best ? { pid: best, kind: "person" } : null;
   }
   function showWriter(pid, kind) {
     const p = (S.people || {})[pid]; if (!p) return;
@@ -300,7 +308,7 @@
   });
   let hoverT = 0;
   cv.addEventListener("pointermove", (e) => {
-    const now = performance.now(); if (now - hoverT < 120) return; hoverT = now;
+    const now = performance.now(); if (now - hoverT < 250 || e.buttons) return; hoverT = now;
     cv.style.cursor = pickAt(e) ? "pointer" : "";
   });
   $("info").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) clearFocus(); });
