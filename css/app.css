@@ -1,0 +1,60 @@
+:root {
+  --cream: #FFF9EE;
+  --paper: #FFFFFF;
+  --sand: #F8DA92;
+  --sand-deep: #E9B95A;
+  --leaf: #6DBE7E;
+  --leaf-deep: #3E8E5A;
+  --teal: #2E9C8F;
+  --ink: #2F3A33;
+  --ink-soft: #66736B;
+  --line: #EADFCB;
+  --rose: #F4C9C4;
+  --shadow: 0 6px 24px rgba(91, 74, 40, .10);
+  --radius: 18px;
+  --font-round: "Huninn", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--cream);
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, .round { font-family: var(--font-round); font-weight: 400; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
+
+.btn {
+  border: 0; border-radius: 999px; padding: 14px 24px;
+  font-size: 17px; font-weight: 700; letter-spacing: .04em;
+  background: var(--leaf-deep); color: #fff;
+  box-shadow: 0 4px 0 #2C6A43;
+  transition: transform .08s, box-shadow .08s, opacity .2s;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #2C6A43; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.ghost { background: #fff; color: var(--leaf-deep); box-shadow: 0 0 0 2px var(--leaf-deep) inset; }
+.btn.small { padding: 8px 14px; font-size: 14px; box-shadow: none; }
+.btn.small.ghost { box-shadow: 0 0 0 1.5px var(--leaf-deep) inset; }
+.btn.warn { background: #C9475B; box-shadow: 0 4px 0 #8E2F3E; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+  border-radius: 999px; padding: 6px 12px; font-size: 14px;
+}
+.chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.card {
+  background: var(--paper); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px;
+}
+.muted { color: var(--ink-soft); }
+.hide { display: none !important; }
+
+@keyframes pop { 0% { transform: scale(.4); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes glow { 0%,100% { opacity: .55 } 50% { opacity: 1 } }

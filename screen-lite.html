@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>360°深耕奇美・大螢幕</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(ellipse at 6% 18%, rgba(150, 214, 210, .75), transparent 45%),
+      radial-gradient(ellipse at 88% 4%, rgba(248, 205, 205, .8), transparent 45%),
+      radial-gradient(ellipse at 60% 110%, rgba(250, 226, 170, .7), transparent 55%),
+      linear-gradient(160deg, #E9F1EA, #FBF1E6 55%, #F1F4DF);
+  }
+  #island { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ov { position: absolute; z-index: 5; }
+  .title { left: 2.2vw; top: 2vh; }
+  .title h1 { margin: 0; font-size: 3.6vw; color: var(--leaf-deep); letter-spacing: .1em; text-shadow: 0 2px 0 #fff; line-height: 1.1; }
+  .title p { margin: .3vh 0 0; font-size: 1.05vw; color: var(--ink-soft); }
+  .title .vision { display: inline-block; margin-top: .8vh; background: rgba(255,255,255,.8); border-radius: 999px; padding: .4vh 1vw; font-family: var(--font-round); color: #B4762A; font-size: 1.15vw; }
+  .phase { left: 50%; top: 2.2vh; transform: translateX(-50%); background: rgba(255,255,255,.92); border-radius: 999px; padding: .9vh 2vw; font-family: var(--font-round); font-size: 1.5vw; box-shadow: var(--shadow); white-space: nowrap; }
+  .phase b { color: var(--leaf-deep); font-weight: 400; }
+  .qr { right: 1.6vw; top: 2vh; background: #fff; border-radius: 18px; padding: 1vw; text-align: center; box-shadow: var(--shadow); width: 13vw; }
+  .qr #qrbox { width: 11vw; height: 11vw; margin: 0 auto; }
+  .qr #qrbox img, .qr #qrbox canvas { width: 100% !important; height: 100% !important; }
+  .qr .t { font-family: var(--font-round); font-size: 1.3vw; color: var(--leaf-deep); margin-top: .6vh; }
+  .qr .u { font-size: .7vw; color: var(--ink-soft); word-break: break-all; margin-top: .3vh; }
+  .stats { left: 1.2vw; bottom: 1.6vh; background: rgba(255,255,255,.88); border-radius: 18px; padding: 1vh 1.2vw; box-shadow: var(--shadow); }
+  .stats .big { font-family: var(--font-round); font-size: 1.15vw; }
+  .stats .big b { font-weight: 400; font-size: 1.6vw; color: var(--leaf-deep); }
+  .stats .fields { display: flex; gap: .4vw; margin-top: .6vh; }
+  .stats .f { border-radius: 8px; color: #fff; padding: .3vh .35vw; font-size: .68vw; text-align: center; min-width: 3vw; }
+  .stats .f b { display: block; font-size: 1.05vw; }
+
+  .spot { left: 50%; bottom: 2.2vh; transform: translateX(-50%); width: 72vw; background: rgba(255,255,255,.96); border-radius: 22px; padding: 1.2vh 1.6vw 1vh; box-shadow: 0 10px 40px rgba(70,60,30,.18); animation: pop .5s; }
+  .spot .hd { display: flex; justify-content: space-between; align-items: center; font-size: 1vw; color: var(--ink-soft); }
+  .spot .hd .sc { color: #fff; border-radius: 999px; padding: .2vh .8vw; }
+  .spot .sentence { font-family: var(--font-round); font-size: 1.75vw; line-height: 1.55; margin: .6vh 0 .8vh; text-align: center; }
+  .spot .sentence .w { border-radius: 10px; padding: 0 .4vw; color: #fff; }
+  .spot .people { display: grid; grid-template-columns: repeat(6, 1fr); gap: .6vw; }
+  .spot .pp { text-align: center; font-size: .85vw; line-height: 1.25; }
+  .spot .pp svg { width: 2.6vw; height: 3.1vw; }
+  .spot .pp .fn { display: inline-block; color: #fff; border-radius: 6px; padding: 0 .4vw; font-size: .75vw; }
+  .spot .pp .nm { font-weight: 700; }
+  .spot .pp .rl { color: var(--ink-soft); font-size: .75vw; }
+
+  .tour { right: 1.6vw; top: 50%; transform: translateY(-50%); width: 22vw; border-radius: 22px; padding: 1.6vh 1.2vw; box-shadow: var(--shadow); animation: pop .4s; }
+  .tour h2 { margin: 0 0 .6vh; font-size: 1.7vw; }
+  .tour .it { background: rgba(255,255,255,.8); border-radius: 10px; padding: .6vh .7vw; margin-top: .6vh; font-size: .95vw; }
+  .tour .ln { font-size: .82vw; color: var(--ink-soft); margin-top: .4vh; padding-left: 1.2vw; text-indent: -1.2vw; }
+
+  .harvest { right: 1.6vw; top: 14vh; width: 30vw; background: rgba(255,255,255,.95); border-radius: 22px; padding: 1.8vh 1.4vw; box-shadow: var(--shadow); animation: pop .5s; }
+  .harvest h2 { margin: 0 0 1vh; font-size: 1.8vw; color: var(--leaf-deep); }
+  .harvest .row { display: flex; gap: .8vw; align-items: flex-start; padding: .9vh 0; border-top: 1px dashed var(--line); }
+  .harvest .rk { font-family: var(--font-round); font-size: 2vw; color: var(--sand-deep); width: 2vw; text-align: center; }
+  .harvest .tx { flex: 1; font-size: 1vw; line-height: 1.55; }
+  .harvest .vt { font-family: var(--font-round); font-size: 1.3vw; color: #2F6FC4; white-space: nowrap; }
+  .mode { right: 1vw; bottom: 1vh; font-size: .7vw; color: var(--ink-soft); background: rgba(255,255,255,.6); padding: 2px 8px; border-radius: 6px; }
+
+  /* SVG */
+  .av-g { transition: opacity .5s; }
+  .av-in.new { animation: dropin .8s cubic-bezier(.3,1.5,.5,1); transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes dropin { 0% { transform: translateY(-60px) scale(.3); opacity: 0 } 100% { transform: none; opacity: 1 } }
+  .dim { opacity: .28; }
+  .seed-dot { animation: glow 2s ease-in-out infinite; }
+  .tree-g { transition: opacity .5s; }
+  .tree-inner { transition: transform 1s cubic-bezier(.3,1.5,.5,1); transform-box: fill-box; transform-origin: 50% 100%; }
+  .tree-g.new .tree-inner { animation: sprout 1.2s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes sprout { 0% { transform: scale(0) } }
+  .vine { stroke-dasharray: 8 10; animation: flow 1.2s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -36; } }
+  .vine-draw { animation: draw 1.4s ease-out forwards; }
+  @keyframes draw { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+  .beacon { animation: glow 2.6s ease-in-out infinite; }
+  .lm { transition: opacity .4s; }
+</style>
+</head>
+<body>
+<svg id="island" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet"></svg>
+
+<div class="ov title"><h1>360°深耕奇美</h1><p id="subtitle"></p><span class="vision" id="vision"></span></div>
+<div class="ov phase" id="phase"></div>
+<div class="ov qr" id="qr"><div id="qrbox"></div><div class="t">掃描報到</div><div class="u" id="qrurl"></div></div>
+<div class="ov stats" id="stats"></div>
+<div class="ov spot hide" id="spot"></div>
+<div class="ov tour hide" id="tour"></div>
+<div class="ov harvest hide" id="harvest"></div>
+<div class="ov mode" id="mode"></div>
+
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/config.js"></script>
+<script src="js/content.js"></script>
+<script src="js/avatars.js"></script>
+<script src="js/store.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/screen.js"></script>
+</body>
+</html>

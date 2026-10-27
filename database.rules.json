@@ -1,0 +1,25 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "events": {
+      "$event": {
+        ".read": true,
+        ".write": true,
+        "people": {
+          "$pid": {
+            "name": { ".validate": "newData.isString() && newData.val().length <= 12" },
+            "text": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "field": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 6" },
+            "scope": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4" }
+          }
+        },
+        "votes": {
+          "$pid": {
+            "$sid": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10" }
+          }
+        }
+      }
+    }
+  }
+}
