@@ -64,14 +64,13 @@
       // 打散排列，讓每次看到的順序不同、不按職類分組
       local.order = Avatar.presets.map((p) => p.id).sort(() => Math.random() - .5);
     }
-    const grid = local.order.map((id) => `<button class="av ${local.avatar === id ? "on" : ""}" data-av="${id}" aria-label="捏捏人">${taken[id] ? `<span class="taken">${taken[id]}</span>` : ""}${Avatar.svg(id)}</button>`).join("");
+    const grid = local.order.map((id) => `<button class="av ${local.avatar === id ? "on" : ""}" data-av="${id}" aria-label="人物">${Avatar.svg(id)}</button>`).join("");
     const pv = local.avatar ? `<div class="preview">${Avatar.svg(local.avatar)}</div>` : "";
     return `<label class="label">部門</label>
       <input class="name-input" id="dept" maxlength="16" placeholder="例：護理部、資訊室、內科部" value="${escapeHtml(local.dept)}" autocomplete="off">
       <label class="label">姓名或暱稱</label>
       <input class="name-input" id="name" maxlength="12" placeholder="例：王小美" value="${escapeHtml(local.name)}" autocomplete="off">
-      <label class="label">點一位你喜歡的捏捏人</label>
-      <p class="muted" style="margin:-4px 0 8px;font-size:13px">右上角的數字是已經有幾位夥伴選了他</p>
+      <label class="label">點一位你喜歡的人物</label>
       <div class="grid">${grid}</div>
       <div class="sticky"><div class="inner">${pv}<button class="btn" id="join" ${local.avatar && local.name.trim() && local.dept.trim() ? "" : "disabled"}>報到！</button></div></div>`;
   }

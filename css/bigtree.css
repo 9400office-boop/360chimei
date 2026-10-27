@@ -14,7 +14,10 @@
   .bt-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8FD6A0, #3E8E41); border-radius: 999px; transition: width .8s; }
   .bigtree .drip { animation: dripfall 1.6s ease-in both; }
   @keyframes dripfall { 0% { transform: translate(var(--x), 60px); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--x), 700px); opacity: 0; } }
-  .bigtree .branches path, .bigtree .fruits { transition: opacity .8s; }
+  .bigtree .fruits { transition: opacity .8s; }
+  .bigtree .branches path { transition: stroke-dashoffset 1.4s ease-out, stroke-width 1.4s, opacity .3s; }
+  .bigtree .trunk { transform-box: view-box; transform-origin: 500px 905px; transition: transform 1.4s; }
+  .bigtree .tclip { transition: y 1.4s ease-out, height 1.4s ease-out; }
   .bigtree .grow { transform-box: view-box; transform-origin: 500px 905px; transition: transform 1s cubic-bezier(.3,1.2,.5,1); }
   .bt-count { font-size: 15px; color: #2F6FC4; font-weight: 700; }
   .bt-side { width: min(440px, 32vw); background: rgba(255,255,255,.9); border-left: 1px solid var(--line, #E8E1D4); padding: 26px 24px; overflow-y: auto; }
@@ -55,3 +58,18 @@
   .bigtree .wing.flap { animation: flap .32s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 30% 100%; }
   @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(-.6); } }
   .bigtree .perched .wing { animation: none; }
+
+  /* 樹根澆水 */
+  .bigtree .can-body { transform-box: fill-box; transform-origin: 20% 80%; animation: canbob 3s ease-in-out infinite; }
+  .bigtree .can.pour .can-body { animation: canpour 2.2s ease-in-out; }
+  @keyframes canbob { 50% { transform: translateY(-4px); } }
+  @keyframes canpour { 0% { transform: rotate(0); } 18%, 70% { transform: rotate(28deg) translate(8px, -6px); } 100% { transform: rotate(0); } }
+  .bigtree .pdrop { animation: pdrop 1s ease-in both; }
+  @keyframes pdrop { 0% { transform: translate(var(--sx), var(--sy)); opacity: 0; } 12% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: .2; } }
+  .bigtree .ripple.go { animation: ripple 1.2s ease-out; transform-box: fill-box; transform-origin: center; }
+  @keyframes ripple { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(2.4); } }
+  .bigtree .wet.go { animation: wet 2.6s ease-out; }
+  @keyframes wet { 0% { opacity: 0; } 20% { opacity: .55; } 100% { opacity: 0; } }
+  .bigtree .sap { stroke-dasharray: .25 1.25; stroke-dashoffset: .25; opacity: 0; }
+  .bigtree .sap.go { animation: sap 1.6s ease-in-out; }
+  @keyframes sap { 0% { stroke-dashoffset: .25; opacity: 1; } 100% { stroke-dashoffset: -1.05; opacity: 1; } }

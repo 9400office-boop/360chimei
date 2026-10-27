@@ -415,7 +415,7 @@
     "4a": [-52, 21], "4b": [-38, 21], "4c": [-24, 21], "4d": [46, -2], "4e": [58, -2]
   };
   const PLAZAS = [
-    { name: "資訊廣場", x: -6, z: 14, w: 16, d: 10, info: true },
+    { name: "AI智慧光廊", x: -6, z: 14, w: 16, d: 10, info: true },
     { name: "社會情緒學習廣場", key: "B", flower: true, x: 22, z: 31, w: 26, d: 12 },
     { name: "復原力廣場", key: "C", flower: true, x: 52, z: 20, w: 20, d: 14 }
   ];
@@ -532,20 +532,40 @@
     });
     // 行動廣場（幼苗種植區）
     PLAZAS.forEach((pz) => {
-      put("box", "#B9D9A2", L(P(pz.x, pz.z), 0, TOP + .03, 0, pz.w, .06, pz.d));
+      put("box", pz.info ? "#DCE3EC" : "#B9D9A2", L(P(pz.x, pz.z), 0, TOP + .03, 0, pz.w, .06, pz.d));
       put("box", "#E5E0D3", L(P(pz.x, pz.z - pz.d / 2), 0, TOP + .1, 0, pz.w + .6, .2, .6));
       put("box", "#E5E0D3", L(P(pz.x, pz.z + pz.d / 2), 0, TOP + .1, 0, pz.w + .6, .2, .6));
       put("box", "#E5E0D3", L(P(pz.x - pz.w / 2, pz.z), 0, TOP + .1, 0, .6, .2, pz.d + .6));
       put("box", "#E5E0D3", L(P(pz.x + pz.w / 2, pz.z), 0, TOP + .1, 0, .6, .2, pz.d + .6));
     });
-    // 資訊廣場：大型資訊看板與查詢機
+    // AI智慧光廊：科技鋪面（不是草皮）＋一列發光拱門串成的走廊
     PLAZAS.filter((pz) => pz.info).forEach((pz) => {
-      const T = P(pz.x, pz.z - pz.d / 2 - 1.4);
-      put("box", "#4A5260", L(T, -3.2, TOP + 1.6, 0, .25, 3.2, .25)); put("box", "#4A5260", L(T, 3.2, TOP + 1.6, 0, .25, 3.2, .25));
-      put("box", "#2F3640", L(T, 0, TOP + 3.4, 0, 7.4, 2.6, .35));
-      glow("box", "#7FD3F5", L(T, 0, TOP + 3.4, .2, 6.9, 2.2, .04));
-      for (let i = 0; i < 4; i++) glow("box", ["#FFFFFF", "#FFD86B", "#9FE8C8", "#FFFFFF"][i], L(T, -2.4 + i * 1.6, TOP + 3.1 + (i % 2) * .5, .23, 1.1, .3, .02));
-      for (const x of [-6.5, 6.5]) { put("box", "#E9E6DF", L(T, x, TOP + .7, .5, .9, 1.4, .6)); glow("box", "#8FD8FF", L(T, x, TOP + 1.1, .81, .7, .5, .02)); }
+      const T = P(pz.x, pz.z);
+      // 鋪面：淺灰藍石板＋發光導引線
+      for (let i = 1; i < 8; i++) if (i !== 4) glow("box", "#8FE3FF", L(T, -pz.w / 2 + i * pz.w / 8, TOP + .07, 0, .07, .02, pz.d - .6));
+      for (const z of [-3.6, 3.6]) glow("box", "#8FE3FF", L(T, 0, TOP + .07, z, pz.w - .6, .02, .07));
+      // 中央步道：深色地板，兩側光帶
+      put("box", "#56688A", L(T, 0, TOP + .08, 0, pz.w - .4, .06, 3.2));
+      for (const z of [-1.7, 1.7]) glow("box", "#5FD0FF", L(T, 0, TOP + .13, z, pz.w - .4, .04, .12));
+      // 七道拱門：白色門框＋藍紫交錯的內緣光
+      const N = 7, HW = 2.3, H = 3.6;
+      for (let i = 0; i < N; i++) {
+        const x = -pz.w / 2 + 1.1 + i * (pz.w - 2.2) / (N - 1), c = i % 2 ? "#B48CFF" : "#5FD0FF";
+        for (const z of [-HW, HW]) {
+          put("box", "#F4F7FB", L(T, x, TOP + H / 2, z, .38, H, .38));
+          glow("box", c, L(T, x, TOP + H / 2, z * .9, .4, H - .4, .06));
+        }
+        put("box", "#F4F7FB", L(T, x, TOP + H + .15, 0, .38, .3, HW * 2 + .38));
+        glow("box", c, L(T, x, TOP + H - .02, 0, .4, .06, HW * 2 - .3));
+      }
+      // 屋脊：兩條縱向樑
+      for (const z of [-HW, HW]) put("box", "#E2E8F0", L(T, 0, TOP + H + .36, z, pz.w - 1.8, .14, .2));
+      // 兩端入口：AI 互動查詢機
+      for (const sx of [-1, 1]) {
+        put("box", "#E9EEF4", L(T, sx * (pz.w / 2 - .5), TOP + .7, -3.6, .6, 1.4, .9));
+        glow("box", "#8FD8FF", L(T, sx * (pz.w / 2 - .5) - sx * .31, TOP + 1.1, -3.6, .02, .5, .7));
+      }
+      W._corridor = { x: pz.x, z: pz.z, y: TOP, len: pz.w - 2.2, HW, H };
     });
     // 行道樹
     for (let x = -68; x <= 68; x += 8) { Pr.tree(P(0, 0), x, -37, .9); Pr.tree(P(0, 0), x, 44, .95); }
@@ -696,6 +716,27 @@
 
     // 動態物件：風車、湖上天鵝、噴泉水光
     W.anim = [];
+    if (W._corridor) {   // 光廊：半透明玻璃頂、沿走廊流動的光點、地面光波
+      const c = W._corridor, grp = new THREE.Group(); grp.position.set(c.x, c.y, c.z); scene.add(grp);
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(c.len + 1, .06, c.HW * 2), new THREE.MeshBasicMaterial({ color: 0xBFEFFF, transparent: true, opacity: .28, depthWrite: false }));
+      glass.position.y = c.H + .45; grp.add(glass);
+      const dotMat = [0x9FEAFF, 0xD3B8FF].map((col) => new THREE.MeshBasicMaterial({ color: col }));
+      const dots = [];
+      for (let i = 0; i < 10; i++) {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(.16, 8, 6), dotMat[i % 2]);
+        m.userData = { u: i / 10, z: [-c.HW + .3, c.HW - .3][i % 2], y: [c.H - .25, .35][Math.floor(i / 2) % 2], sp: .12 + (i % 3) * .03 };
+        grp.add(m); dots.push(m);
+      }
+      const wave = new THREE.Mesh(new THREE.BoxGeometry(.5, .03, 3.1), new THREE.MeshBasicMaterial({ color: 0x8FE3FF, transparent: true, opacity: .8, depthWrite: false }));
+      wave.position.y = .16; grp.add(wave);
+      let tt = 0;
+      W.anim.push((dt) => {
+        tt += dt;
+        dots.forEach((m) => { const d = m.userData; d.u = (d.u + dt * d.sp) % 1; m.position.set(-c.len / 2 + d.u * c.len, d.y, d.z); });
+        const u = (tt * .25) % 1; wave.position.x = -c.len / 2 + u * c.len; wave.material.opacity = .8 * Math.sin(u * Math.PI);
+        glass.material.opacity = .22 + .08 * Math.sin(tt * 1.5);
+      });
+    }
     const t4d = W.tileById["4d"];
     if (t4d) for (const [ox, oz] of [[2.6, -.6], [4.2, .6]]) {
       const g = new THREE.Group(); g.position.set(t4d.x + ox, TOP, t4d.z + oz);
