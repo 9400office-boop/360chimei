@@ -1,6 +1,6 @@
 /* =========================================================
  * 人資熱氣球：7 顆印著 CHIMEI 的熱氣球在院區上空巡航，
- * 不定時空投人力（撐降落傘的小人），降落到各範疇展台支援
+ * 不定時派送人力（撐降落傘的小人），降落到各範疇展台支援
  * ========================================================= */
 (function () {
   const W = window.World, C = window.ISLAND_CONTENT;
@@ -69,7 +69,7 @@
     return b;
   }
 
-  // 空投一位支援人力
+  // 派送一位支援人力
   function drop(b) {
     if (drops.length >= 8 || !window.Life || !Life.buildChar) return;
     const items = W.tiles.filter((t) => t.kind === "item");
@@ -102,7 +102,7 @@
       b.g.rotation.y += dt * .12;
       b.fire.scale.setScalar(.8 + Math.abs(Math.sin(t * 7 + b.ph)) * .5);
       b.next -= dt;
-      if (b.next <= 0 && !(window.Life && Life.People.paused)) { drop(b); b.next = 10 + Math.random() * 14; }
+      if (b.next <= 0 && !(window.Life && Life.People.paused)) { drop(b); b.next = 16 + Math.random() * 18; }
     });
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];

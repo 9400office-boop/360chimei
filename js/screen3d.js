@@ -15,7 +15,27 @@
   W.init(stage);
   Life.init();
   Balloons.init(7);
-  Balloons.onDrop = (scope, avatar) => addEvent(`🎈 人資熱氣球空投人力，支援 <b style="color:${SC(scope).color}">${SC(scope).tag}</b>`, avatar);
+  // 以場景時間節流，讓直播訊息節奏穩定（熱氣球、資訊車、會計船輪流出現）
+  let simT = 0; W.onFrame((dt) => (simT += dt));
+  const last = {};
+  const gate = (k, gap) => { if (last[k] !== undefined && simT - last[k] < gap) return false; last[k] = simT; return true; };
+  const scopeTag = (n) => `<b style="color:${SC(n).color}">${SC(n).tag}</b>`;
+  Balloons.onDrop = (scope, avatar) => gate("hr", 12) && addEvent(`🎈 <b>人資熱氣球</b>${C.live.hrBalloon.replace("{scope}", scopeTag(scope))}`, avatar, "hr");
+  // 資訊車停靠照護站：輪流回報範疇三建置進度（同一時間太多車停靠時，間隔顯示）
+  let carIdx = 0, lastCarMsg = 0;
+  W.onCarStop = (car, st) => {
+    if (!gate("it", 7)) return;
+    const task = C.live.infoCar[carIdx++ % C.live.infoCar.length];
+    addEvent(`<b>資訊車</b>停靠「${escapeHtml(st.name)}」站・${scopeTag(3)} <b>${escapeHtml(task)}</b>`, null, "it");
+  };
+  // 會計船靠岸：隨機回報某範疇已完成核銷
+  let scopeRot = Math.floor(Math.random() * 4);
+  W.onBoatDock = (kind) => {
+    if (kind !== "accountBoat") return;
+    if (!gate("acc", 6)) return;
+    const n = 1 + (scopeRot++ % 4);
+    addEvent(`<b>會計船</b>靠岸會計碼頭・${C.live.accountBoat.replace("{scope}", scopeTag(n))} ✅`, null, "acc");
+  };
   BigTree.init(document.body);
   W.flyTo({ x: 0, y: 0, z: 30 }, 345, .72, 0, .01);
   if (!W.capture) W.start();
@@ -36,7 +56,8 @@
     arrow.rotation.x = Math.PI;
     ring.visible = arrow.visible = false;
     W.scene.add(ring); W.scene.add(arrow);
-    W.controls.addEventListener("start", () => {});
+    // 手指拖曳畫面時，自動停止跟隨，方便自由逛院區、點花朵
+    W.controls.addEventListener("start", () => { if (follow && meFound) { follow = false; renderMeBar(); } });
     W.onFrame((dt, t) => {
       const e = People.ents[ME];
       if (!e) return;
@@ -58,11 +79,12 @@
     const p = (S.people || {})[ME];
     const bar = $("mebar");
     bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>找不到你的人物，請回到報到頁</span></div>`) +
-      `<button data-me="follow" class="${follow ? "on" : ""}">📍 跟著我</button><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
+      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><button data-me="garden">🌸 花園</button><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
   }
   if (ME) $("mebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-me]"); if (!b) return;
     if (b.dataset.me === "follow") { follow = true; meFound = false; }
+    if (b.dataset.me === "garden") { follow = false; const pz = (W.PLAZAS || []).find((p) => p.key === "B"); W._flyRaw({ x: pz.x + 14, y: 0, z: pz.z }, 70, .85, 0); }
     if (b.dataset.me === "all") { follow = false; W._flyRaw({ x: 0, y: 0, z: 30 }, 345, .72, 0); }
     renderMeBar();
   });
@@ -169,8 +191,8 @@
       const open = q || openScope === s.id;
       return `<div class="srow ${open ? "open" : ""}"><button data-scope="${s.id}"><span class="no" style="color:${s.color}">0${s.id}</span><span class="nmz">${escapeHtml(s.name)}<small>${s.tag}</small></span><span class="ct">${s.items.length} ↗</span></button>
         <div class="items">${items.map((it) => `<button class="item ${activeItem === it.id ? "on" : ""}" data-item="${it.id}"><span class="dt" style="background:${s.color}"></span>${escapeHtml(it.text)}</button>`).join("")}</div></div>`;
-    }).join("") + `<div class="srow"><button data-stages="1"><span class="no" style="color:#E9B95A">08</span><span class="nmz">360° 永續照護環<small>${C.stages.map((s) => s.name).join("・")}</small></span><span class="ct">${C.stages.length} ↗</span></button></div>` +
-      `<div class="srow ${openScope === "sup" ? "open" : ""}"><button data-sup-open="1"><span class="no" style="color:#2E9C8F">09</span><span class="nmz">${escapeHtml(C.supportsTitle)}<small>車、船、橋與碼頭，陪大家一同完成</small></span><span class="ct">${Object.keys(C.supports).length} ↗</span></button>
+    }).join("") + `<div class="srow"><button data-stages="1"><span class="nmz">360° 永續照護環<small>${C.stages.map((s) => s.name).join("・")}</small></span><span class="ct">${C.stages.length} ↗</span></button></div>` +
+      `<div class="srow ${openScope === "sup" ? "open" : ""}"><button data-sup-open="1"><span class="nmz">${escapeHtml(C.supportsTitle)}<small>車、船、橋與碼頭，陪大家一同完成</small></span><span class="ct">${Object.keys(C.supports).length} ↗</span></button>
       <div class="items">${Object.entries(C.supports).map(([k, sp]) => `<button class="item" data-sup="${k}">${sp.icon} ${escapeHtml(sp.name)}</button>`).join("")}</div></div>`;
   }
   $("list").addEventListener("click", (e) => {
@@ -238,6 +260,49 @@
     $("log").classList.add("hide"); document.querySelector('[data-mode="log"]').classList.remove("on");
   }
   function hideInfo() { $("info").classList.add("hide"); }
+
+  // ---------- 點花朵或人物，看那句行動句是誰寫的 ----------
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const cv = W.renderer.domElement;
+  let downAt = null;
+  function pickAt(ev) {
+    const r = cv.getBoundingClientRect();
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, W.camera);
+    const objs = [];
+    Object.values(Life.Flowers.flowers).forEach((f) => objs.push(f.m));
+    Object.values(People.ents).forEach((e) => objs.push(e.body));
+    const hit = ray.intersectObjects(objs, true)[0];
+    if (!hit) return null;
+    let o = hit.object;
+    while (o && !o.userData.pid) { const pid = Object.keys(People.ents).find((k) => People.ents[k].body === o); if (pid) return { pid, kind: "person" }; o = o.parent; }
+    return o ? { pid: o.userData.pid, kind: "flower" } : null;
+  }
+  function showWriter(pid, kind) {
+    const p = (S.people || {})[pid]; if (!p) return;
+    const sc = p.scope ? SC(p.scope) : null;
+    const plaza = p.plaza === "B" ? "社會情緒學習廣場" : p.plaza === "C" ? "復原力廣場" : "";
+    const body = personDone(p)
+      ? `<div class="wsent">${sentenceRich({ pid }, S.people, S.edits, true)}</div>`
+      : `<div class="ln">還在填寫行動句中…</div>`;
+    const wasSpot = S.state && S.state.spotlight;
+    if (wasSpot) return;
+    $("info").innerHTML = `<button class="x" data-x>×</button>
+      <div class="eyebrow">${kind === "flower" ? `🌸 ${plaza}的一朵花` : "🧑‍⚕️ 院區夥伴"}</div>
+      <div class="writer">${Avatar.svg(p.avatar)}<div><b>${escapeHtml(p.name || "")}</b><span>${escapeHtml(p.dept || "")}</span>${sc ? `<span class="tag" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>` : ""}</div></div>${body}`;
+    $("info").classList.remove("hide");
+    $("log").classList.add("hide");
+  }
+  cv.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
+  cv.addEventListener("pointerup", (e) => {
+    if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
+    const r = pickAt(e); if (r) showWriter(r.pid, r.kind);
+  });
+  let hoverT = 0;
+  cv.addEventListener("pointermove", (e) => {
+    const now = performance.now(); if (now - hoverT < 120) return; hoverT = now;
+    cv.style.cursor = pickAt(e) ? "pointer" : "";
+  });
   $("info").addEventListener("click", (e) => { if (e.target.closest("[data-x]")) clearFocus(); });
   renderList();
 
@@ -273,14 +338,14 @@
   // ---------- 日誌 ----------
   const events = [];
   const fmt = (t) => new Date(t).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
-  function addEvent(html, avatar) {
+  function addEvent(html, avatar, kind) {
     const ev = { html, avatar, t: Date.now() };
     events.unshift(ev); if (events.length > 200) events.pop();
-    const el = document.createElement("div"); el.className = "ev";
-    el.innerHTML = (avatar ? Avatar.svg(avatar) : "") + `<span>${html}</span>`;
-    const feed = $("feed"); feed.prepend(el);
-    while (feed.children.length > 4) feed.lastChild.remove();
-    setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 700); }, 7000);
+    const el = document.createElement("div"); el.className = "ev" + (kind ? " k-" + kind : "");
+    el.innerHTML = `<div class="av">${avatar ? Avatar.svg(avatar) : ""}</div><div class="msg"><span class="tm">${fmt(ev.t)}</span>${html}</div>`;
+    const list = $("feedList"); list.appendChild(el);
+    while (list.children.length > 5) list.firstChild.remove();
+    const cnt = $("feedCount"); if (cnt) cnt.textContent = events.length;
     if (!$("log").classList.contains("hide")) renderLog();
   }
   function renderLog() {
