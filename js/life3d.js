@@ -361,8 +361,6 @@
   }
   const flowers = {};
   const plazaSlots = {};
-  const hitGeo = new THREE.SphereGeometry(.55, 8, 6);
-  const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   function slotsFor(pz) {
     if (plazaSlots[pz.key]) return plazaSlots[pz.key];
     const sp = 2.3, cols = Math.max(1, Math.floor((pz.w - 1.2) / sp)), rows = Math.max(1, Math.floor((pz.d - 1.2) / sp));
@@ -388,9 +386,6 @@
           const h = hash(id), ci = h % PETALS.length, kind = (h >> 3) % 3;
           if (!f) {
             const m = new THREE.Mesh(flowerGeo(ci, kind), flowerMat); m.castShadow = true;
-            // 點擊用的透明感應球（花頭附近）
-            const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.y = 1; m.add(hit);
-            m.userData.pid = id; hit.userData.pid = id;
             W.scene.add(m);
             f = flowers[id] = { m, s: instant ? 1 : 0, ph: (h % 100) / 10 };
           }

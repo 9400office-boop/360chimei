@@ -46,7 +46,7 @@
   .nm.me::before { content: "📍我 "; }
   /* 手機「找我的人物」模式 */
   .mebar { display: none; }
-  body.memode .panel, body.memode .toolbar, body.memode .side-btns,  body.memode .brand .side, body.memode .mode { display: none !important; }
+  body.memode .panel, body.memode .toolbar, body.memode .side-btns, body.memode .feed, body.memode .brand .side, body.memode .mode { display: none !important; }
   body.memode #stage { right: 0; transition: none; }
   body.memode .panel { transition: none; }
   body.memode .topbar { right: 12px; left: 12px; top: 10px; }
@@ -64,7 +64,7 @@
   .mebar .who { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; min-width: 0; }
   .mebar .who svg { width: 34px; height: 41px; flex: none; }
   .mebar .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mebar button, .mebar a { border: 0; border-radius: 12px; padding: 10px 9px; font-size: 13px; font-weight: 700; background: #F1EADC; color: #22302B; text-decoration: none; white-space: nowrap; font-family: inherit; }
+  .mebar button, .mebar a { border: 0; border-radius: 12px; padding: 10px 11px; font-size: 13px; font-weight: 700; background: #F1EADC; color: #22302B; text-decoration: none; white-space: nowrap; font-family: inherit; }
   .mebar .on { background: #1E6F5C; color: #fff; }
   .nm.dim { opacity: .25; }
   body.notags .nm:not(.big) { display: none; }
@@ -167,35 +167,9 @@
   .harvest .vt { color: #2F6FC4; font-weight: 700; white-space: nowrap; }
 
   /* 日誌 */
-  .info .writer { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
-  .info .writer svg { width: 52px; height: 62px; flex: none; }
-  .info .writer b { display: block; font-size: 18px; }
-  .info .writer span { display: block; font-size: 13px; color: var(--ink-soft); }
-  .info .writer .tag { display: inline-block; margin-top: 4px; }
-  .info .wsent { font-size: 16px; line-height: 1.75; background: #FFFBEF; border-radius: 12px; padding: 10px 12px; }
-  /* 院區直播（右側） */
-  body.memode .feed { display: none; }
-  .feed { position: absolute; right: calc(var(--panel) + 18px); bottom: 22px; width: 310px; z-index: 4; pointer-events: none; transition: right .4s; }
-  body.nopanel .feed { right: 18px; }
-  .feed .fh { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; pointer-events: auto; }
-  .feed .live-dot { background: #E5484D; color: #fff; font-weight: 900; font-size: 12px; letter-spacing: .08em; border-radius: 6px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 3px 10px rgba(229,72,77,.35); }
-  .feed .live-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
-  @keyframes blink { 50% { opacity: .2 } }
-  .feed .fh b { background: rgba(36,48,44,.82); color: #fff; font-size: 13px; border-radius: 6px; padding: 3px 9px; }
-  .feed .fh span { background: rgba(36,48,44,.6); color: #fff; font-size: 12px; border-radius: 6px; padding: 3px 8px; }
-  .feed .list { display: flex; flex-direction: column; gap: 6px;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 70px); mask-image: linear-gradient(to bottom, transparent 0, #000 70px); }
-  .feed .ev { display: flex; align-items: flex-start; gap: 8px; background: rgba(255,253,249,.94); border-radius: 14px; padding: 6px 10px 6px 6px; font-size: 13px; line-height: 1.45; box-shadow: 0 3px 12px rgba(0,0,0,.12); animation: livein .45s cubic-bezier(.3,1.3,.5,1); border-left: 4px solid #C9C2B2; }
-  @keyframes livein { from { opacity: 0; transform: translateX(40px) scale(.96); } }
-  .feed .ev .av { width: 30px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; }
-  .feed .ev .av svg { width: 30px; height: 36px; }
-  .feed .ev .av:empty::before { content: "•"; color: #B9B2A2; }
-  .feed .ev .tm { display: block; font-size: 10px; color: #8A938E; }
-  .feed .ev.k-hr { border-left-color: #E5704F; }
-  .feed .ev.k-it { border-left-color: #2E9C8F; }
-  .feed .ev.k-acc { border-left-color: #D8B65E; }
-  .feed .ev.k-it .av:empty::before { content: "🚐"; font-size: 20px; }
-  .feed .ev.k-acc .av:empty::before { content: "🛥️"; font-size: 20px; }
+  .feed { position: absolute; left: 22px; bottom: 22px; display: flex; flex-direction: column; gap: 6px; z-index: 4; pointer-events: none; }
+  .feed .ev { background: rgba(255,253,249,.93); border-radius: 999px; padding: 4px 14px 4px 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.1); animation: rise .4s; transition: opacity .6s; }
+  .feed .ev svg { width: 26px; height: 31px; }
   .log { position: absolute; left: 22px; top: 140px; bottom: 22px; width: 320px; background: var(--paper); border-radius: 20px; box-shadow: var(--shadow); z-index: 6; padding: 16px 18px; overflow-y: auto; animation: rise .3s; }
   .log h3 { margin: 0 0 8px; }
   .log .e { font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 8px; }
@@ -301,7 +275,7 @@
 <div class="info hide" id="info"></div>
 <div class="spot hide" id="spot"></div>
 <div class="harvest hide" id="harvest"></div>
-<div class="feed" id="feed"><div class="fh"><span class="live-dot">LIVE</span><b>院區直播</b><span>累計 <i id="feedCount" style="font-style:normal">0</i> 則</span></div><div class="list" id="feedList"></div></div>
+<div class="feed" id="feed"></div>
 <div class="log hide" id="log"></div>
 <div class="help hide" id="help"><div class="box">
   <h2 style="margin-top:0">🏥 360°深耕奇美怎麼玩</h2>
@@ -309,7 +283,7 @@
   2. 寫下六欄行動句（主詞、動詞、受詞、合作夥伴、方式、目的），種下後會在社會情緒學習廣場或復原力廣場開出一朵花。<br>
   3. 主持人挑選並揭曉行動句，鏡頭會飛到作者身邊。<br>
   4. 每人 3 滴水，澆給最想實現的句子；每一滴水讓共識大樹長出一片葉子，票多的句子掛在樹上最醒目的位置。<br>
-  <p style="color:#6B7772;font-size:13px">外圍一圈與院區前的大道都是「連續照護大道」，八個照護站用「採購橋」連回院區；七台資訊車（停靠照護站回報智慧科技建置進度）、七顆人資熱氣球（派送人力）、會計船（靠岸回報核銷進度）、資訊廣場，是行政後勤夥伴「渡大家一程、一同完成」的象徵，點一下就能看說明。<br>點廣場上的花朵或任何人物，可以看到那句行動句是誰寫的。<br>滑鼠拖曳旋轉、滾輪縮放、右鍵拖曳平移；點地塊名稱可看說明。</p>
+  <p style="color:#6B7772;font-size:13px">外圍一圈與院區前的大道都是「連續照護大道」，八個照護站用「採購橋」連回院區；七台資訊車、七顆人資熱氣球、會計船與會計碼頭、資訊廣場，是行政後勤夥伴「渡大家一程、一同完成」的象徵，點一下就能看說明。<br>滑鼠拖曳旋轉、滾輪縮放、右鍵拖曳平移；點地塊名稱可看說明。</p>
   <button class="pill on" data-act="help">知道了</button>
 </div></div>
 <div class="mode" id="mode"></div>
