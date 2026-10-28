@@ -323,53 +323,110 @@
     setTimeout(() => restart(".sap", "go"), 1100);
   }
 
+  // ---------- 收成：從種子長成大樹，果實＝盛開（100%）的行動句 ----------
+  let fruitHtml = "", fruitsShown = false, fruitData = [], cur = { people: {}, edits: null }, played = false, pourIv = null;
+  const FRUIT_AT = .62;
+  function showFruits(on) {
+    if (on === fruitsShown) return;
+    fruitsShown = on;
+    fruitLayer.innerHTML = on ? fruitHtml : "";
+    fruitLayer.style.opacity = 1;
+  }
+  const _render = render;
+  render = function (g) { _render(g); fruitLayer.style.opacity = 1; showFruits(g >= FRUIT_AT); setBar(g); };
+  function setBar(g) {
+    if (!root) return;
+    root.querySelector(".bt-bar i").style.width = (g * 100).toFixed(1) + "%";
+    const n = fruitData.length;
+    root.querySelector(".bt-count").textContent = g >= 1
+      ? (n ? `🌸 ${n} 朵盛開的花，結成 ${n} 顆共識果實・點果實看行動句` : "🌳 共識大樹長成了！")
+      : g < .06 ? "🌱 種子吸飽了大家的水…" : g < .25 ? "🌱 發芽、長高…" : g < FRUIT_AT ? "🌿 枝葉展開中…" : "🍎 結出共識果實！";
+  }
+  // 播放整段生長（預設 18 秒），期間水壺持續在樹幹澆水
+  function playGrow(dur = 18000) {
+    if (!root) return;
+    if (tween) cancelAnimationFrame(tween);
+    clearInterval(pourIv);
+    setLeaves(0); showFruits(false);
+    curG = 0; lastG = 0; render(0);
+    const t0 = performance.now();
+    drip(4);
+    pourIv = setInterval(() => { if (curG < .95) drip(3); else clearInterval(pourIv); }, 2600);
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      curG = e; lastG = e; render(e);
+      tween = k < 1 ? requestAnimationFrame(step) : null;
+    };
+    tween = requestAnimationFrame(step);
+  }
+  function fruitCard(i) {
+    const card = root.querySelector(".bt-card");
+    const s = fruitData[i];
+    if (!s) { card.classList.add("hide"); return; }
+    const p = (cur.people || {})[s.pid] || {}, sc = SC(s.scope);
+    card.style.setProperty("--sc", sc.color);
+    card.innerHTML = `<button class="bt-x" aria-label="關閉">×</button>
+      <div class="bt-cno" style="background:${sc.color}">${s.order}</div>
+      <div class="bt-ctx">${typeof sentenceRich === "function" ? sentenceRich(s, cur.people, cur.edits, false) : escapeHtml(sentenceText(s, cur.people, cur.edits))}</div>
+      <div class="bt-cby">${window.Avatar && p.avatar ? Avatar.svg(p.avatar) : ""}<span><b>${escapeHtml(p.name || "")}</b>${escapeHtml(p.dept || "")}</span><em style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</em></div>`;
+    card.classList.remove("hide");
+    root.querySelectorAll(".fruit").forEach((f) => f.classList.toggle("on", Number(f.dataset.i) === i));
+  }
+
   // ---------- 對外 ----------
   window.BigTree = {
-    init(container, opts = {}) { if (!root) { build(container); if (opts.inline) { root.classList.add("inline"); root.classList.remove("hide"); } } },
-    show(on) { if (root) root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on); if (window.World) World.skipRender = !!on; },
-    get visible() { return root && !root.classList.contains("hide"); },
-    update({ sents, totals, people, edits, phase, drops, possible, full: needed }) {
-      if (!root) return;
-      const full = Math.max(1, needed || Math.ceil(Object.keys(people || {}).length * ((window.ISLAND_CONFIG && ISLAND_CONFIG.treeDropsPerPerson) || 1)) || 1);
-      const g = Math.min(1, drops / full);
-      if (lastDrops !== null && drops > lastDrops) drip(drops - lastDrops);
-      lastDrops = drops;
-      setGrowth(g);
-      root.querySelector(".bt-bar i").style.width = (g * 100).toFixed(1) + "%";
-      root.querySelector(".bt-count").textContent = g >= 1
-        ? `💧 全場澆了 ${drops} 滴・🌳 共識大樹長成了！`
-        : `💧 全場澆了 ${drops} 滴・再 ${full - drops} 滴長成大樹（${Math.floor(g * 100)}%）`;
-      root.querySelector(".bt-sub").textContent = phase === "harvest" ? "收成・全場共識" : "澆水中・從一顆種子，灌溉成一棵大樹";
-      // 果實：每一句
-      const maxV = Math.max(1, ...sents.map((s) => totals[s.id] || 0));
-      const ranked = sents.slice().sort((a, b) => (totals[b.id] || 0) - (totals[a.id] || 0));
-      const rank = {}; ranked.forEach((s, i) => (rank[s.id] = i));
-      // 票多的句子放在越靠中央上方的位置
-      let fr = "";
-      const spots = fruitSpotsFor(ranked.length);
-      ranked.forEach((s, i) => {
-        const p = spots[i]; if (!p) return;
-        const v = totals[s.id] || 0, k = v / maxV, sc = SC(s.scope);
-        const rr = 13 + k * 15, top = i < 3 && v > 0;
-        fr += `<g class="fruit" transform="translate(${p.x.toFixed(1)} ${(p.y + 8).toFixed(1)})">
-          <line y1="-10" y2="${(-rr + 2).toFixed(1)}" stroke="#7C7F86" stroke-width="1.5"/>
-          ${top ? `<circle r="${(rr + 6).toFixed(1)}" fill="#F2C94C" opacity=".35"/>` : ""}
-          <circle r="${rr.toFixed(1)}" fill="${sc.color}" stroke="#fff" stroke-width="3"/>
-          <text y="${(rr * .36).toFixed(1)}" text-anchor="middle" font-size="${(rr * .95).toFixed(0)}" font-weight="700" fill="#fff" font-family="Noto Sans TC, sans-serif">${s.order}</text>
-          ${v ? `<text y="${(rr + 16).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="#2F6FC4" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="Noto Sans TC, sans-serif">💧${v}</text>` : ""}
-        </g>`;
+    init(container, opts = {}) {
+      if (root) return;
+      build(container);
+      if (opts.inline) { root.classList.add("inline"); root.classList.remove("hide"); }
+      const stage = root.querySelector(".bt-stage");
+      stage.insertAdjacentHTML("beforeend", `<div class="bt-card hide"></div>`);
+      root.addEventListener("click", (e) => {
+        const f = e.target.closest(".fruit"); if (f) { fruitCard(Number(f.dataset.i)); return; }
+        const r = e.target.closest("[data-fi]"); if (r) { fruitCard(Number(r.dataset.fi)); return; }
+        if (e.target.closest(".bt-x")) fruitCard(-1);
       });
-      fruitLayer.innerHTML = fr;
-      // 右側排行
-      const n = phase === "harvest" ? 5 : 8;
+      if (opts.inline) { played = true; curG = 1; lastG = 1; render(1); } else render(0);   // 主持人預覽：先顯示長好的樹
+    },
+    show(on) {
+      if (!root) return;
+      const was = !root.classList.contains("hide");
+      root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on);
+      if (window.World) World.skipRender = !!on;
+      if (on && !was) played = false;                      // 每次打開大樹，都從種子開始長
+    },
+    get visible() { return root && !root.classList.contains("hide"); },
+    replay(dur) { played = true; fruitCard(-1); playGrow(dur); },
+    update({ sents, people, edits, totals }) {
+      if (!root) return;
+      cur = { people: people || {}, edits };
+      fruitData = sents.slice().sort((a, b) => a.order - b.order);
+      root.querySelector(".bt-sub").textContent = "收成・從一顆種子，灌溉成一棵大樹";
+      // 果實：每一朵盛開的花，結成一顆果實（顏色＝範疇）
+      const spots = fruitSpotsFor(fruitData.length);
+      const r0 = fruitData.length > 40 ? 13 : fruitData.length > 20 ? 15 : 18;
+      fruitHtml = fruitData.map((s, i) => {
+        const p = spots[i]; if (!p) return "";
+        const sc = SC(s.scope);
+        return `<g class="fruit" data-i="${i}" transform="translate(${p.x.toFixed(1)} ${(p.y + 8).toFixed(1)})" style="--d:${(i % 24) * 70}ms">
+          <g class="fr-in"><line y1="-10" y2="${(-r0 + 2).toFixed(1)}" stroke="#7C7F86" stroke-width="1.5"/>
+          <circle class="fr-halo" r="${r0 + 7}" fill="${sc.color}" opacity="0"/>
+          <circle r="${r0}" fill="${sc.color}" stroke="#fff" stroke-width="3"/>
+          <ellipse cx="${(-r0 * .35).toFixed(1)}" cy="${(-r0 * .35).toFixed(1)}" rx="${(r0 * .28).toFixed(1)}" ry="${(r0 * .18).toFixed(1)}" fill="#fff" opacity=".45"/>
+          <text y="${(r0 * .36).toFixed(1)}" text-anchor="middle" font-size="${(r0 * .95).toFixed(0)}" font-weight="700" fill="#fff" font-family="Noto Sans TC, sans-serif">${s.order}</text></g></g>`;
+      }).join("");
+      if (fruitsShown) { fruitLayer.innerHTML = fruitHtml; fruitLayer.querySelectorAll(".fruit").forEach((f) => f.style.setProperty("--d", "0ms")); }
+      setBar(curG < 0 ? 0 : curG);
+      // 右側：共識果實清單
       const side = root.querySelector(".bt-side");
-      const html = `<h3>${phase === "harvest" ? "🌳 全場共識前五名" : "💧 即時共識排行"}</h3>` +
-        ranked.slice(0, n).map((s, i) => {
+      const html = `<h3>🍎 共識果實（${fruitData.length}）</h3><p class="bt-more" style="text-align:left;margin:-4px 0 6px">每一顆果實都是一朵澆到 100% 盛開的花</p>` +
+        (fruitData.map((s, i) => {
           const p = (people || {})[s.pid] || {}, sc = SC(s.scope);
-          return `<div class="bt-row ${i < 3 && (totals[s.id] || 0) ? "top" : ""}"><div class="bt-rk">${i + 1}</div><div class="bt-tx">${escapeHtml(sentenceText(s, people, edits))}
-            <div class="bt-meta"><span class="bt-tag" style="background:${sc.color}">${s.order}・${sc.tag}</span>${escapeHtml((p.dept ? p.dept + " " : "") + (p.name || ""))}</div></div><div class="bt-v">💧${totals[s.id] || 0}</div></div>`;
-        }).join("") + (sents.length > n ? `<p class="bt-more">樹上共有 ${sents.length} 顆行動果實</p>` : "");
+          return `<div class="bt-row" data-fi="${i}"><div class="bt-rk" style="color:${sc.color}">${s.order}</div><div class="bt-tx">${escapeHtml(sentenceText(s, people, edits))}
+            <div class="bt-meta"><span class="bt-tag" style="background:${sc.color}">${sc.tag}</span>${escapeHtml((p.dept ? p.dept + " " : "") + (p.name || ""))}</div></div></div>`;
+        }).join("") || `<p class="bt-more">還沒有盛開的花</p>`);
       if (side.dataset.h !== html) { side.dataset.h = html; side.innerHTML = html; }
+      if (!played && this.visible) { played = true; playGrow(); }
     }
   };
 })();

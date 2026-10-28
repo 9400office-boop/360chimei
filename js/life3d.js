@@ -339,30 +339,44 @@
     }
   };
 
-  // ---------- 花朵：每完成一句行動，就在社會情緒學習廣場或復原力廣場開一朵 ----------
-  const PETALS = ["#F4A7B9", "#FFD86B", "#B9A4E3", "#FF9F80", "#8FD6E8", "#F7F0E6", "#E98AA0", "#FFB347", "#C9E265", "#F28CC8"];
+  // ---------- 花朵：每完成一句行動，就在社會情緒學習廣場或復原力廣場種下一朵；澆水 6 次盛開 ----------
+  // stage 0 剛種下 → 1 發芽 → 2 長葉 → 3 結苞 → 4 花苞轉色 → 5 半開 → 6 盛開（與手機花園的插畫一致）
+  const PETALS = window.FLOWER_PETALS;
   const flowerGeoCache = {};
   const flowerMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
-  function flowerGeo(ci, kind) {
-    const k = ci + "_" + kind;
+  const STEM_H = [.18, .45, .7, .9, 1.0, 1.08, 1.1];
+  function flowerGeo(ci, kind, st) {
+    const k = ci + "_" + kind + "_" + st;
     if (flowerGeoCache[k]) return flowerGeoCache[k];
     const I = new M4(), parts = [], put = (g, col, m) => parts.push(colored(GEO[g], col, m));
-    const col = PETALS[ci];
-    put("cyl", "#5E9E5A", L(I, 0, .55, 0, .06, 1.1, .06));
-    put("sph", "#6DB06A", L(I, .22, .35, 0, .22, .07, .12, 0, 0, -.5));
-    put("sph", "#6DB06A", L(I, -.2, .55, 0, .2, .07, .11, 0, 0, .5));
-    const n = kind === 0 ? 5 : kind === 1 ? 6 : 8, pr = kind === 2 ? .2 : .26;
-    for (let i = 0; i < n; i++) {
-      const a = i / n * Math.PI * 2;
-      put("sph", col, L(I, Math.cos(a) * .26, 1.15, Math.sin(a) * .26, pr, .07, .14, -a));
+    const col = PETALS[ci], h = STEM_H[st];
+    put("sph", "#8C6A45", L(I, 0, .02, 0, .42, .08, .42));                      // 土堆
+    if (st === 0) { put("sph", "#8A5A2B", L(I, 0, .08, 0, .13, .09, .1)); put("cyl", "#5E9E5A", L(I, .03, .16, 0, .03, .14, .03)); return (flowerGeoCache[k] = merge(parts)); }
+    put("cyl", "#5E9E5A", L(I, 0, h / 2, 0, st < 2 ? .04 : .06, h, st < 2 ? .04 : .06));
+    if (st === 1) { put("sph", "#86C27A", L(I, .1, h, 0, .13, .04, .07, 0, 0, -.5)); put("sph", "#6DB06A", L(I, -.1, h, 0, .13, .04, .07, 0, 0, .5)); }
+    else {
+      put("sph", "#6DB06A", L(I, .2, h * .32, 0, .2 + st * .01, .06, .11, 0, 0, -.5));
+      put("sph", "#86C27A", L(I, -.18, h * .52, 0, .18 + st * .01, .06, .1, 0, 0, .5));
+      if (st >= 4) put("sph", "#6DB06A", L(I, .16, h * .72, .05, .15, .05, .09, 0, 0, -.5));
     }
-    put("sph", kind === 2 ? "#8A5A2B" : "#FFD34D", L(I, 0, 1.18, 0, .14, .1, .14));
+    if (st === 3) put("sph", "#7DBE6E", L(I, 0, h + .08, 0, .1, .15, .1));
+    if (st === 4) { put("sph", col, L(I, 0, h + .12, 0, .13, .2, .13)); put("sph", "#6DB06A", L(I, 0, h + .03, 0, .14, .07, .14)); }
+    if (st === 5) {
+      for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; put("sph", col, L(I, Math.cos(a) * .1, h + .14, Math.sin(a) * .1, .09, .2, .07, -a, 0, 0)); }
+      put("sph", "#6DB06A", L(I, 0, h + .03, 0, .14, .07, .14));
+    }
+    if (st === 6) {
+      const n = kind === 0 ? 5 : kind === 1 ? 6 : 8, pr = kind === 2 ? .2 : .26;
+      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; put("sph", col, L(I, Math.cos(a) * .26, h + .05, Math.sin(a) * .26, pr, .07, .14, -a)); }
+      put("sph", kind === 2 ? "#8A5A2B" : "#FFD34D", L(I, 0, h + .08, 0, .14, .1, .14));
+    }
     return (flowerGeoCache[k] = merge(parts));
   }
   const flowers = {};
   const plazaSlots = {};
   const hitGeo = new THREE.SphereGeometry(.55, 8, 6);
   const hitMat = new THREE.MeshBasicMaterial({ visible: false });   // 不繪製，只供點擊偵測
+  const glowGeo = new THREE.RingGeometry(.5, .75, 24);
   function slotsFor(pz) {
     if (plazaSlots[pz.key]) return plazaSlots[pz.key];
     const sp = 2.3, cols = Math.max(1, Math.floor((pz.w - 1.2) / sp)), rows = Math.max(1, Math.floor((pz.d - 1.2) / sp));
@@ -375,28 +389,37 @@
   }
   const Flowers = {
     flowers,
-    sync(people, instant) {
+    sync(people, instant, totals = {}, hidden = {}) {
       const plazas = (W.PLAZAS || []).filter((p) => p.flower);
-      const seen = new Set();
+      const seen = new Set(), BL = window.bloomAt ? bloomAt() : 6;
       plazas.forEach((pz) => {
-        const list = Object.entries(people || {}).filter(([, p]) => p.plaza === pz.key && personDone(p))
+        const list = Object.entries(people || {}).filter(([id, p]) => p.plaza === pz.key && personDone(p) && !hidden[id])
           .sort((a, b) => (a[1].submittedAt || 0) - (b[1].submittedAt || 0));
         const slots = slotsFor(pz);
         list.forEach(([id, p], i) => {
           seen.add(id);
           let f = flowers[id];
-          const h = hash(id), ci = h % PETALS.length, kind = (h >> 3) % 3;
+          const look = flowerLook(id), st = Math.round(Math.min(BL, totals[id] || 0) / BL * 6);
           if (!f) {
-            const m = new THREE.Mesh(flowerGeo(ci, kind), flowerMat); m.castShadow = false;
+            const m = new THREE.Mesh(flowerGeo(look.ci, look.kind, st), flowerMat); m.castShadow = false;
             // 點擊用的透明感應球（花頭附近）
-            const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.y = 1; m.add(hit);
+            const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.y = .8; m.add(hit);
             m.userData.pid = id; hit.userData.pid = id;
             W.scene.add(m);
-            f = flowers[id] = { m, s: instant ? 1 : 0, ph: (h % 100) / 10 };
+            f = flowers[id] = { m, s: instant ? 1 : 0, ph: (look.h % 100) / 10, st, pop: 0 };
+          } else if (f.st !== st) {
+            f.m.geometry = flowerGeo(look.ci, look.kind, st);
+            if (st > f.st) f.pop = 1;                     // 長大時彈一下
+            f.st = st;
           }
+          // 盛開的花：地上一圈金色光暈
+          if (st === 6 && !f.glow) {
+            f.glow = new THREE.Mesh(glowGeo, new THREE.MeshBasicMaterial({ color: 0xFFD34D, transparent: true, opacity: .7, side: THREE.DoubleSide, depthWrite: false }));
+            f.glow.rotation.x = -Math.PI / 2; f.glow.position.y = .06; f.m.add(f.glow);
+          } else if (st < 6 && f.glow) { f.m.remove(f.glow); f.glow = null; }
           const pos = slots[i % slots.length], lap = Math.floor(i / slots.length);
           f.m.position.set(pos.x + lap * .7, pos.y, pos.z + lap * .5);
-          f.m.rotation.y = (h % 628) / 100;
+          f.m.rotation.y = (look.h % 628) / 100;
         });
       });
       Object.keys(flowers).forEach((id) => { if (!seen.has(id)) { W.scene.remove(flowers[id].m); delete flowers[id]; } });
@@ -404,8 +427,10 @@
     update(dt, t) {
       Object.values(flowers).forEach((f) => {
         if (f.s < 1) f.s = Math.min(1, f.s + dt * 1.2);
-        const e = 1 - Math.pow(1 - f.s, 3);
-        f.m.scale.setScalar(1.7 * e * (1 + Math.sin(t * 1.8 + f.ph) * .03));
+        if (f.pop > 0) f.pop = Math.max(0, f.pop - dt * 1.6);
+        const e = 1 - Math.pow(1 - f.s, 3), pop = Math.sin(f.pop * Math.PI) * .45;
+        f.m.scale.setScalar(1.7 * e * (1 + pop + Math.sin(t * 1.8 + f.ph) * .03));
+        if (f.glow) { const k = .5 + .5 * Math.sin(t * 2.4 + f.ph); f.glow.material.opacity = .35 + k * .4; f.glow.scale.setScalar(1 + k * .25); }
       });
     }
   };

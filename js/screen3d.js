@@ -79,7 +79,7 @@
     const p = (S.people || {})[ME];
     const bar = $("mebar");
     bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>找不到你的人物，請回到報到頁</span></div>`) +
-      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><button data-me="garden">🌸 花園</button><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
+      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><a href="garden.html${p && p.plaza ? "?plaza=" + p.plaza : ""}">🌸 花園</a><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
   }
   if (ME) $("mebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-me]"); if (!b) return;
@@ -88,6 +88,32 @@
     if (b.dataset.me === "all") { follow = false; W._flyRaw({ x: 0, y: 0, z: 30 }, 345, .72, 0); }
     renderMeBar();
   });
+  // ---------- 依裝置調整版面：手機、平板、橫式手機、電腦／大螢幕 ----------
+  const mqCompact = matchMedia("(max-width: 1099px), (max-height: 560px)");
+  const setTopH = () => {
+    const tb = document.querySelector(".topbar");
+    document.documentElement.style.setProperty("--top-h", Math.round(tb.getBoundingClientRect().bottom) + "px");
+  };
+  let lastHome = 0;
+  function layoutMode() {
+    const compact = mqCompact.matches;
+    document.body.classList.toggle("compact", compact);
+    if (!ME) document.body.classList.toggle("nopanel", compact);      // 小螢幕：清單收起，需要時再點「☰ 清單」
+    const pb = document.querySelector('[data-act="panel"]'); if (pb) pb.classList.toggle("on", !document.body.classList.contains("nopanel"));
+    setTopH(); setTimeout(() => { W.resize(); setTopH(); }, 450);
+  }
+  mqCompact.addEventListener ? mqCompact.addEventListener("change", layoutMode) : mqCompact.addListener(layoutMode);
+  window.addEventListener("resize", () => { setTopH(); });
+  new MutationObserver(() => requestAnimationFrame(setTopH)).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  // 手機轉向（直式↔橫式）：重新取景
+  window.addEventListener("orientationchange", () => setTimeout(() => { W.resize(); setTopH(); if (!ME && Date.now() - lastHome > 500) { lastHome = Date.now(); W.home(); } }, 500));
+  layoutMode();
+  if (!ME) setTimeout(() => W.home(), 60);
+  // 小螢幕：在清單點了項目後，自動收起清單，讓人看到院區畫面
+  $("list").addEventListener("click", (e) => {
+    if (document.body.classList.contains("compact") && e.target.closest(".item, .lrow")) setTimeout(() => { document.body.classList.add("nopanel"); layoutMode.call && document.querySelector('[data-act="panel"]').classList.remove("on"); }, 200);
+  });
+
   $("mode").textContent = Store.mode === "local" ? "本機示範模式" : "";
   $("subline").textContent = (CFG.subtitle || "").replace("健康台灣深耕計畫・", "") + "・" + C.vision;
 
@@ -129,7 +155,9 @@
   (W.PLAZAS || []).forEach((pz) => {
     const key = pz.info ? "infoPlaza" : pz.key === "B" ? "selPlaza" : "resPlaza";
     const icon = C.supports[key].icon;
-    tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza", `${icon} ${escapeHtml(pz.name)}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => { W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }), id: "plaza" });
+    tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza" + (pz.flower ? " garden" : ""), `${icon} ${escapeHtml(pz.name)}${pz.flower && ME ? " <b class=\"gopen\">進花園 ›</b>" : ""}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => {
+      if (pz.flower && ME) { location.href = "garden.html?plaza=" + pz.key; return; }   // 手機：點花園就開啟花園頁
+      W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }), id: "plaza" });
   });
   W.stages.forEach((st) => { if (st.bridgeMid) tileLabels.push({ ...mkLabel("tl sup small", `🌉 採購橋`, st.bridgeMid, () => showSupport("purchaseBridge")), id: "bridge" }); });
   [-137.5, -47.5, 0, 180].map((d) => d * Math.PI / 180).forEach((a) => {
@@ -294,7 +322,9 @@
       ? `<p class="wtext">${sentenceRich({ pid }, S.people, S.edits, false)}</p>`
       : `<p class="wtext muted">還在填寫行動句中…</p>`;
     if (S.state && S.state.spotlight) return;
-    const where = kind === "flower" ? `🌸 ${plaza}` : "🧑‍⚕️ 院區夥伴";
+    const wn = waterTotals(S)[pid] || 0, bloomed = wn >= bloomAt();
+    const prog = personDone(p) && !(S.hide || {})[pid] ? `<span class="prog ${bloomed ? "full" : ""}">${bloomed ? "🌸 盛開 100%" : `💧 ${flowerPct(wn)}%`}</span>` : "";
+    const where = (kind === "flower" ? `🌸 ${plaza}` : "🧑‍⚕️ 院區夥伴") + prog;
     const w = $("writer");
     w.style.setProperty("--sc", sc ? sc.color : "#6B7772");
     w.style.setProperty("--scs", sc ? sc.soft : "#EEF0EE");
@@ -308,7 +338,9 @@
   cv.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
   cv.addEventListener("pointerup", (e) => {
     if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
-    const r = pickAt(e); if (r) showWriter(r.pid, r.kind);
+    const r = pickAt(e); if (!r) return;
+    if (ME && r.kind === "flower") { const fp = (S.people || {})[r.pid] || {}; location.href = `garden.html?plaza=${fp.plaza || "B"}&f=${encodeURIComponent(r.pid)}`; return; }
+    showWriter(r.pid, r.kind);
   });
   let hoverT = 0;
   cv.addEventListener("pointermove", (e) => {
@@ -343,7 +375,7 @@
   document.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => {
     const a = b.dataset.act;
     if (a === "home") { clearFocus(); topView = false; document.querySelector('[data-mode="top"]').classList.remove("on"); W.home(); }
-    if (a === "panel") { document.body.classList.toggle("nopanel"); b.classList.toggle("on", document.body.classList.contains("nopanel")); setTimeout(W.resize, 420); }
+    if (a === "panel") { document.body.classList.toggle("nopanel"); b.classList.toggle("on", !document.body.classList.contains("nopanel")); if (!document.body.classList.contains("compact")) setTimeout(W.resize, 420); }
     if (a === "help") $("help").classList.toggle("hide");
   }));
 
@@ -367,6 +399,7 @@
   // ---------- 資料 ----------
   let S = {};
   const loadedAt = Date.now();
+  let prevWt = null;
   let prevPeople = null, prevSentCount = 0, lastSpot = null, lastTour = "init", lastPhase = null, sentKey = "", firstSync = true;
   const sentsSorted = () => Object.entries(S.sentences || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => a.order - b.order);
   let treePos = {};
@@ -384,7 +417,8 @@
     const phase = (S.state && S.state.phase) || "join";
     const settling = Date.now() - loadedAt < 2500;
     People.sync(people, firstSync || settling);
-    Life.Flowers.sync(people, flowerFirst || settling);
+    const wt = waterTotals(S), hidden = S.hide || {};
+    Life.Flowers.sync(people, flowerFirst || settling, wt, hidden);
     if (Object.keys(people).length) { firstSync = false; flowerFirst = false; }
 
     // 日誌
@@ -397,6 +431,12 @@
       });
     }
     prevPeople = JSON.parse(JSON.stringify(people));
+    // 花朵盛開：直播
+    if (prevWt && !settling) Object.entries(wt).forEach(([fid, n]) => {
+      const p = people[fid]; if (!p || hidden[fid]) return;
+      if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt()) addEvent(`🌸 <b>${escapeHtml(p.name)}</b> 的行動句澆到 100%，在${p.plaza === "B" ? "社會情緒學習廣場" : "復原力廣場"}盛開了！`, p.avatar, "bloom");
+    });
+    prevWt = wt;
 
     // 名牌
     Object.entries(people).forEach(([id, p]) => {
@@ -440,13 +480,17 @@
     lastTour = tour;
 
     // 階段
-    if (phase !== lastPhase) { treeOverride = null; lastPhase = phase; }
+    if (phase !== lastPhase) {
+      // 進入澆花：大螢幕鏡頭飛到兩座花園
+      if (phase === "water" && lastPhase !== null && !ME) { clearFocus(); W.flyTo({ x: 36, y: 0, z: 26 }, 78, .78, 0); }
+      treeOverride = null; lastPhase = phase;
+    }
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
     // 參加者手機的地圖（?me=）不切換共識大樹，維持院區全景；大樹只在大螢幕顯示
-    const showTree = ME ? false : (treeOverride !== null ? treeOverride : ((phase === "water" || phase === "harvest") && sents.length > 0 && !spotId));
+    const showTree = ME ? false : (treeOverride !== null ? treeOverride : (phase === "harvest" && !spotId));
     BigTree.show(showTree);
     document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
-    if (showTree) BigTree.update({ sents, totals, people, edits: S.edits, phase, drops, possible: Object.keys(people).length * CFG.dropsPerPerson, full: treeNeed(people) });
+    if (showTree) BigTree.update({ sents, people, edits: S.edits });
     renderPhase(phase, sents, totals, showTree);
   }
 
@@ -464,30 +508,34 @@
   const joinUrl = new URL("index.html", location.href).href;
   let qrSvg = "";
   try { const qr = qrcode(0, "M"); qr.addData(joinUrl); qr.make(); qrSvg = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) {}
+  const gardenUrl = new URL("garden.html", location.href).href;
+  let qrGarden = "";
+  try { const qr = qrcode(0, "M"); qr.addData(gardenUrl); qr.make(); qrGarden = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); } catch (e) {}
 
   function renderPhase(phase, sents, totals, treeShown) {
     const ps = Object.values(S.people || {});
     const doneN = ps.filter(personDone).length;
-    const drops = Object.values(totals).reduce((a, b) => a + b, 0);
+    const gf = gardenFlowers(S), wDrops = Object.values(waterTotals(S)).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
-      join: ME ? `🏥 <b>報到中</b>・你的人物正在院區散步，金色箭頭就是你` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
-      reveal: `📣 <b>揭曉</b>・${sents.length} 句行動句`,
-      water: `💧 <b>澆水共識</b>・全場已澆 ${drops} / ${ps.length * CFG.dropsPerPerson} 滴`,
+      join: ME ? `🏥 <b>報到中</b>・金色箭頭就是你・點廣場上的花園可以逛花園` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
+      reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
+      water: ME ? `🌸 <b>澆花中</b>・點廣場上的花園，進花園幫夥伴的花澆水` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
       harvest: `🌳 <b>收成</b>・我們的共識大樹`
     }[phase];
     const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
-    const nums = `報到 <b>${ps.length}</b> 人　行動句 <b>${doneN}</b> 句　花朵 <b>${doneN}</b> 朵`;
+    const nb = gf.filter((f) => f.bloomed).length;
+    const nums = phase === "join" ? `報到 <b>${ps.length}</b> 人　行動句 <b>${doneN}</b> 句　花朵 <b>${doneN}</b> 朵` : `花朵 <b>${gf.length}</b> 朵　盛開 <b>${nb}</b> 朵　全場澆了 <b>${wDrops}</b> 滴`;
     const key = phase + nums + JSON.stringify(sc);
     if ($("live").dataset.key !== key) {
       $("live").dataset.key = key;
-      $("live").innerHTML = (phase === "join"
-        ? `<div class="live"><div class="qr">${qrSvg}</div><div><div class="t">掃描報到</div><div class="u">${escapeHtml(joinUrl.replace(/^https?:\/\//, ""))}</div><div class="nums">${nums}</div></div></div>`
+      $("live").innerHTML = (phase === "join" || phase === "water"
+        ? `<div class="live"><div class="qr">${phase === "water" ? qrGarden : qrSvg}</div><div><div class="t">${phase === "water" ? "掃描進花園澆花" : "掃描報到"}</div><div class="u">${escapeHtml((phase === "water" ? gardenUrl : joinUrl).replace(/^https?:\/\//, ""))}</div><div class="nums">${nums}</div></div></div>`
         : `<div class="live"><div class="nums">${nums}</div></div>`) +
         `<div class="fbar" style="grid-template-columns:repeat(4,1fr)">${C.scopes.map((s) => `<div style="background:${s.color}" title="${s.tag}・${s.name}"><b>${sc[s.id] || 0}</b>${s.tag}</div>`).join("")}</div>`;
     }
     // 大樹沒開時，收成名單用側欄顯示
     const $h = $("harvest");
-    if (phase === "harvest" && sents.length && !treeShown && !(S.state && S.state.spotlight)) {
+    if (false) {
       const top = sents.slice().sort((a, b) => (totals[b.id] || 0) - (totals[a.id] || 0)).slice(0, 5);
       const html = `<h2>🌳 全場共識前五名</h2>` + top.map((s, i) => `<div class="row"><div class="rk">${i + 1}</div><div style="flex:1">${escapeHtml(sentenceText(s, S.people, S.edits))}<br><span class="tag" style="background:${SC(s.scope).color}">${s.order}・${SC(s.scope).tag}</span></div><div class="vt">💧${totals[s.id] || 0}</div></div>`).join("");
       if ($h.innerHTML !== html) $h.innerHTML = html;

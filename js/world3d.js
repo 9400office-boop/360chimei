@@ -849,13 +849,21 @@
     W.setTime("day");
     W.resize();
     window.addEventListener("resize", W.resize);
+    // 畫面區域大小一改變（清單收合、手機轉向、網址列伸縮）就重新調整 3D 畫布
+    if (window.ResizeObserver) new ResizeObserver(() => W.resize()).observe(W.renderer.domElement.parentElement);
   };
 
   W.resize = function () {
     const el = W.renderer.domElement.parentElement;
     const w = el.clientWidth, h = el.clientHeight;
+    if (!w || !h) return;
     W.renderer.setSize(w, h); W.camera.aspect = w / h; W.camera.updateProjectionMatrix();
     W.vw = w; W.vh = h;
+    const fk = W.fitK();
+    if (W.controls) W.controls.maxDistance = 420 * fk;
+    // 鏡頭拉遠時，霧與可視距離跟著放寬，畫面才不會被霧蓋住
+    if (W.scene && W.scene.fog) { W.scene.fog.near = 360 * fk; W.scene.fog.far = 820 * fk; }
+    if (W.camera.far !== 1600 * fk) { W.camera.far = 1600 * fk; W.camera.updateProjectionMatrix(); }
   };
 
   // ---------- 晝夜 ----------
@@ -880,8 +888,11 @@
 
   // ---------- 鏡頭 ----------
   let fly = null;
+  // 依螢幕比例調整鏡頭距離：直式手機畫面較窄，鏡頭自動拉遠，讓院區完整入鏡
+  W.fitK = () => Math.min(2.2, Math.max(1, 1.45 / (W.camera.aspect || 1.6)));
   W.flyTo = function (target, dist = 70, polar = .82, az = null, dur = 1.6) {
     const c = W.controls, cam = W.camera;
+    const fk = W.fitK(); dist *= dist > 60 ? fk : Math.sqrt(fk);
     const from = { t: c.target.clone(), p: cam.position.clone() };
     const curOff = cam.position.clone().sub(c.target);
     const sph = new THREE.Spherical().setFromVector3(curOff);

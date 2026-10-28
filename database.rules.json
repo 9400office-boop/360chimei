@@ -14,6 +14,11 @@
             "scope": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4" }
           }
         },
+        "waters": {
+          "$giver": {
+            "$flower": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10" }
+          }
+        },
         "votes": {
           "$pid": {
             "$sid": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10" }

@@ -149,6 +149,36 @@ window.sentenceRich = function (s, people, edits, highlight) {
     ? `<span class="w" style="${highlight ? `background:${ISLAND_CONTENT.fields[x - 1].color};color:#fff;border-radius:6px;padding:0 4px` : ""}">${escapeHtml(cleanWord(x, w[x]) || "＿＿")}</span>` : x).join("");
 };
 
+/* =========================================================
+ * 共識花園：每人 10 滴水，每朵花澆 6 次盛開
+ * 資料：waters/{澆水者 pid}/{花主 pid} = 次數
+ * ========================================================= */
+window.GARDEN_STEPS = [0, 10, 30, 50, 70, 90, 100];
+window.bloomAt = () => (window.ISLAND_CONFIG && ISLAND_CONFIG.bloomAt) || 6;
+window.waterTotals = function (state) {
+  const t = {};
+  Object.values((state && state.waters) || {}).forEach((v) => Object.entries(v || {}).forEach(([fid, n]) => { t[fid] = (t[fid] || 0) + (n || 0); }));
+  return t;
+};
+window.waterUsed = function (state, giver) {
+  return Object.values(((state && state.waters) || {})[giver] || {}).reduce((a, b) => a + (b || 0), 0);
+};
+window.flowerStage = (n) => Math.min(bloomAt(), n || 0);
+window.flowerPct = (n) => GARDEN_STEPS[Math.round(flowerStage(n) / bloomAt() * 6)];
+/* 花園裡的花（完成行動句、沒被主持人隱藏） */
+window.gardenFlowers = function (state) {
+  const tot = waterTotals(state), hide = (state && state.hide) || {};
+  return Object.entries((state && state.people) || {}).filter(([id, p]) => personDone(p) && !hide[id])
+    .map(([id, p]) => ({ pid: id, p, n: tot[id] || 0, stage: flowerStage(tot[id]), pct: flowerPct(tot[id]), bloomed: (tot[id] || 0) >= bloomAt() }))
+    .sort((a, b) => (a.p.submittedAt || 0) - (b.p.submittedAt || 0));
+};
+/* 每朵花固定的花色與花型（3D 與手機花園一致） */
+window.FLOWER_PETALS = ["#F4A7B9", "#FFD86B", "#B9A4E3", "#FF9F80", "#8FD6E8", "#F7F0E6", "#E98AA0", "#FFB347", "#C9E265", "#F28CC8"];
+window.flowerLook = function (id) {
+  let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0; h = Math.abs(h);
+  return { h, ci: h % FLOWER_PETALS.length, kind: (h >> 3) % 3, color: FLOWER_PETALS[h % FLOWER_PETALS.length] };
+};
+
 window.voteTotals = function (state) {
   const t = {};
   Object.values(state.votes || {}).forEach((v) => Object.entries(v || {}).forEach(([sid, n]) => { t[sid] = (t[sid] || 0) + (n || 0); }));

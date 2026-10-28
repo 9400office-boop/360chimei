@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>360°深耕奇美・大螢幕</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,500;1,700&family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
@@ -100,7 +100,7 @@
 
   /* 右側索引 */
   .panel { position: absolute; top: 0; right: 0; bottom: 0; width: var(--panel); background: var(--paper); border-left: 1px solid var(--line); z-index: 7; display: flex; flex-direction: column; transition: transform .4s ease; }
-  body.nopanel .panel { transform: translateX(100%); }
+  body.nopanel .panel { transform: translateX(100%); visibility: hidden; transition: transform .4s ease, visibility 0s .4s; }
   .ph-head { padding: 26px 26px 12px; }
   .eyebrow { font-size: 11px; letter-spacing: .28em; color: var(--coral); font-weight: 700; }
   .ph-head h1 { margin: 8px 0 6px; font-family: var(--serif); font-size: 30px; font-weight: 900; letter-spacing: .06em; }
@@ -235,6 +235,117 @@
   .spot .author b { display: block; font-size: 18px; }
   .spot .author span { color: var(--ink-soft); font-size: 14px; }
   body.memode .bigtree { z-index: 8; }
+  /* 共識花園 */
+  .writer .prog { margin-left: 8px; color: #2F6FC4; background: #EAF4FC; border-radius: 999px; padding: 2px 10px; font-weight: 700; letter-spacing: 0; }
+  .writer .prog.full { color: #9A4A00; background: #FFF1CF; }
+  .tl.plaza.garden .gopen { margin-left: 4px; background: #E8B84A; color: #3A2A00; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-family: var(--font); }
+  body.memode .tl.plaza.garden { font-size: 13px; padding: 5px 10px; box-shadow: 0 0 0 3px rgba(232,184,74,.55), 0 3px 10px rgba(0,0,0,.15); animation: gpulse 2s ease-in-out infinite; }
+  @keyframes gpulse { 50% { box-shadow: 0 0 0 7px rgba(232,184,74,.15), 0 3px 10px rgba(0,0,0,.15); } }
+  .feed .ev.k-bloom { border-left-color: #F59E0B; background: #FFF8E6; }
+
+  /* =========================================================
+   * 響應式：依裝置自動調整
+   * compact = 平板、手機、橫式手機（寬 < 1100 或 高 < 560）
+   * ========================================================= */
+  body.compact #stage { right: 0; }
+  body.compact .topbar { left: 12px; right: 12px; top: calc(10px + env(safe-area-inset-top)); flex-wrap: wrap; gap: 8px; }
+  body.compact .brand { padding: 8px 14px; border-radius: 14px; }
+  body.compact .brand .big { font-size: 22px; }
+  body.compact .brand .big small { font-size: 9px; letter-spacing: .2em; margin-top: 4px; }
+  body.compact .toolbar { gap: 6px; }
+  body.compact .grp { padding: 4px; }
+  body.compact .tb:not(.icon) { font-size: 0; gap: 0; padding: 7px; min-width: 34px; }
+  body.compact .tb.icon { min-width: 34px; padding: 7px; }
+  body.compact .tb svg { width: 18px; height: 18px; }
+  body.compact .pill { padding: 9px 12px; font-size: 13px; border-radius: 12px; }
+  body.compact .phase, body.compact:not(.nopanel) .phase { left: 50%; top: calc(var(--top-h, 70px) + 8px); font-size: 13px; padding: 6px 14px; max-width: calc(100% - 24px); white-space: normal; text-align: center; }
+  /* 清單：疊在畫面上，從工具列下方展開 */
+  body.compact .panel { top: calc(var(--top-h, 70px) + 8px); right: 12px; bottom: 12px; width: min(400px, calc(100% - 24px)); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 16px 50px rgba(30,50,45,.28); overflow: hidden; z-index: 12; }
+  body.compact.nopanel .panel { display: none; }
+  body.compact .panel { animation: panelin .3s ease; }
+  @keyframes panelin { from { opacity: 0; transform: translateY(-10px); } }
+  html, body { overflow: clip; overscroll-behavior: none; }
+  body.compact .ph-head { padding: 16px 18px 8px; }
+  body.compact .ph-head h1 { font-size: 22px; }
+  body.compact .live, body.compact .fbar, body.compact .search, body.compact .tabs { margin-left: 18px; margin-right: 18px; }
+  body.compact .live .qr { width: 92px; height: 92px; }
+  body.compact .list { padding: 4px 18px 18px; }
+  body.compact .spot, body.compact:not(.nopanel) .spot { left: 50%; width: calc(100% - 24px); bottom: 12px; padding: 10px 14px; max-height: 58vh; overflow-y: auto; }
+  body.compact .writer, body.compact.nopanel .writer { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+  body.compact .feed { right: 12px; bottom: 12px; width: 270px; }
+  body.compact .feed .ev:not(:nth-last-child(-n+3)) { display: none; }
+  body.compact .harvest, body.compact .log { left: 12px; top: calc(var(--top-h, 70px) + 8px); bottom: 12px; width: min(400px, calc(100% - 24px)); overflow-y: auto; }
+  body.compact .harvest { bottom: auto; max-height: calc(100% - var(--top-h, 70px) - 20px); }
+  body.compact .info { left: 12px; bottom: 12px; width: min(360px, calc(100% - 24px)); }
+  body.compact .help .box { max-width: calc(100% - 32px); max-height: calc(100% - 40px); overflow-y: auto; padding: 20px 22px; font-size: 14px; }
+  body.compact .mode { display: none; }
+  body.compact .bigtree .bt-stage { padding-top: calc(var(--top-h, 70px) + 6px); }
+
+  /* 手機直式（寬 ≤ 640） */
+  @media (max-width: 640px) {
+    body.compact .brand .big { font-size: 18px; letter-spacing: .06em; }
+    body.compact .brand .big small { display: none; }
+    body.compact .toolbar { order: 3; width: 100%; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    body.compact .toolbar::-webkit-scrollbar { display: none; }
+    body.compact .grp { flex: none; }
+    body.compact .side-btns { gap: 6px; }
+    body.compact .pill { padding: 8px 10px; font-size: 12px; }
+    body.compact .feed { left: 12px; width: auto; }
+    body.compact .feed .ev { font-size: 12px; }
+    body.compact .feed .ev:not(:nth-last-child(-n+2)) { display: none; }
+    body.compact .writer { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 16px 16px; border-left: 0; border-top: 5px solid var(--sc); z-index: 9; }
+    body.compact .writer .who { padding-right: 40px; border-right: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+    body.compact .writer .who svg { width: 42px; height: 50px; }
+    body.compact .writer .id b { font-size: 17px; }
+    body.compact .writer .wtext { font-size: 16px; }
+    body.compact .spot .sentence { font-size: 16px; }
+    body.compact .spot .people { grid-template-columns: repeat(3, 1fr); }
+    body.compact .spot .hd { flex-wrap: wrap; gap: 4px; font-size: 11px; }
+    body.compact .panel { left: 12px; width: auto; }
+    body.compact .harvest, body.compact .log, body.compact .info { right: 12px; width: auto; }
+    /* 3D 標籤縮小 */
+    body.compact .tl { font-size: 10px; padding: 2px 7px; gap: 4px; }
+    body.compact .tl.hub { font-size: 12px; }
+    body.compact .tl.bldg { font-size: 11px; }
+    body.compact .tl.road.care { font-size: 12px; }
+    body.compact .tl.plaza, body.compact .tl.stage, body.compact .tl.sup { font-size: 10px; }
+    body.compact .nm { font-size: 11px; padding: 1px 6px; }
+    body.compact .nm.big { font-size: 14px; }
+    body.compact .nm.me { font-size: 15px; }
+  }
+  /* 平板（641～1099）標籤略縮 */
+  @media (min-width: 641px) and (max-width: 1099px) {
+    body.compact .tl { font-size: 12px; }
+    body.compact .nm { font-size: 13px; }
+  }
+  /* 手機橫式（高 ≤ 560）：上方工具列壓成一列，直播只留最新一則 */
+  @media (max-height: 560px) {
+    body.compact .topbar { flex-wrap: nowrap; }
+    body.compact .brand { padding: 6px 12px; }
+    body.compact .brand .big { font-size: 17px; }
+    body.compact .brand .big small { display: none; }
+    body.compact #times { display: none; }
+    body.compact .toolbar { flex-wrap: nowrap; }
+    body.compact .tb:not(.icon), body.compact .tb.icon { padding: 5px; min-width: 30px; }
+    body.compact .pill { padding: 7px 10px; font-size: 12px; }
+    body.compact .phase { font-size: 12px; padding: 4px 12px; }
+    body.compact .feed { width: 240px; }
+    body.compact .feed .ev:not(:last-child) { display: none; }
+    body.compact .spot { max-height: 70vh; }
+    body.compact .writer { padding: 10px 44px 10px 14px; gap: 12px; }
+    body.compact .writer .who svg { width: 40px; height: 48px; }
+    body.compact .writer .wtext { font-size: 15px; }
+    body.compact .tl { font-size: 10px; padding: 2px 7px; }
+    body.compact .nm { font-size: 11px; padding: 1px 6px; }
+    body.memode .mebar { left: auto; width: min(560px, calc(100% - 20px)); }
+    body.memode .brand .big { font-size: 15px; }
+    body.memode .phase { top: 52px; }
+  }
+  /* 「我的人物」模式：小手機也要放得下按鈕 */
+  @media (max-width: 380px) {
+    .mebar button, .mebar a { padding: 9px 7px; font-size: 12px; }
+    .mebar .who span { max-width: 4.5em; }
+  }
 </style>
 <link rel="stylesheet" href="css/bigtree.css">
 </head>
@@ -291,8 +402,8 @@
   <h2 style="margin-top:0">🏥 360°深耕奇美怎麼玩</h2>
   1. 掃右側 QR Code，選一位人物、填上部門和姓名，再選一個想深耕的範疇，你的人物就會走到那個範疇的大樓前。<br>
   2. 寫下六欄行動句（主詞、動詞、受詞、合作夥伴、方式、目的），種下後會在社會情緒學習廣場或復原力廣場開出一朵花。<br>
-  3. 主持人挑選並揭曉行動句，鏡頭會飛到作者身邊。<br>
-  4. 每人 3 滴水，澆給最想實現的句子；每一滴水讓共識大樹長出一片葉子，票多的句子掛在樹上最醒目的位置。<br>
+  3. 澆花時間：在手機進「共識花園」點花看句子、按澆水；每人 10 滴水，每朵花澆 6 次（10%→30%→50%→70%→90%→100%）就會盛開。<br>
+  4. 主持人揭曉澆到 100% 的盛開句子；最後收成，共識大樹從一顆種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。<br>
   <p style="color:#6B7772;font-size:13px">外圍一圈與院區前的大道都是「連續照護大道」，八個照護站用「採購橋」連回院區；七台資訊車（停靠照護站回報智慧科技建置進度）、七顆人資熱氣球（派送人力）、會計船（靠岸回報核銷進度）、AI智慧光廊，是行政後勤夥伴「渡大家一程、一同完成」的象徵，點一下就能看說明。<br>點廣場上的花朵或任何人物，可以看到那句行動句是誰寫的。<br>滑鼠拖曳旋轉、滾輪縮放、右鍵拖曳平移；點地塊名稱可看說明。</p>
   <button class="pill on" data-act="help">知道了</button>
 </div></div>

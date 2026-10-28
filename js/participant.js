@@ -32,7 +32,7 @@
   function render(force) {
     const view = decideView();
     // 填寫、選人物畫面避免打字中被重繪
-    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), S.sentences || null, (S.votes || {})[pid], me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
+    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), S.sentences || null, waterTotals(S)[pid] || 0, waterUsed(S, pid), (S.hide || {})[pid] || 0, gardenFlowers(S).filter((f) => f.bloomed).length, me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
     if (!force && key === lastKey && (view === "pick" || view === "write" || view === "scope")) return;
     if (!force && key === lastKey && view === "home" && phase() !== "harvest") return;
     lastKey = key;
@@ -51,7 +51,7 @@
   // ---------- 歡迎 ----------
   function vWelcome() {
     return `<div class="hero"><div class="ttl"><h1>360°深耕奇美</h1><p>${escapeHtml(C.vision)}・一起讓院區長出新的連結</p></div></div>
-      <div class="steps"><div><b>🧑‍⚕️</b>選人物報到</div><div><b>🧭</b>選一個範疇</div><div><b>🌸</b>寫一句行動種下花</div><div><b>💧</b>澆水長成大樹</div></div>
+      <div class="steps"><div><b>🧑‍⚕️</b>選人物報到</div><div><b>🌱</b>寫一句行動種下小花</div><div><b>💧</b>進花園澆花讓花盛開</div><div><b>🌳</b>收成共識大樹</div></div>
       <button class="btn" style="width:100%" data-act="start">我要報到</button>
       <p style="text-align:center"><button class="link-btn" data-act="explore">先看看院區有什麼</button></p>`;
   }
@@ -126,49 +126,44 @@
   }
   function vHome() {
     const m = me(); const ph = phase();
+    const TOTAL = CFG.dropsPerPerson, leftN = Math.max(0, TOTAL - waterUsed(S, pid));
+    const gf = gardenFlowers(S), nb = gf.filter((f) => f.bloomed).length;
     let html = "";
     if (personDone(m)) {
-      const sc = SC(m.scope);
+      const sc = SC(m.scope), n = waterTotals(S)[pid] || 0, st = flowerStage(n), look = flowerLook(pid), full = n >= bloomAt();
       html += `<div class="card seed">${Avatar.svg(m.avatar)}<div style="min-width:0">
         <span class="tagf" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>
         <div class="mysent">${sentenceRich({ pid }, S.people, S.edits, true)}</div>
         ${ph === "join" ? `<button class="btn small ghost" data-act="edit">修改</button>` : ""}
       </div></div>`;
-      if (m.plaza) html += `<p class="status" style="margin:8px 0">🌸 你的花開在「<b>${PLAZA_NAME[m.plaza]}</b>」</p>`;
+      if (!(S.hide || {})[pid]) html += `<a class="myflower" href="garden.html?plaza=${m.plaza || "B"}&f=${encodeURIComponent(pid)}">
+        <div class="fa">${FlowerArt.svg(st, look.color, look.kind)}</div>
+        <div class="fi"><b>我的花・${full ? "🌸 盛開 100%" : `${FlowerArt.LABELS[st]} ${flowerPct(n)}%`}</b>
+          <span>開在「${PLAZA_NAME[m.plaza] || ""}」・被澆了 ${n} 次</span>
+          <div class="fbar"><i style="width:${flowerPct(n)}%"></i></div></div></a>`;
     } else if (ph !== "join") {
-      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">填寫時間已經結束，你可以一起看大螢幕${ph === "water" ? "、幫喜歡的句子澆水" : ""}。</p></div>`;
+      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">填寫時間已經結束，你可以一起看大螢幕${ph === "water" ? "、進花園幫大家的花澆水" : ""}。</p></div>`;
     }
 
     if (ph === "join") {
-      html += `<p class="status"><b>請看大螢幕</b>，等待主持人揭曉全場的行動句</p>`;
+      html += `<p class="status"><b>請看大螢幕</b>，主持人開放澆花後，就能進花園幫大家的花澆水 💧</p>`;
+      html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 先逛逛共識花園</a>`;
+    } else if (ph === "water") {
+      html += `<a class="btn gardenbtn" href="garden.html">🌸 進共識花園澆花<small>你還有 ${leftN} / ${TOTAL} 滴水・每朵澆 ${bloomAt()} 次盛開</small></a>`;
+      html += `<p class="status">全場已經有 <b>${nb}</b> 朵花盛開（共 ${gf.length} 朵）</p>`;
     } else if (ph === "reveal") {
       const list = sentencesSorted();
-      if (!list.length) html += `<p class="status">主持人正在挑選要展示的句子，請稍候…</p>`;
-      else {
-        const mine = list.find((s) => s.pid === pid);
-        html += `<p class="status">${mine ? "🎉 你的行動句入選展示了！" : "🎉 一起看看大家的行動句"}</p>`;
-        html += list.map((s) => sentCard(s)).join("");
-      }
-    } else if (ph === "water") {
-      const total = CFG.dropsPerPerson;
-      const mv = (S.votes || {})[pid] || {};
-      const used = Object.values(mv).reduce((a, b) => a + (b || 0), 0);
-      const left = Math.max(0, total - used);
-      html += `<div class="drops">剩下的水滴 <span class="d">${"💧".repeat(left)}${"<span style='opacity:.2'>💧</span>".repeat(total - left)}</span><br><span class="muted" style="font-size:13px">把水滴給最想實現的句子，可以集中在同一句</span></div>`;
-      html += sentencesSorted().map((s) => {
-        const n = mv[s.id] || 0;
-        return `<div class="sent ${s.pid === pid ? "minebox" : ""}"><div class="text">${sentenceHtml(s)}</div>
-          <div class="meta"><span>${s.order}・${SC(s.scope).tag}・${escapeHtml(authorOf(s))}</span>
-          <span class="water"><button data-vote="${s.id}" data-d="-1" ${n ? "" : "disabled"}>−</button><span class="n">${"💧".repeat(n) || "0"}</span><button data-vote="${s.id}" data-d="1" ${left ? "" : "disabled"}>＋</button></span></div></div>`;
-      }).join("");
+      const mine = list.find((s) => s.pid === pid);
+      html += `<p class="status">${list.length ? (mine ? "🎉 你的花盛開了，入選揭曉！" : `📣 揭曉 <b>${list.length}</b> 朵澆到 100% 的花`) : "主持人正在整理盛開的花，請看大螢幕…"}</p>`;
+      html += list.map((s) => sentCard(s)).join("");
     } else if (ph === "harvest") {
-      const tot = voteTotals(S);
-      const top = sentencesSorted().sort((a, b) => (tot[b.id] || 0) - (tot[a.id] || 0)).slice(0, 3);
-      html += `<p class="status">🌳 收成時間！共識大樹上最受期待的三句行動</p>`;
-      html += top.map((s, i) => `<div class="sent"><div class="text"><span class="rank">${i + 1}</span>${sentenceHtml(s)}</div><div class="meta"><span>${SC(s.scope).tag}・${escapeHtml(authorOf(s))}</span><span>💧 ${tot[s.id] || 0}</span></div></div>`).join("");
+      const list = sentencesSorted();
+      html += `<p class="status">🌳 收成時間！請看大螢幕，共識大樹從一顆種子長成大樹，<br>樹上的 <b>${list.length}</b> 顆果實，就是大家澆到盛開的行動句</p>`;
+      html += list.map((s) => sentCard(s)).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">在地圖上點任何一朵花，就能看到那句行動句是誰寫的</p>`;
+    if (ph !== "water" && ph !== "join") html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">在地圖上點廣場的花園，也能進入共識花園</p>`;
     html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
     return html;
   }
@@ -233,8 +228,7 @@
         $app.querySelectorAll(".scope-big").forEach((x) => x.classList.toggle("on", x === ps));
         document.getElementById("toscope").disabled = false; return;
       }
-      const v = e.target.closest("[data-vote]");
-      if (v) vote(v.dataset.vote, Number(v.dataset.d));
+
     };
     if (view === "pick") {
       const n = document.getElementById("name"), d = document.getElementById("dept");
@@ -290,17 +284,8 @@
     try {
       await Store.update("people/" + pid, upd);
       local.editing = false; local.words = null;
-      toast("行動句已種下，開出一朵花 🌸"); render(true); window.scrollTo(0, 0);
+      toast("行動句已種下，花園裡多了一朵小花 🌱"); render(true); window.scrollTo(0, 0);
     } catch (e) { toast("送出失敗，請再試一次"); b.disabled = false; }
-  }
-
-  async function vote(sid, d) {
-    const total = CFG.dropsPerPerson;
-    const mv = { ...((S.votes || {})[pid] || {}) };
-    const used = Object.values(mv).reduce((a, b) => a + (b || 0), 0);
-    if (d > 0 && used >= total) return;
-    const n = Math.max(0, (mv[sid] || 0) + d);
-    try { await Store.set(`votes/${pid}/${sid}`, n || null); } catch (e) { toast("澆水失敗，請再試一次"); }
   }
 
   // ---------- 啟動 ----------
