@@ -54,7 +54,7 @@
     const sd = sh.querySelector("#said"); if (sd.dataset.h !== said) { sd.dataset.h = said; sd.innerHTML = said; }
     const b = sh.querySelector("#wbtn");
     b.classList.toggle("done", f.bloomed);
-    if (f.bloomed) { b.disabled = true; b.innerHTML = "🌸 已盛開，謝謝大家的灌溉"; }
+    if (f.bloomed) { b.disabled = true; b.innerHTML = "🌸 已盛開，謝謝大家的深耕"; }
     else if (!me()) { b.disabled = true; b.innerHTML = "報到後就能澆水"; }
     else if (phase() === "join") { b.disabled = true; b.innerHTML = "⏳ 主持人開放後就能澆水"; }
     else if (phase() !== "water") { b.disabled = true; b.innerHTML = "澆花時間已結束"; }

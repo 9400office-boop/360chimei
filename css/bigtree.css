@@ -3,7 +3,7 @@
   .bigtree.hide { display: none; }
   @keyframes fadein { from { opacity: 0 } }
   .bt-stage { flex: 1 1 0; position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 18px 10px 10px; }
-  .bt-stage svg { flex: 1 1 0; width: 100%; height: auto; min-height: 0; }
+  .bt-stage > svg:not(.bt-wire) { flex: 1 1 0; width: 100%; height: auto; min-height: 0; }
   .bt-title { text-align: center; }
   .bt-title small { display: block; letter-spacing: .3em; font-size: 13px; color: #8A8FA8; font-weight: 700; }
   .bt-title b { display: block; font-family: var(--serif, 'Noto Serif TC', serif); font-size: 44px; color: #3E3F6E; letter-spacing: .2em; line-height: 1.2; }
@@ -98,3 +98,39 @@
   .bt-card .bt-cby b { display: block; color: #2B2A26; font-size: 15px; }
   .bt-card .bt-cby em { font-style: normal; margin-left: auto; color: #fff; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 12px; white-space: nowrap; }
   @media (max-width: 760px) { .bt-card { padding: 12px 44px 12px 60px; bottom: 10px; } .bt-card .bt-ctx { font-size: 16px; } .bt-card .bt-cno { width: 34px; height: 34px; font-size: 15px; left: 12px; } }
+
+  /* 大螢幕：樹放大置中，旁邊是自動輪播的留言板 */
+  .bigtree:not(.inline) .bt-side { display: none; }
+  .bigtree:not(.inline) .bt-stage { padding: 10px 10px 6px; }
+  .bigtree:not(.inline) .bt-title { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 2; }
+  .bigtree:not(.inline) .bt-title b { font-size: 34px; }
+  .bigtree:not(.inline) .bt-stage > svg:not(.bt-wire) { margin-top: 52px; }
+  .bigtree:not(.inline) .bt-card { display: none; }
+  .bt-wire { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; overflow: visible; }
+  .bt-wire path { animation: wire .9s ease-out both; }
+  @keyframes wire { from { stroke-dashoffset: 1000; opacity: 0; } to { stroke-dashoffset: 0; opacity: .85; } }
+  .bt-wire .bb-ring { animation: ringp 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes ringp { 50% { transform: scale(1.25); opacity: .4; } }
+  .bt-bubble { position: absolute; z-index: 4; width: min(460px, 29%); background: rgba(255,253,249,.97); border-radius: 22px; border: 2px solid var(--sc, #3E8E41); box-shadow: 0 16px 44px rgba(40,50,80,.2); padding: 16px 20px 14px; }
+  .bt-bubble.hide { display: none; }
+  .bt-bubble.left { left: 2.5%; }
+  .bt-bubble.right { right: 2.5%; }
+  .bt-bubble.bottom { left: 50%; bottom: 12px; width: min(620px, calc(100% - 24px)); transform: translateX(-50%); }
+  .bt-bubble.go { animation: bbin .55s cubic-bezier(.3,1.3,.5,1); }
+  .bt-bubble.bottom.go { animation: bbinb .55s cubic-bezier(.3,1.3,.5,1); }
+  @keyframes bbin { from { opacity: 0; transform: translateY(18px) scale(.96); } }
+  @keyframes bbinb { from { opacity: 0; transform: translate(-50%, 18px); } }
+  .bt-bubble .bb-top { display: flex; align-items: center; gap: 8px; }
+  .bt-bubble .bb-no { width: 34px; height: 34px; border-radius: 50%; color: #fff; font-weight: 900; font-size: 16px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); flex: none; }
+  .bt-bubble .bb-tag { font-weight: 700; font-size: 14px; }
+  .bt-bubble .bb-cnt { margin-left: auto; font-size: 13px; color: #8A8FA8; font-weight: 700; white-space: nowrap; }
+  .bt-bubble .bb-tx { font-size: clamp(18px, 1.35vw, 26px); line-height: 1.7; color: #2B2A26; margin: 10px 0 8px; font-weight: 500; }
+  .bt-bubble .bb-tx .w { font-weight: 800; color: var(--sc); }
+  .bt-bubble .bb-by { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6B7772; }
+  .bt-bubble .bb-by svg { width: 40px; height: 48px; }
+  .bt-bubble .bb-by b { display: block; color: #2B2A26; font-size: 17px; }
+  .bt-bubble .bb-prog { height: 4px; background: #EEEAE0; border-radius: 999px; margin-top: 10px; overflow: hidden; }
+  .bt-bubble .bb-prog i { display: block; height: 100%; width: 100%; background: var(--sc); transform-origin: left; animation: bbprog linear both; }
+  @keyframes bbprog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .bigtree .fruit.on .fr-in { animation: fruitbeat 1.2s ease-in-out infinite; }
+  @keyframes fruitbeat { 50% { transform: scale(1.3); } }

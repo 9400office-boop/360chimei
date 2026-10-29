@@ -94,6 +94,7 @@
   function vWrite() {
     const m = me(); const sc = SC(m.scope);
     if (!local.words) local.words = { ...(personWords(m)) };
+    if (!(local.words[1] || "").trim() && m.dept) local.words[1] = m.dept;      // 部門名稱：預先填入報到時的部門
     const ex = C.examples[m.scope] || C.examples[1];
     const exHtml = SENTENCE_ORDER.map((x) => typeof x === "number" ? `<b style="color:${F(x).color}">${escapeHtml(ex[x])}</b>` : x).join("");
     const order = [1, 2, 3, 4, 5, 6];
@@ -102,7 +103,7 @@
       return `<div class="fblock" style="--c:${f.color}">
         <div class="fh"><span class="fn">0${n}</span><span class="ft">${f.title}</span><span class="fs">${f.sub}</span></div>
         <input class="finput" data-w="${n}" maxlength="20" placeholder="${escapeHtml(f.question)}" value="${escapeHtml(v)}" autocomplete="off">
-        <div class="hints">${f.hints.map((h) => `<button class="chip ${v === h ? "on" : ""}" data-hint="${escapeHtml(h)}" data-n="${n}">${escapeHtml(h)}</button>`).join("")}</div>
+        <div class="hints"><span class="exlbl">舉例：</span>${(n === 1 && m.dept && !f.hints.includes(m.dept) ? [m.dept, ...f.hints] : f.hints).map((h) => `<button class="chip ${v === h ? "on" : ""}" data-hint="${escapeHtml(h)}" data-n="${n}">${escapeHtml(h)}</button>`).join("")}</div>
       </div>`;
     }).join("");
     return `<div class="scopebar" style="background:${sc.color}">${sc.emoji} ${sc.tag}・${escapeHtml(sc.name)} <button class="link-btn" data-act="rescope" style="color:#fff">換範疇</button></div>
@@ -138,7 +139,7 @@
       </div></div>`;
       if (!(S.hide || {})[pid]) html += `<a class="myflower" href="garden.html?plaza=${m.plaza || "B"}&f=${encodeURIComponent(pid)}">
         <div class="fa">${FlowerArt.svg(st, look.color, look.kind)}</div>
-        <div class="fi"><b>我的花・${full ? "🌸 盛開 100%" : `${FlowerArt.LABELS[st]} ${flowerPct(n)}%`}</b>
+        <div class="fi"><b>我的「希望花」・${full ? "🌸 盛開 100%" : `${FlowerArt.LABELS[st]} ${flowerPct(n)}%`}</b>
           <span>開在「${PLAZA_NAME[m.plaza] || ""}」・被澆了 ${n} 次</span>
           <div class="fbar"><i style="width:${flowerPct(n)}%"></i></div></div></a>`;
     } else if (ph !== "join") {
@@ -163,7 +164,7 @@
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
     if (ph !== "water" && ph !== "join") html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，操控我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">點地面走路、走到各個地點看介紹，走到花園點花朵就能澆水</p>`;
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟我的夥伴一起深耕</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">點地面走路、走到各個地點看介紹，走到花園點花朵就能澆水</p>`;
     html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
     return html;
   }
