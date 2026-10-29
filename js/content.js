@@ -90,8 +90,9 @@ window.ISLAND_CONTENT = {
     purchaseBridge: { name: "採購橋", icon: "🌉", text: "肩負資源整合、品質把關、成本效益及供應穩定的重要使命，讓每一項資源都能在適當的時間送達需要的地方。" },
     hrBalloon: { name: "人資熱氣球", icon: "🎈", text: "派送人力，精準降落至需要支援的各個範疇，化身人才補給隊，讓合適的人才能在需要的地方發揮價值，協助各範疇共同達成目標。" },
     accountBoat: { name: "會計船", icon: "🛥️", text: "三艘會計船（金色貨船、拖船、帆船），載著資源與經費穩穩前進，在會計碼頭靠岸並回報各範疇的核銷進度，把每一筆經費送到需要的地方。" },
-    selPlaza: { name: "社會情緒學習廣場", icon: "🌸", text: "每位夥伴種下行動句後，會在這裡或復原力廣場開出一朵花。照顧好彼此的情緒與關係，是一切行動的土壤。" },
-    resPlaza: { name: "復原力廣場", icon: "🌼", text: "每位夥伴種下行動句後，會在這裡或社會情緒學習廣場開出一朵花。面對壓力也能彼此支持、重新站起來。" },
+    proPlaza: { name: "專業續航廣場", icon: "🌻", text: "每位夥伴種下的希望花，會開在三座花園其中一座。專業能量持續充電、經驗代代傳承，讓照護走得長長久久。" },
+    selPlaza: { name: "社會情緒學習廣場", icon: "🌸", text: "每位夥伴種下的希望花，會開在三座花園其中一座。照顧好彼此的情緒與關係，是一切行動的土壤。" },
+    resPlaza: { name: "復原力廣場", icon: "🌼", text: "每位夥伴種下的希望花，會開在三座花園其中一座。面對壓力也能彼此支持、重新站起來。" },
     accountDock: { name: "會計碼頭", icon: "⚓", text: "守護每一筆經費與資源，讓各項計畫安穩靠岸、穩健前行，讓每一分投入都能發揮最大價值，成為支持醫院永續經營與連續性照護不可或缺的重要後盾。" }
   },
 
@@ -153,6 +154,17 @@ window.ISLAND_CONTENT = {
     3: { 1: "資訊室", 4: "資訊室及行政單位", 5: "國際接軌", 2: "引進", 3: "科技", 6: "提升效率" },
     4: { 1: "社工室", 4: "社區醫療與居家護理團隊", 5: "社區醫療", 2: "整合", 3: "照護體系", 6: "照護可及性" }
   }
+};
+
+/* 三座花園（希望花隨機種在其中一座） */
+window.PLAZA_NAMES = { B: "社會情緒學習廣場", C: "復原力廣場", D: "專業續航廣場" };
+window.PLAZA_ICONS = { B: "🌸", C: "🌼", D: "🌻" };
+window.PLAZA_SUPPORT = { B: "selPlaza", C: "resPlaza", D: "proPlaza" };
+window.pickPlaza = function (people) {               // 平均分配：挑目前花最少的花園
+  const n = { B: 0, C: 0, D: 0 };
+  Object.values(people || {}).forEach((p) => { if (p && n[p.plaza] !== undefined) n[p.plaza]++; });
+  const min = Math.min(...Object.values(n)), c = Object.keys(n).filter((k) => n[k] === min);
+  return c[Math.floor(Math.random() * c.length)];
 };
 
 /* 把六個詞拼成一句話 */

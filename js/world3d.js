@@ -417,7 +417,8 @@
   const PLAZAS = [
     { name: "AI智慧光廊", x: -6, z: 14, w: 16, d: 10, info: true },
     { name: "社會情緒學習廣場", key: "B", flower: true, x: 22, z: 31, w: 26, d: 12 },
-    { name: "復原力廣場", key: "C", flower: true, x: 52, z: 20, w: 20, d: 14 }
+    { name: "復原力廣場", key: "C", flower: true, x: 52, z: 20, w: 20, d: 14 },
+    { name: "專業續航廣場", key: "D", flower: true, x: -9, z: 31, w: 18, d: 12 }
   ];
   const CAMPUS = { x0: -72, x1: 72, z0: -40, z1: 46 };
   const RIVER = { z: 101, d: 22, docks: [{ key: "accountDock", x: 0 }] };

@@ -9,11 +9,11 @@
   let pid = null;
   try { pid = localStorage.getItem("deepisland:me:" + CFG.eventId); } catch (e) {}
   const SC = (id) => C.scopes.find((s) => s.id === Number(id));
-  const PLAZA = { B: { name: "社會情緒學習廣場", icon: "🌸" }, C: { name: "復原力廣場", icon: "🌼" } };
+  const PLAZA = {}; Object.keys(PLAZA_NAMES).forEach((k) => (PLAZA[k] = { name: PLAZA_NAMES[k], icon: PLAZA_ICONS[k] }));
   const TOTAL = CFG.dropsPerPerson || 10, BLOOM = bloomAt();
   const FILTERS = [["all", "全部"], ["need", "💧 需要澆水"], ["soon", "✨ 快開花了"], ["bloom", "🌸 已盛開"], ["mine", "⭐ 我的花"], ["gave", "💙 我澆過的"]];
 
-  let S = {}, plaza = qs.get("plaza") === "C" ? "C" : qs.get("plaza") === "B" ? "B" : null, filter = "all";
+  let S = {}, plaza = PLAZA_NAMES[qs.get("plaza")] ? qs.get("plaza") : null, filter = "all";
   let lastStage = {}, lastUsed = null, built = false;
   WaterCard.init({ getState: () => S, pid, onClose: () => history.replaceState(null, "", location.pathname + (plaza ? "?plaza=" + plaza : "")) });
   let firstOpen = qs.get("f") || null;

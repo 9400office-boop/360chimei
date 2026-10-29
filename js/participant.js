@@ -118,7 +118,7 @@
 
   // ---------- 首頁（依活動階段） ----------
   function sentenceHtml(s) { return sentenceRich(s, S.people, S.edits, false); }
-  const PLAZA_NAME = { B: "社會情緒學習廣場", C: "復原力廣場" };
+  const PLAZA_NAME = PLAZA_NAMES;
   function sentencesSorted() {
     return Object.entries(S.sentences || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => a.order - b.order);
   }
@@ -148,11 +148,8 @@
       html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">主持人已關閉填寫，你可以一起看大螢幕${waterOpen(S) ? "、進花園幫大家的花澆水" : ""}。</p></div>`;
     }
 
-    // 澆花隨時開放（主持人可在後台暫停）
-    if (waterOpen(S)) {
-      html += `<a class="btn gardenbtn" href="garden.html">🌸 進共識花園澆花<small>你還有 ${leftN} / ${TOTAL} 滴水・每朵澆 ${bloomAt()} 次盛開</small></a>`;
-      html += `<p class="status">全場已經有 <b>${nb}</b> 朵花盛開（共 ${gf.length} 朵）</p>`;
-    } else html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
+    // 進入院區：放在上方
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟我的夥伴一起深耕</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 10px">搖桿或點地面走路、看清單與院區直播，走到花園點花朵就能澆水</p>`;
     if (ph === "reveal") {
       const list = sentencesSorted();
       const mine = list.find((s) => s.pid === pid);
@@ -164,8 +161,13 @@
       html += list.map((s) => sentCard(s)).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟我的夥伴一起深耕</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">點地面走路、走到各個地點看介紹，走到花園點花朵就能澆水</p>`;
-    html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
+    html += `<p style="text-align:center;margin:6px 0 0"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
+    // 進共識花園澆花：放在最下方
+    html += `<p class="status" style="margin-bottom:0">🌸 全場已經有 <b>${nb}</b> 朵花盛開（共 ${gf.length} 朵）</p>`;
+    html += `<div class="sticky"><div class="inner">${waterOpen(S)
+      ? `<a class="btn gardenbtn" href="garden.html">🌸 進共識花園澆花<small>你還有 ${leftN} / ${TOTAL} 滴水・每朵澆 ${bloomAt()} 次盛開</small></a>`
+      : `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`}</div></div>`;
+
     return html;
   }
 
@@ -282,7 +284,7 @@
     const b = document.getElementById("plant"); b.disabled = true;
     const words = {}; [1, 2, 3, 4, 5, 6].forEach((n) => (words[n] = w[n].trim().slice(0, 20)));
     const upd = { words, submittedAt: Date.now() };
-    if (!me().plaza) upd.plaza = Math.random() < .5 ? "B" : "C";
+    if (!me().plaza) upd.plaza = pickPlaza(S.people);
     try {
       await Store.update("people/" + pid, upd);
       local.editing = false; local.words = null;

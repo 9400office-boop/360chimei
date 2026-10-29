@@ -270,7 +270,7 @@
     people().forEach((p) => {
       const n = wt[p.id] || 0;
       rows.push([p.dept || "", p.name, p.avatar || "", p.scope ? SC(p.scope).tag : "", personDone(p) ? personSentence(p, S.edits, p.id) : "", ...wordsCols(p),
-        n, flowerPct(n) + "%", n >= bloomAt() ? "是" : "", HD[p.id] ? "是" : "", waterUsed(S, p.id), p.plaza === "B" ? "社會情緒學習廣場" : p.plaza === "C" ? "復原力廣場" : "", p.joinedAt ? new Date(p.joinedAt).toLocaleString("zh-TW") : ""]);
+        n, flowerPct(n) + "%", n >= bloomAt() ? "是" : "", HD[p.id] ? "是" : "", waterUsed(S, p.id), PLAZA_NAMES[p.plaza] || "", p.joinedAt ? new Date(p.joinedAt).toLocaleString("zh-TW") : ""]);
     });
     download(`360深耕奇美_全部行動句_${CFG.eventId}.csv`, csv(rows), "text/csv;charset=utf-8");
   }
@@ -290,7 +290,7 @@
       const words = {}; C.fields.forEach((f) => (words[f.n] = pick(f.hints)));
       upd["people/" + pid] = {
         name: pick(SIM_NAMES), dept: pick(SIM_DEPTS), avatar: pick(Avatar.presets).id, joinedAt: Date.now() + i,
-        scope: 1 + Math.floor(Math.random() * 4), words, submittedAt: Date.now() + i, plaza: Math.random() < .5 ? "B" : "C", sim: true
+        scope: 1 + Math.floor(Math.random() * 4), words, submittedAt: Date.now() + i, plaza: "BCD"[i % 3], sim: true
       };
     }
     await Store.update("", upd);

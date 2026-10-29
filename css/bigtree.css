@@ -116,7 +116,7 @@
   .bt-bubble.hide { display: none; }
   .bt-bubble.left { left: 2.5%; }
   .bt-bubble.right { right: 2.5%; }
-  .bt-bubble.bottom { left: 50%; bottom: 12px; width: min(620px, calc(100% - 24px)); transform: translateX(-50%); }
+  .bt-bubble.bottom { background: #FFFDF9; left: 50%; bottom: 12px; width: min(620px, calc(100% - 24px)); transform: translateX(-50%); }
   .bt-bubble.go { animation: bbin .55s cubic-bezier(.3,1.3,.5,1); }
   .bt-bubble.bottom.go { animation: bbinb .55s cubic-bezier(.3,1.3,.5,1); }
   @keyframes bbin { from { opacity: 0; transform: translateY(18px) scale(.96); } }

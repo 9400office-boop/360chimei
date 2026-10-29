@@ -5,7 +5,7 @@
 (function () {
   const CFG = window.ISLAND_CONFIG, C = window.ISLAND_CONTENT;
   const SC = (id) => C.scopes.find((s) => s.id === Number(id));
-  const PLAZA = { B: "社會情緒學習廣場", C: "復原力廣場" };
+  const PLAZA = PLAZA_NAMES;
   let getS = () => ({}), pid = null, openId = null, busy = false, lastStage = null, onClose = null;
 
   const S = () => getS() || {};

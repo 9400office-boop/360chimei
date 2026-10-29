@@ -78,11 +78,16 @@
     if (!ME) return;
     const p = (S.people || {})[ME];
     const bar = $("mebar");
-    bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>找不到你的人物，請回到報到頁</span></div>`) +
-      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><button data-me="garden">🌸 去花園</button><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
+    const sheet = document.body.classList.contains("listopen") ? "list" : document.body.classList.contains("feedopen") ? "feed" : "";
+    bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>請回到報到頁</span></div>`) +
+      `<button data-me="follow" class="${follow && !sheet ? "on" : ""}"><i>📍</i>我</button><button data-me="garden"><i>🌸</i>花園</button>` +
+      `<button data-me="list" class="${sheet === "list" ? "on" : ""}"><i>☰</i>清單</button><button data-me="feed" class="${sheet === "feed" ? "on" : ""}"><i>📡</i>直播${feedNew ? `<em>${Math.min(feedNew, 9)}</em>` : ""}</button>` +
+      `<button data-me="all"><i>🗺️</i>全景</button><a href="index.html"><i>←</i>詞卡</a>`;
   }
   if (ME) $("mebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-me]"); if (!b) return;
+    if (b.dataset.me === "list" || b.dataset.me === "feed") { openSheet(document.body.classList.contains(b.dataset.me + "open") ? null : b.dataset.me); return; }
+    openSheet(null);
     if (b.dataset.me === "follow") { follow = true; meFound = false; }
     if (b.dataset.me === "garden") {
       const mp = (S.people || {})[ME] || {}, pz = (W.PLAZAS || []).find((p) => p.key === (mp.plaza || "B"));
@@ -160,7 +165,7 @@
     pts.forEach(([x, z]) => tileLabels.push({ ...mkLabel("tl road care", escapeHtml(r.name), new THREE.Vector3(x, .5, z), () => showSupport("careRoad")), id: "road" }));
   });
   (W.PLAZAS || []).forEach((pz) => {
-    const key = pz.info ? "infoPlaza" : pz.key === "B" ? "selPlaza" : "resPlaza";
+    const key = pz.info ? "infoPlaza" : PLAZA_SUPPORT[pz.key];
     const icon = C.supports[key].icon;
     tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza" + (pz.flower ? " garden" : ""), `${icon} ${escapeHtml(pz.name)}${pz.flower && ME ? " <b class=\"gopen\">走過去澆花 ›</b>" : ""}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => {
       if (pz.flower && ME) { arriveGarden(pz); return; }   // 手機：走到花園，點花朵澆水
@@ -241,7 +246,7 @@
     const sb2 = e.target.closest("[data-sup]");
     if (sb2) {
       const k = sb2.dataset.sup;
-      const target = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), hrBalloon: () => W.vehicles.find((v) => v.key === k).obj.position, accountBoat: () => W.vehicles.find((v) => v.key === k).obj.position, purchaseBridge: () => W.stages[1].bridgeMid, careRoad: () => ({ x: 0, z: 0 }), infoCar: () => W.vehicles.find((v) => v.key === k).obj.position }[k];
+      const target = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), proPlaza: () => W.PLAZAS.find((p) => p.key === "D"), hrBalloon: () => W.vehicles.find((v) => v.key === k).obj.position, accountBoat: () => W.vehicles.find((v) => v.key === k).obj.position, purchaseBridge: () => W.stages[1].bridgeMid, careRoad: () => ({ x: 0, z: 0 }), infoCar: () => W.vehicles.find((v) => v.key === k).obj.position }[k];
       const p = target && target();
       if (p) W.flyTo({ x: p.x, y: k === "hrBalloon" ? p.y : 0, z: p.z }, k === "careRoad" ? 330 : k === "hrBalloon" ? 45 : 55, k === "careRoad" ? .3 : k === "hrBalloon" ? 1.1 : .85);
       showSupport(k); return;
@@ -324,7 +329,7 @@
   function showWriter(pid, kind) {
     const p = (S.people || {})[pid]; if (!p) return;
     const sc = p.scope ? SC(p.scope) : null;
-    const plaza = p.plaza === "B" ? "社會情緒學習廣場" : p.plaza === "C" ? "復原力廣場" : "";
+    const plaza = PLAZA_NAMES[p.plaza] || "";
     const body = personDone(p)
       ? `<p class="wtext">${sentenceRich({ pid }, S.people, S.edits, false)}</p>`
       : `<p class="wtext muted">還在填寫行動句中…</p>`;
@@ -413,7 +418,8 @@
   }
   // 有說明卡或作者卡打開時，收起搖桿，避免重疊
   if (ME) {
-    const syncCard = () => document.body.classList.toggle("cardopen", !$("info").classList.contains("hide") || !$("writer").classList.contains("hide"));
+    const syncCard = () => document.body.classList.toggle("cardopen", !$("info").classList.contains("hide") || !$("writer").classList.contains("hide") || document.body.classList.contains("listopen") || document.body.classList.contains("feedopen"));
+    new MutationObserver(syncCard).observe(document.body, { attributes: true, attributeFilter: ["class"] });
     const mo = new MutationObserver(syncCard);
     mo.observe($("info"), { attributes: true, attributeFilter: ["class"] }); mo.observe($("writer"), { attributes: true, attributeFilter: ["class"] });
   }
@@ -526,9 +532,44 @@
   // ---------- 日誌 ----------
   const events = [];
   const fmt = (t) => new Date(t).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
+  // ---------- 手機：清單與院區直播（底部彈出） ----------
+  let feedNew = 0;
+  function openSheet(which) {
+    document.body.classList.toggle("listopen", which === "list");
+    document.body.classList.toggle("feedopen", which === "feed");
+    if (which) { hideInfo(); $("writer").classList.add("hide"); }
+    if (which === "feed") { feedNew = 0; renderMFeed(); }
+    if (which === "list") renderList();
+    renderMeBar();
+  }
+  function renderMFeed() {
+    const el = $("mfeedList"); if (!el) return;
+    el.innerHTML = events.slice(0, 40).map((e) => `<div class="ev${e.kind ? " k-" + e.kind : ""}"><div class="av">${e.avatar ? Avatar.svg(e.avatar) : ""}</div><div class="msg"><span class="tm">${fmt(e.t)}</span>${e.html}</div></div>`).join("") || `<p class="mf-empty">還沒有動靜，等第一位夥伴報到 🌱</p>`;
+  }
+  if (ME) {
+    document.querySelectorAll("[data-close-sheet]").forEach((b) => b.addEventListener("click", () => openSheet(null)));
+    // 手機遊戲模式：在清單點項目 → 收起清單，人物走過去看介紹
+    $("list").addEventListener("click", (e) => {
+      const sb = e.target.closest("[data-scope]");
+      if (sb) { e.stopImmediatePropagation(); const id = Number(sb.dataset.scope); openScope = openScope === id ? null : id; renderList(); return; }
+      const ib = e.target.closest("[data-item]");
+      if (ib) { e.stopImmediatePropagation(); const t = W.tileById[ib.dataset.item]; openSheet(null); walkTo(t.x, t.z + W.R * .8, () => focusItem(ib.dataset.item), ITEM[ib.dataset.item].short); return; }
+      const sp = e.target.closest("[data-sup]");
+      if (sp) {
+        e.stopImmediatePropagation(); const k = sp.dataset.sup; openSheet(null);
+        const fixed = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), proPlaza: () => W.PLAZAS.find((p) => p.key === "D"), purchaseBridge: () => W.stages[1].bridgeMid }[k];
+        const p = fixed && fixed();
+        if (p) walkTo(p.x, p.z + (k === "fountain" ? 6 : 2), () => showSupport(k), C.supports[k].name); else showSupport(k);
+        return;
+      }
+      if (e.target.closest("[data-stages]")) { e.stopImmediatePropagation(); openSheet(null); follow = false; renderMeBar(); W._flyRaw({ x: 0, y: 0, z: 0 }, 300, .12, 0); return; }
+      if (e.target.closest("[data-link]")) openSheet(null);
+    }, true);
+  }
   function addEvent(html, avatar, kind) {
-    const ev = { html, avatar, t: Date.now() };
+    const ev = { html, avatar, kind, t: Date.now() };
     events.unshift(ev); if (events.length > 200) events.pop();
+    if (ME) { if (document.body.classList.contains("feedopen")) renderMFeed(); else if (feedNew < 99) { feedNew++; if (feedNew <= 10) renderMeBar(); } }
     const el = document.createElement("div"); el.className = "ev" + (kind ? " k-" + kind : "");
     el.innerHTML = `<div class="av">${avatar ? Avatar.svg(avatar) : ""}</div><div class="msg"><span class="tm">${fmt(ev.t)}</span>${html}</div>`;
     const list = $("feedList"); list.appendChild(el);
@@ -543,7 +584,12 @@
   // ---------- 資料 ----------
   let S = {};
   const loadedAt = Date.now();
-  let prevWt = null;
+  let prevWt = null, meTree = false;
+  // 手機：收成時點上方提示，切換到共識大樹畫面（在本機繪製，不增加網路負擔）
+  if (ME) {
+    $("phase").addEventListener("click", () => { if (((S.state && S.state.phase) || "join") === "harvest") { meTree = true; openSheet(null); hideInfo(); apply(); } });
+    $("treeback").addEventListener("click", () => { meTree = false; apply(); });
+  }
   let prevPeople = null, prevSentCount = 0, lastSpot = null, lastTour = "init", lastPhase = null, sentKey = "", firstSync = true;
   const sentsSorted = () => Object.entries(S.sentences || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => a.order - b.order);
   let treePos = {};
@@ -572,14 +618,14 @@
         const o = prevPeople[id];
         const nm = `<b>${escapeHtml(p.name)}</b>${p.dept ? `<small>（${escapeHtml(p.dept)}）</small>` : ""}`;
         if (!o) addEvent(`${nm} 報到了`, p.avatar);
-        else if (personDone(p) && !personDone(o)) addEvent(`${nm} 種下行動句，在${p.plaza === "B" ? "社會情緒學習廣場" : "復原力廣場"}開了一朵花 🌸`, p.avatar);
+        else if (personDone(p) && !personDone(o)) addEvent(`${nm} 種下行動句，在${PLAZA_NAMES[p.plaza] || "花園"}種下一朵希望花 🌱`, p.avatar);
       });
     }
     prevPeople = JSON.parse(JSON.stringify(people));
     // 花朵盛開：直播
     if (prevWt && !settling) Object.entries(wt).forEach(([fid, n]) => {
       const p = people[fid]; if (!p || hidden[fid]) return;
-      if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt()) addEvent(`🌸 <b>${escapeHtml(p.name)}</b> 的行動句澆到 100%，在${p.plaza === "B" ? "社會情緒學習廣場" : "復原力廣場"}盛開了！`, p.avatar, "bloom");
+      if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt()) addEvent(`🌸 <b>${escapeHtml(p.name)}</b> 的行動句澆到 100%，在${PLAZA_NAMES[p.plaza] || "花園"}盛開了！`, p.avatar, "bloom");
     });
     prevWt = wt;
 
@@ -627,12 +673,13 @@
     // 階段
     if (phase !== lastPhase) {
       // 進入澆花：大螢幕鏡頭飛到兩座花園
-      if (phase === "water" && lastPhase !== null && !ME) { clearFocus(); W.flyTo({ x: 36, y: 0, z: 26 }, 78, .78, 0); }
+      if (phase === "water" && lastPhase !== null && !ME) { clearFocus(); W.flyTo({ x: 18, y: 0, z: 26 }, 118, .78, 0); }
       treeOverride = null; lastPhase = phase;
     }
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
     // 參加者手機的地圖（?me=）不切換共識大樹，維持院區全景；大樹只在大螢幕顯示
-    const showTree = ME ? false : (treeOverride !== null ? treeOverride : (phase === "harvest" && !spotId));
+    if (phase !== "harvest") meTree = false;
+    const showTree = ME ? meTree : (treeOverride !== null ? treeOverride : (phase === "harvest" && !spotId));
     BigTree.show(showTree);
     document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
     if (showTree) BigTree.update({ sents, people, edits: S.edits });
@@ -665,7 +712,7 @@
       join: ME ? `🕹️ <b>搖桿</b>或<b>點地面</b>走路・走到花園點花朵就能澆水` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
       water: ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
-      harvest: `🌳 <b>收成</b>・我們的共識大樹`
+      harvest: ME ? `🌳 <b>收成</b>・我們的共識大樹 <span class="phgo">點我看大樹 ›</span>` : `🌳 <b>收成</b>・我們的共識大樹`
     }[phase];
     const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
     const nb = gf.filter((f) => f.bloomed).length;
