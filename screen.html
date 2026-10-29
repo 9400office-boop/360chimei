@@ -252,6 +252,15 @@
   .joy .knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3E9C84, #1E6F5C); border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.3); transition: transform .12s; }
   .joy.on .knob { transition: none; background: radial-gradient(circle at 35% 30%, #F2CC6B, #E8B84A); }
   .joy.on .ring { background: radial-gradient(circle, rgba(255,253,249,.5) 0 55%, rgba(232,184,74,.35) 56% 100%); }
+  /* 手機遊戲模式：說明卡／作者卡固定在下方按鈕列之上，可捲動；開卡時搖桿暫時收起 */
+  body.memode .info, body.memode.compact .info, body.memode .writer, body.memode.compact .writer {
+    left: 10px; right: 10px; width: auto; max-width: none; bottom: calc(86px + env(safe-area-inset-bottom));
+    max-height: min(46vh, 420px); overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 8; box-shadow: 0 -6px 28px rgba(30,50,45,.22); }
+  body.memode .info { padding: 14px 44px 16px 18px; }
+  body.memode .info h3 { font-size: 19px; margin: 4px 0 6px; }
+  body.memode .info .x, body.memode .writer .x { position: sticky; float: right; top: 0; margin: -4px -30px 0 0; width: 34px; height: 34px; border-radius: 50%; background: #F1EADC; font-size: 18px; line-height: 1; }
+  body.memode.cardopen .joy, body.memode.cardopen .walkhint { display: none; }
+  @media (max-height: 560px) { body.memode .info, body.memode.compact .info, body.memode .writer, body.memode.compact .writer { left: auto; width: min(520px, calc(100% - 20px)); max-height: calc(100% - 150px); } }
   @media (max-height: 560px) { body.memode .joy { bottom: calc(70px + env(safe-area-inset-bottom)); width: 104px; height: 104px; } }
   .feed .ev.k-bloom { border-left-color: #F59E0B; background: #FFF8E6; }
 

@@ -411,6 +411,12 @@
     showInfo(`<div class="eyebrow">360° 永續照護環・照護站 ${st.n}</div><h3>${st.icon} ${escapeHtml(st.name)}</h3>` +
       (items.length ? items.map((l) => `<div class="ln">🔗 ${escapeHtml(nameOf(l.a === st.id ? l.b : l.a))}<br>${escapeHtml(l.why)}</div>`).join("") : `<div class="ln">連續照護的一站，透過採購橋與院區相連。</div>`));
   }
+  // 有說明卡或作者卡打開時，收起搖桿，避免重疊
+  if (ME) {
+    const syncCard = () => document.body.classList.toggle("cardopen", !$("info").classList.contains("hide") || !$("writer").classList.contains("hide"));
+    const mo = new MutationObserver(syncCard);
+    mo.observe($("info"), { attributes: true, attributeFilter: ["class"] }); mo.observe($("writer"), { attributes: true, attributeFilter: ["class"] });
+  }
   // ---------- 虛擬搖桿：用拇指推著走（方向以鏡頭視角為準） ----------
   const joy = { on: false, x: 0, y: 0, sent: 0 };
   if (ME) {
