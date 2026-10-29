@@ -81,7 +81,7 @@
     const sheet = document.body.classList.contains("listopen") ? "list" : document.body.classList.contains("feedopen") ? "feed" : "";
     bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>請回到報到頁</span></div>`) +
       `<button data-me="follow" class="${follow && !sheet ? "on" : ""}"><i>📍</i>我</button><button data-me="garden"><i>🌸</i>花園</button>` +
-      `<button data-me="list" class="${sheet === "list" ? "on" : ""}"><i>☰</i>清單</button><button data-me="feed" class="${sheet === "feed" ? "on" : ""}"><i>📡</i>直播${feedNew ? `<em>${Math.min(feedNew, 9)}</em>` : ""}</button>` +
+      `<button data-me="list" class="${sheet === "list" ? "on" : ""}"><i>☰</i>清單</button><button data-me="feed" class="${sheet === "feed" ? "on" : ""}"><i>📡</i>直播</button>` +
       `<button data-me="all"><i>🗺️</i>全景</button><a href="index.html"><i>←</i>詞卡</a>`;
   }
   if (ME) $("mebar").addEventListener("click", (e) => {
@@ -569,7 +569,7 @@
   function addEvent(html, avatar, kind) {
     const ev = { html, avatar, kind, t: Date.now() };
     events.unshift(ev); if (events.length > 200) events.pop();
-    if (ME) { if (document.body.classList.contains("feedopen")) renderMFeed(); else if (feedNew < 99) { feedNew++; if (feedNew <= 10) renderMeBar(); } }
+    if (ME && document.body.classList.contains("feedopen")) renderMFeed();
     const el = document.createElement("div"); el.className = "ev" + (kind ? " k-" + kind : "");
     el.innerHTML = `<div class="av">${avatar ? Avatar.svg(avatar) : ""}</div><div class="msg"><span class="tm">${fmt(ev.t)}</span>${html}</div>`;
     const list = $("feedList"); list.appendChild(el);
