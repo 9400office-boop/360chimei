@@ -1001,6 +1001,20 @@
   // 給人物與樹用的工具
   W.GEO = GEO; W.L = L; W.colored = colored; W.merge = merge;
   W.tilesOfScope = (s) => W.tiles.filter((t) => t.scope === Number(s));
-  W.BUILDINGS = BUILDINGS; W.PLAZAS = PLAZAS; W.ROADS = ROADS; W.RIVER = RIVER;
+  W.BUILDINGS = BUILDINGS; W.PLAZAS = PLAZAS; W.ROADS = ROADS; W.RIVER = RIVER; W.CAMPUS = CAMPUS;
+  // 地面高度（人物走動用）：院區平台、環形步道、外圍地面
+  W.groundY = function (x, z) {
+    if (x > CAMPUS.x0 - 1 && x < CAMPUS.x1 + 1 && z > CAMPUS.z0 - 1 && z < CAMPUS.z1 + 1) return TOP;
+    if (W.RX) { const e = Math.hypot(x / W.RX, z / W.RZ); if (Math.abs(e - 1) * Math.min(W.RX, W.RZ) < 2.2) return W.ringY(x, z) + .05; }
+    return .1;
+  };
+  // 可以走的範圍：不走進河裡（碼頭除外）、不走出地圖
+  W.clampWalk = function (x, z) {
+    x = Math.max(-150, Math.min(150, x)); z = Math.max(-110, z);
+    const bank = RIVER.z - RIVER.d / 2;
+    const dock = (W.docks || []).find((d) => Math.abs(x - d.x) < 6);
+    z = Math.min(z, dock ? bank + 6.5 : bank - 1.2);
+    return { x, z };
+  };
   window.World = W;
 })();

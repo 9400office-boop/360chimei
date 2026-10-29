@@ -6,8 +6,10 @@
 (function () {
   const CFG = window.ISLAND_CONFIG;
   const FB_VER = "10.12.2";
-  const listeners = [];
-  let current = {};
+  const listeners = [], moveListeners = [];
+  let current = {}, moves = {};
+  // 人物走動：獨立的輕量頻道（不觸發整體重繪）
+  function emitMove(id, m) { moves[id] = m; moveListeners.forEach((fn) => { try { fn(id, m); } catch (e) { console.error(e); } }); }
   let impl = null;
 
   function emit() { listeners.forEach((fn) => { try { fn(current); } catch (e) { console.error(e); } }); }
@@ -37,7 +39,20 @@
     const root = firebase.database().ref("events/" + CFG.eventId);
     const conn = firebase.database().ref(".info/connected");
     conn.on("value", (s) => { Store.online = !!s.val(); Store.onConnection && Store.onConnection(Store.online); });
-    root.on("value", (snap) => { current = snap.val() || {}; emit(); });
+    // 分開監聽各個資料區塊：走動資料（moves）不會讓整個畫面重算
+    const KEYS = ["people", "waters", "state", "sentences", "edits", "hide", "fieldCounts"];
+    let pend = false;
+    const flush = () => { pend = false; emit(); };
+    KEYS.forEach((k) => root.child(k).on("value", (snap) => {
+      const v = snap.val(); const n = { ...current };
+      if (v === null || v === undefined) delete n[k]; else n[k] = v;
+      current = n;
+      if (!pend) { pend = true; setTimeout(flush, 0); }
+    }));
+    const mv = root.child("moves");
+    mv.on("child_added", (s) => emitMove(s.key, s.val()));
+    mv.on("child_changed", (s) => emitMove(s.key, s.val()));
+    mv.on("child_removed", (s) => emitMove(s.key, null));
     return {
       set: (p, v) => root.child(p).set(v),
       update: (p, o) => (p ? root.child(p) : root).update(o),
@@ -50,6 +65,7 @@
         if (!r.committed) throw new Error("派卡失敗，請再試一次");
         return chosen;
       },
+      move: (id, m) => mv.child(id).set(m),
       reset: () => root.remove()
     };
   }
@@ -66,7 +82,10 @@
       if (bc) bc.postMessage("changed");
     };
     const refresh = () => { current = load(); emit(); };
-    if (bc) bc.onmessage = refresh;
+    const MKEY = KEY + ":moves";
+    const loadMoves = () => { try { return JSON.parse(localStorage.getItem(MKEY) || "{}"); } catch (e) { return {}; } };
+    if (bc) bc.onmessage = (e) => { if (e.data && e.data.move) emitMove(e.data.move, e.data.m); else refresh(); };
+    setTimeout(() => Object.entries(loadMoves()).forEach(([id, m]) => emitMove(id, m)), 0);
     window.addEventListener("storage", (e) => { if (e.key === KEY) refresh(); });
     current = load();
     setTimeout(emit, 0);
@@ -99,7 +118,12 @@
         const s = load(); const out = pickBalanced(s.fieldCounts);
         s.fieldCounts = out.counts; save(s); return out.chosen;
       },
-      async reset() { save({}); }
+      async move(id, m) {
+        const all = loadMoves(); all[id] = m;
+        try { localStorage.setItem(MKEY, JSON.stringify(all)); } catch (e) {}
+        emitMove(id, m); if (bc) bc.postMessage({ move: id, m });
+      },
+      async reset() { try { localStorage.removeItem(MKEY); } catch (e) {} save({}); }
     };
   }
 
@@ -117,6 +141,9 @@
     update: (p, o) => impl.update(p, o),
     remove: (p) => impl.remove(p),
     claimField: () => impl.claimField(),
+    move: (id, m) => impl.move(id, m),
+    onMove(fn) { moveListeners.push(fn); Object.entries(moves).forEach(([id, m]) => fn(id, m)); },
+    get moves() { return moves; },
     reset: () => impl.reset()
   };
   window.Store = Store;

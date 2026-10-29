@@ -241,6 +241,18 @@
   .tl.plaza.garden .gopen { margin-left: 4px; background: #E8B84A; color: #3A2A00; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-family: var(--font); }
   body.memode .tl.plaza.garden { font-size: 13px; padding: 5px 10px; box-shadow: 0 0 0 3px rgba(232,184,74,.55), 0 3px 10px rgba(0,0,0,.15); animation: gpulse 2s ease-in-out infinite; }
   @keyframes gpulse { 50% { box-shadow: 0 0 0 7px rgba(232,184,74,.15), 0 3px 10px rgba(0,0,0,.15); } }
+  .walkhint { position: absolute; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(36,48,44,.88); color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 14px; z-index: 9; white-space: nowrap; max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; pointer-events: none; animation: rise .25s; }
+  body:not(.memode) .walkhint { display: none; }
+  /* 虛擬搖桿（手機操控人物） */
+  .joy { display: none; }
+  body.memode .joy { display: block; position: absolute; left: 18px; bottom: calc(92px + env(safe-area-inset-bottom)); width: 124px; height: 124px; z-index: 4; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .joy .ring { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(255,253,249,.35) 0 55%, rgba(255,253,249,.55) 56% 100%); border: 3px solid rgba(255,255,255,.9); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .joy .ring::before, .joy .ring::after { content: ""; position: absolute; left: 50%; top: 50%; width: 70%; height: 2px; background: rgba(30,111,92,.18); transform: translate(-50%, -50%); }
+  .joy .ring::after { transform: translate(-50%, -50%) rotate(90deg); }
+  .joy .knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #3E9C84, #1E6F5C); border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.3); transition: transform .12s; }
+  .joy.on .knob { transition: none; background: radial-gradient(circle at 35% 30%, #F2CC6B, #E8B84A); }
+  .joy.on .ring { background: radial-gradient(circle, rgba(255,253,249,.5) 0 55%, rgba(232,184,74,.35) 56% 100%); }
+  @media (max-height: 560px) { body.memode .joy { bottom: calc(70px + env(safe-area-inset-bottom)); width: 104px; height: 104px; } }
   .feed .ev.k-bloom { border-left-color: #F59E0B; background: #FFF8E6; }
 
   /* =========================================================
@@ -348,6 +360,7 @@
   }
 </style>
 <link rel="stylesheet" href="css/bigtree.css">
+<link rel="stylesheet" href="css/garden.css">
 </head>
 <body>
 <div id="stage"><div id="labels"></div></div>
@@ -409,6 +422,8 @@
 </div></div>
 <div class="mode" id="mode"></div>
 <div class="mebar" id="mebar"></div>
+<div class="walkhint hide" id="walkhint"></div>
+<div class="joy" id="joy" aria-label="搖桿"><div class="ring"></div><div class="knob"></div></div>
 
 <script src="js/vendor/three.min.js"></script>
 <script src="js/vendor/OrbitControls.js"></script>
@@ -422,6 +437,8 @@
 <script src="js/life3d.js"></script>
 <script src="js/balloons3d.js"></script>
 <script src="js/bigtree.js"></script>
+<script src="js/flowerart.js"></script>
+<script src="js/watercard.js"></script>
 <script src="js/screen3d.js"></script>
 </body>
 </html>

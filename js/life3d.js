@@ -154,18 +154,20 @@
           return;
         }
         if (People.paused && !e.spotTarget) { e.body.position.y = 0; e.body.rotation.z = 0; return; }
-        const tgt = e.spotTarget || e.target;
+        const tgt = e.spotTarget || e.ctrl || e.target;
         let moving = false;
         if (tgt) {
           const dx = tgt.x - g.position.x, dz = tgt.z - g.position.z, d = Math.hypot(dx, dz);
-          if (d > .08) {
-            const sp = e.spotTarget ? 3.2 : 1.3;
+          if (d > (e.ctrlSpeed ? .02 : .08)) {
+            const sp = e.spotTarget ? 3.2 : e.ctrl ? (e.ctrlSpeed || (d > 30 ? 9 : 5.2)) : 1.3;   // 玩家走路比較快，遠距離小跑步
             const k = Math.min(1, sp * dt / d);
             g.position.x += dx * k; g.position.z += dz * k;
             const want = Math.atan2(dx, dz);
             let diff = ((want - g.rotation.y + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
             g.rotation.y += diff * Math.min(1, dt * 8);
             moving = true;
+          } else if (e.ctrl && !e.spotTarget) {
+            if (e.onArrive) { const f = e.onArrive; e.onArrive = null; try { f(); } catch (er) { console.error(er); } }
           } else if (!e.spotTarget) { e.target = null; e.wait = 1 + Math.random() * 4; }
           else {
             // 面向樹
@@ -178,6 +180,8 @@
           e.wait -= dt;
           if (e.wait <= 0) e.target = randInTile(e.tile);
         }
+        // 跟著地面高度（院區平台、環形步道、外圍地面）
+        if (W.groundY) { const gy = W.groundY(g.position.x, g.position.z); g.position.y += (gy - g.position.y) * Math.min(1, dt * 8); }
         e.phase += dt * (moving ? 11 : 2);
         e.body.position.y = moving ? Math.abs(Math.sin(e.phase)) * .1 : 0;
         e.body.rotation.z = moving ? Math.sin(e.phase) * .09 : Math.sin(e.phase) * .02;
@@ -185,6 +189,15 @@
         e.seed.rotation.y += dt * 2;
       });
     },
+    // 玩家操控：走到指定位置（抵達後原地站著，不再自己亂逛）
+    drive(id, x, z, opts = {}) {
+      const e = ents[id]; if (!e) return false;
+      const c = W.clampWalk ? W.clampWalk(x, z) : { x, z };
+      e.ctrl = new V3(c.x, TOP, c.z); e.onArrive = opts.onArrive || null; e.target = null; e.ctrlSpeed = opts.speed || null;
+      if (opts.instant) { e.grp.position.set(c.x, W.groundY ? W.groundY(c.x, c.z) : TOP, c.z); e.falling = false; }
+      return true;
+    },
+    release(id) { const e = ents[id]; if (e) { e.ctrl = null; e.onArrive = null; } },
     headPos(id) { const e = ents[id]; return e ? new V3(e.grp.position.x, e.grp.position.y + 1.6, e.grp.position.z) : null; }
   };
 

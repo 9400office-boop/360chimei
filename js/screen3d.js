@@ -79,12 +79,15 @@
     const p = (S.people || {})[ME];
     const bar = $("mebar");
     bar.innerHTML = (p ? `<div class="who">${Avatar.svg(p.avatar)}<span>${escapeHtml(p.name)}</span></div>` : `<div class="who"><span>找不到你的人物，請回到報到頁</span></div>`) +
-      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><a href="garden.html${p && p.plaza ? "?plaza=" + p.plaza : ""}">🌸 花園</a><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
+      `<button data-me="follow" class="${follow ? "on" : ""}">📍 我</button><button data-me="garden">🌸 去花園</button><button data-me="all">🗺️ 全景</button><a href="index.html">← 詞卡</a>`;
   }
   if (ME) $("mebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-me]"); if (!b) return;
     if (b.dataset.me === "follow") { follow = true; meFound = false; }
-    if (b.dataset.me === "garden") { follow = false; const pz = (W.PLAZAS || []).find((p) => p.key === "B"); W._flyRaw({ x: pz.x + 14, y: 0, z: pz.z }, 70, .85, 0); }
+    if (b.dataset.me === "garden") {
+      const mp = (S.people || {})[ME] || {}, pz = (W.PLAZAS || []).find((p) => p.key === (mp.plaza || "B"));
+      walkTo(pz.x, pz.z + pz.d / 2 + .8, () => arriveGarden(pz), pz.name);
+    }
     if (b.dataset.me === "all") { follow = false; W._flyRaw({ x: 0, y: 0, z: 30 }, 345, .72, 0); }
     renderMeBar();
   });
@@ -120,11 +123,15 @@
   // ---------- 標籤 ----------
   const $labels = $("labels");
   const tileLabels = [];
-  function mkLabel(cls, html, anchor, onClick) {
+  function mkLabel(cls, html, anchor, onClick, opt = {}) {
     const el = document.createElement("div");
     el.className = "lbl"; el.innerHTML = `<div class="${cls}">${html}</div>`;
     $labels.appendChild(el);
-    if (onClick) el.firstChild.addEventListener("click", onClick);
+    // 手機遊戲模式：點地點 → 人物走過去，抵達後才顯示介紹
+    if (onClick) el.firstChild.addEventListener("click", (ev) => {
+      if (ME && !opt.noWalk && anchor && myEnt()) { ev.stopPropagation(); const w = opt.walk || anchor; walkTo(w.x, w.z, onClick, opt.label || el.textContent.trim()); }
+      else onClick(ev);
+    });
     return { el, inner: el.firstChild, anchor };
   }
   W.tiles.forEach((t) => {
@@ -145,7 +152,7 @@
   (W.BUILDINGS || []).forEach((bd) => {
     if (!bd.scope) return;
     const sc = SC(bd.scope);
-    tileLabels.push({ ...mkLabel("tl bldg", `<span class="n" style="color:${sc.color}">${sc.tag}</span>${escapeHtml(sc.name)}`, new THREE.Vector3(bd.lx, W.TOP + bd.ly, bd.lz), () => focusScope(bd.scope)), id: bd.id, scope: bd.scope });
+    tileLabels.push({ ...mkLabel("tl bldg", `<span class="n" style="color:${sc.color}">${sc.tag}</span>${escapeHtml(sc.name)}`, new THREE.Vector3(bd.lx, W.TOP + bd.ly, bd.lz), () => focusScope(bd.scope), { walk: { x: bd.x, z: bd.z + (bd.d || 10) / 2 + 3 } }), id: bd.id, scope: bd.scope });
   });
   (W.ROADS || []).forEach((r) => {
     const pts = r.vertical ? [[r.x, -48], [r.x, 60]] : [[0, r.z]];
@@ -155,9 +162,9 @@
   (W.PLAZAS || []).forEach((pz) => {
     const key = pz.info ? "infoPlaza" : pz.key === "B" ? "selPlaza" : "resPlaza";
     const icon = C.supports[key].icon;
-    tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza" + (pz.flower ? " garden" : ""), `${icon} ${escapeHtml(pz.name)}${pz.flower && ME ? " <b class=\"gopen\">進花園 ›</b>" : ""}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => {
-      if (pz.flower && ME) { location.href = "garden.html?plaza=" + pz.key; return; }   // 手機：點花園就開啟花園頁
-      W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }), id: "plaza" });
+    tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza" + (pz.flower ? " garden" : ""), `${icon} ${escapeHtml(pz.name)}${pz.flower && ME ? " <b class=\"gopen\">走過去澆花 ›</b>" : ""}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => {
+      if (pz.flower && ME) { arriveGarden(pz); return; }   // 手機：走到花園，點花朵澆水
+      W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }, { walk: { x: pz.x, z: pz.z + pz.d / 2 + .8 } }), id: "plaza" });
   });
   W.stages.forEach((st) => { if (st.bridgeMid) tileLabels.push({ ...mkLabel("tl sup small", `🌉 採購橋`, st.bridgeMid, () => showSupport("purchaseBridge")), id: "bridge" }); });
   [-137.5, -47.5, 0, 180].map((d) => d * Math.PI / 180).forEach((a) => {
@@ -168,7 +175,7 @@
   // 會移動的交通工具標籤
   const vehLabels = (W.vehicles || []).map((v) => {
     const sp = C.supports[v.key];
-    const l = mkLabel("tl sup veh", `${sp.icon} ${escapeHtml(sp.name)}`, new THREE.Vector3(), () => { const p = v.obj.position; W.flyTo({ x: p.x, y: 0, z: p.z }, 40, .85); showSupport(v.key); });
+    const l = mkLabel("tl sup veh", `${sp.icon} ${escapeHtml(sp.name)}`, new THREE.Vector3(), () => { const p = v.obj.position; W.flyTo({ x: p.x, y: 0, z: p.z }, 40, .85); showSupport(v.key); }, { noWalk: true });
     return { ...l, v };
   });
   W.onFrame(() => {
@@ -176,7 +183,7 @@
     vehLabels.forEach((l) => { if (far && !l.v.main) { if (l._v !== 0) { l.el.style.display = "none"; l._v = 0; } return; } l.anchor.copy(l.v.obj.position); l.anchor.y += l.v.h; place(l, l.anchor); });
   });
   W.stages.forEach((st) => {
-    tileLabels.push({ ...mkLabel("tl stage", `<span class="n">${st.n}</span>${st.icon} ${escapeHtml(st.name)}`, new THREE.Vector3(st.x, 1.2, st.z + 6.6), () => W.flyTo({ x: st.x, y: 0, z: st.z }, 38, .9)), id: st.id });
+    tileLabels.push({ ...mkLabel("tl stage", `<span class="n">${st.n}</span>${st.icon} ${escapeHtml(st.name)}`, new THREE.Vector3(st.x, 1.2, st.z + 6.6), () => { W.flyTo({ x: st.x, y: 0, z: st.z }, 38, .9); showStage(st); }, { walk: { x: st.x, z: st.z + 4 } }), id: st.id });
   });
   const nameTags = {}, treeTags = {};
   function place(l, v3) {
@@ -338,10 +345,141 @@
   cv.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
   cv.addEventListener("pointerup", (e) => {
     if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
-    const r = pickAt(e); if (!r) return;
-    if (ME && r.kind === "flower") { const fp = (S.people || {})[r.pid] || {}; location.href = `garden.html?plaza=${fp.plaza || "B"}&f=${encodeURIComponent(r.pid)}`; return; }
-    showWriter(r.pid, r.kind);
+    const r = pickAt(e);
+    if (ME) {
+      if (r && r.kind === "flower") { tapFlower(r.pid); return; }
+      if (r && r.kind === "person" && r.pid !== ME) { showWriter(r.pid, r.kind); return; }
+      const g = groundAt(e); if (g) { $("writer").classList.add("hide"); hideInfo(); walkTo(g.x, g.z); }
+      return;
+    }
+    if (r) showWriter(r.pid, r.kind);
   });
+  // ---------- 手機遊戲模式：點地面走路、走到地點看介紹、走到花園點花澆水 ----------
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), _hit = new THREE.Vector3();
+  function groundAt(ev) {
+    const r = cv.getBoundingClientRect();
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, W.camera);
+    plane.constant = -W.TOP;
+    if (!ray.ray.intersectPlane(plane, _hit)) return null;
+    const C0 = W.CAMPUS;
+    if (!(C0 && _hit.x > C0.x0 && _hit.x < C0.x1 && _hit.z > C0.z0 && _hit.z < C0.z1)) { plane.constant = -.1; if (!ray.ray.intersectPlane(plane, _hit)) return null; }
+    return { x: _hit.x, z: _hit.z };
+  }
+  const myEnt = () => ME && People.ents[ME];
+  let lastMoveSent = 0, moveTimer = null;
+  function sendMove(x, z) {
+    const m = { x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10, t: Date.now() };
+    const e = myEnt(); if (e) e._mt = m.t;
+    const go = () => { lastMoveSent = Date.now(); Store.move(ME, m).catch(() => {}); };
+    clearTimeout(moveTimer);
+    if (Date.now() - lastMoveSent > 300) go(); else moveTimer = setTimeout(go, 300);   // 連點時最多每 0.3 秒送一次
+  }
+  // 目的地標記
+  const mark = new THREE.Mesh(new THREE.RingGeometry(.5, .85, 28), new THREE.MeshBasicMaterial({ color: 0xE8B84A, transparent: true, opacity: .9, side: THREE.DoubleSide, depthWrite: false }));
+  mark.rotation.x = -Math.PI / 2; mark.visible = false; W.scene.add(mark);
+  let markT = 0;
+  W.onFrame((dt) => { if (!mark.visible) return; markT += dt; mark.scale.setScalar(1 + Math.sin(markT * 6) * .15); });
+  function walkTo(x, z, onArrive, label) {
+    const e = myEnt();
+    if (!e) { if (onArrive) onArrive(); return; }
+    const c = W.clampWalk(x, z);
+    const d = Math.hypot(c.x - e.grp.position.x, c.z - e.grp.position.z);
+    mark.position.set(c.x, W.groundY(c.x, c.z) + .08, c.z); mark.visible = true; markT = 0;
+    if (!follow) { follow = true; renderMeBar(); }
+    People.drive(ME, c.x, c.z, { onArrive: () => { mark.visible = false; if (onArrive) onArrive(); } });
+    sendMove(c.x, c.z);
+    if (label && d > 4) walkHint(`🚶 走去「${label.replace(/走過去澆花 ›/, "").trim()}」…`);
+  }
+  let hintT = null;
+  function walkHint(t) { const el = $("walkhint"); el.textContent = t; el.classList.remove("hide"); clearTimeout(hintT); hintT = setTimeout(() => el.classList.add("hide"), 1800); }
+  function arriveGarden(pz) {
+    walkHint(`🌸 到「${pz.name}」了！點花朵就能看句子、幫它澆水`);
+  }
+  function tapFlower(fid) {
+    const f = Life.Flowers.flowers[fid], e = myEnt();
+    if (!f || !e) { WaterCard.open(fid); return; }
+    const fp = f.m.position, d = Math.hypot(fp.x - e.grp.position.x, fp.z - e.grp.position.z);
+    if (d < 3.4) { WaterCard.open(fid); return; }
+    // 走到花旁邊再打開
+    const k = 1.4 / d;
+    walkTo(fp.x + (e.grp.position.x - fp.x) * k, fp.z + (e.grp.position.z - fp.z) * k, () => WaterCard.open(fid));
+    walkHint("🚶 走到這朵花旁邊…");
+  }
+  function showStage(st) {
+    const items = C.links.filter((l) => l.a === st.id || l.b === st.id);
+    showInfo(`<div class="eyebrow">360° 永續照護環・照護站 ${st.n}</div><h3>${st.icon} ${escapeHtml(st.name)}</h3>` +
+      (items.length ? items.map((l) => `<div class="ln">🔗 ${escapeHtml(nameOf(l.a === st.id ? l.b : l.a))}<br>${escapeHtml(l.why)}</div>`).join("") : `<div class="ln">連續照護的一站，透過採購橋與院區相連。</div>`));
+  }
+  // ---------- 虛擬搖桿：用拇指推著走（方向以鏡頭視角為準） ----------
+  const joy = { on: false, x: 0, y: 0, sent: 0 };
+  if (ME) {
+    const J = $("joy"), knob = J.querySelector(".knob"), R = 46;
+    let cx = 0, cy = 0, pidJ = null;
+    const setKnob = (dx, dy) => { knob.style.transform = `translate(${dx}px, ${dy}px)`; };
+    J.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      pidJ = e.pointerId; J.setPointerCapture(pidJ);
+      const r = J.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+      joy.on = true; J.classList.add("on");
+      mark.visible = false; const me0 = myEnt(); if (me0) me0.onArrive = null;
+      if (!follow) { follow = true; renderMeBar(); }
+      $("writer").classList.add("hide"); hideInfo();
+      if (navigator.vibrate) try { navigator.vibrate(12); } catch (er) {}
+      move(e);
+    });
+    const move = (e) => {
+      if (!joy.on || e.pointerId !== pidJ) return;
+      let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy);
+      if (d > R) { dx *= R / d; dy *= R / d; }
+      joy.x = dx / R; joy.y = dy / R; setKnob(dx, dy);
+    };
+    const end = (e) => {
+      if (e.pointerId !== pidJ) return;
+      joy.on = false; joy.x = joy.y = 0; setKnob(0, 0); J.classList.remove("on");
+      const me0 = myEnt();
+      if (me0) { const g = me0.grp.position; People.drive(ME, g.x, g.z, { speed: 6 }); sendMove(g.x, g.z); }
+    };
+    J.addEventListener("pointermove", move);
+    J.addEventListener("pointerup", end); J.addEventListener("pointercancel", end);
+    // 電腦也能用方向鍵／WASD
+    const keys = {};
+    window.addEventListener("keydown", (e) => { if (/^(Arrow|Key[WASD])/.test(e.code)) { keys[e.code] = 1; e.preventDefault(); } });
+    window.addEventListener("keyup", (e) => { delete keys[e.code]; });
+    const _f = new THREE.Vector3(), _r = new THREE.Vector3();
+    let wasKey = false;
+    W.onFrame(() => {
+      const e = myEnt(); if (!e) return;
+      let jx = joy.x, jy = joy.y;
+      const kx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0);
+      const ky = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+      const usingKeys = !joy.on && (kx || ky);
+      if (usingKeys) { const n = Math.hypot(kx, ky); jx = kx / n; jy = ky / n; if (!follow) { follow = true; renderMeBar(); } }
+      if (!joy.on && !usingKeys) { if (wasKey) { wasKey = false; const g = e.grp.position; People.drive(ME, g.x, g.z, { speed: 6 }); sendMove(g.x, g.z); } return; }
+      wasKey = usingKeys;
+      const mag = Math.min(1, Math.hypot(jx, jy)); if (mag < .12) return;
+      // 以鏡頭方向換算：推上＝往畫面裡面走
+      W.camera.getWorldDirection(_f); _f.y = 0; _f.normalize();
+      _r.set(-_f.z, 0, _f.x);
+      const dx = (_r.x * jx - _f.x * jy) / mag, dz = (_r.z * jx - _f.z * jy) / mag;
+      const g = e.grp.position, spd = 2.5 + 5 * mag;
+      People.drive(ME, g.x + dx * 1.2, g.z + dz * 1.2, { speed: spd });
+      // 同步給其他人：每 0.4 秒送一次「預計 0.5 秒後的位置」
+      const now = performance.now();
+      if (now - joy.sent > 400) { joy.sent = now; sendMove(g.x + dx * spd * .5, g.z + dz * spd * .5); }
+    });
+  }
+  // 其他人的走動：只收目的地，各自在本機算出走路過程
+  function applyMove(id, m) {
+    const e = People.ents[id]; if (!e) return;
+    if (!m) { People.release(id); e._mt = null; return; }
+    if (e._mt === m.t) return;
+    const first = e._mt === undefined || e._mt === null;
+    e._mt = m.t;
+    if (id === ME && !first) return;                     // 自己的人物以本機為準
+    People.drive(id, m.x, m.z, { instant: first && !(id === ME && meFound) });
+  }
+  Store.onMove(applyMove);
   let hoverT = 0;
   cv.addEventListener("pointermove", (e) => {
     const now = performance.now(); if (now - hoverT < 250 || e.buttons) return; hoverT = now;
@@ -417,6 +555,7 @@
     const phase = (S.state && S.state.phase) || "join";
     const settling = Date.now() - loadedAt < 2500;
     People.sync(people, firstSync || settling);
+    Object.entries(Store.moves).forEach(([id, m]) => { const e = People.ents[id]; if (e && (e._mt === undefined)) applyMove(id, m); });
     const wt = waterTotals(S), hidden = S.hide || {};
     Life.Flowers.sync(people, flowerFirst || settling, wt, hidden);
     if (Object.keys(people).length) { firstSync = false; flowerFirst = false; }
@@ -517,9 +656,9 @@
     const doneN = ps.filter(personDone).length;
     const gf = gardenFlowers(S), wDrops = Object.values(waterTotals(S)).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
-      join: ME ? `🏥 <b>報到中</b>・金色箭頭就是你・點廣場上的花園可以逛花園` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
+      join: ME ? `🕹️ <b>左下搖桿</b>或<b>點地面</b>走路・點地點走過去看介紹` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
-      water: ME ? `🌸 <b>澆花中</b>・點廣場上的花園，進花園幫夥伴的花澆水` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
+      water: ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
       harvest: `🌳 <b>收成</b>・我們的共識大樹`
     }[phase];
     const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
@@ -543,7 +682,8 @@
     } else $h.classList.add("hide");
   }
 
-  Store.init().then(() => Store.subscribe((st) => { S = st || {}; apply(); }))
+  if (window.WaterCard) WaterCard.init({ getState: () => S, pid: ME });
+  Store.init().then(() => Store.subscribe((st) => { S = st || {}; apply(); if (window.WaterCard) WaterCard.refresh(); }))
     .catch((e) => { $("phase").textContent = "無法連線：" + e.message; });
 
   // 測試用

@@ -163,7 +163,7 @@
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
     if (ph !== "water" && ph !== "join") html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🗺️ 看院區地圖，找到我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">在地圖上點廣場的花園，也能進入共識花園</p>`;
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，操控我的人物</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">點地面走路、走到各個地點看介紹，走到花園點花朵就能澆水</p>`;
     html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
     return html;
   }
