@@ -362,42 +362,64 @@
     tween = requestAnimationFrame(step);
   }
 
-  // ---------- 留言板：樹長好後，依序自動播放每一顆果實的行動句（大螢幕） ----------
-  let autoT = null, autoI = -1, pauseT = null;
-  const AUTO_MS = 7000;
-  function stopAuto() { clearTimeout(autoT); clearTimeout(pauseT); autoT = null; }
+  // ---------- 留言板：樹長好後，左右兩側輪流出現果實的行動句（大螢幕） ----------
+  // 右邊先出現一則，1～3 秒後左邊再出現一則；每則停留 8 秒後換下一顆果實
+  const HOLD_MS = 8000;
+  const slots = { R: { t: null, i: -1 }, L: { t: null, i: -1 }, B: { t: null, i: -1 } };
+  let used = new Set(), pauseT = null;
+  function stopAuto() { Object.values(slots).forEach((sl) => { clearTimeout(sl.t); sl.t = null; }); clearTimeout(pauseT); }
+  function clearBubbles() { Object.keys(slots).forEach((k) => { slots[k].i = -1; const el = root.querySelector(`.bt-bubble[data-slot="${k}"]`); if (el) el.classList.add("hide"); const g = root.querySelector(`.bt-wire g[data-slot="${k}"]`); if (g) g.innerHTML = ""; }); markOn(); }
+  const isNarrow = () => root.querySelector(".bt-stage").getBoundingClientRect().width < 900;
+  function fruitX(i) { const fe = root.querySelector(`.fruit[data-i="${i}"] circle:not(.fr-halo)`); if (!fe) return 0; const r = fe.getBoundingClientRect(), sr = root.querySelector(".bt-stage").getBoundingClientRect(); return r.left + r.width / 2 - sr.left - sr.width / 2; }
+  // 依序挑下一顆：優先挑在同一側的果實，讓連線不必穿過整棵樹
+  function pickFor(side) {
+    const busy = new Set(Object.values(slots).map((sl) => sl.i));
+    let cand = fruitData.map((_, i) => i).filter((i) => !used.has(i) && !busy.has(i));
+    if (!cand.length) { used = new Set(); cand = fruitData.map((_, i) => i).filter((i) => !busy.has(i)); }
+    if (!cand.length) return -1;
+    const same = side === "B" ? cand : cand.filter((i) => (side === "R") === (fruitX(i) >= 0));
+    const i = (same.length ? same : cand)[0];
+    used.add(i); return i;
+  }
+  function runSlot(side, delay) {
+    clearTimeout(slots[side].t);
+    slots[side].t = setTimeout(() => { const i = pickFor(side); if (i >= 0) showSlot(side, i); runSlot(side, HOLD_MS); }, delay);
+  }
   function startAuto(delay = 0) {
     stopAuto();
     if (isInline || !root || root.classList.contains("hide") || !fruitData.length) return;
-    const tick = () => { autoI = (autoI + 1) % fruitData.length; bubble(autoI); autoT = setTimeout(tick, AUTO_MS); };
-    autoT = setTimeout(tick, delay);
+    if (isNarrow()) { runSlot("B", delay); return; }
+    runSlot("R", delay);
+    if (fruitData.length > 1) runSlot("L", delay + 1000 + Math.random() * 2000);
   }
-  function bubble(i) {
-    const st = root.querySelector(".bt-stage"), bb = root.querySelector(".bt-bubble"), wire = root.querySelector(".bt-wire");
-    const s = fruitData[i]; if (!s || !fruitsShown) { bb.classList.add("hide"); wire.innerHTML = ""; return; }
+  function markOn() { const on = new Set(Object.values(slots).map((sl) => sl.i)); root.querySelectorAll(".fruit").forEach((f) => f.classList.toggle("on", on.has(Number(f.dataset.i)))); }
+  function showSlot(side, i) {
+    const st = root.querySelector(".bt-stage"), bb = root.querySelector(`.bt-bubble[data-slot="${side}"]`), g = root.querySelector(`.bt-wire g[data-slot="${side}"]`);
+    const s = fruitData[i]; if (!s || !fruitsShown) { bb.classList.add("hide"); g.innerHTML = ""; return; }
     const fe = root.querySelector(`.fruit[data-i="${i}"]`); if (!fe) return;
-    root.querySelectorAll(".fruit").forEach((f) => f.classList.toggle("on", f === fe));
+    slots[side].i = i; markOn();
     const p = (cur.people || {})[s.pid] || {}, sc = SC(s.scope);
     bb.style.setProperty("--sc", sc.color);
     bb.innerHTML = `<div class="bb-top"><span class="bb-no" style="background:${sc.color}">${s.order}</span><span class="bb-tag" style="color:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span><span class="bb-cnt">🍎 ${i + 1} / ${fruitData.length}</span></div>
       <div class="bb-tx">${typeof sentenceRich === "function" ? sentenceRich(s, cur.people, cur.edits, false) : escapeHtml(sentenceText(s, cur.people, cur.edits))}</div>
-      <div class="bb-by">${window.Avatar && p.avatar ? Avatar.svg(p.avatar) : ""}<span><b>${escapeHtml(p.name || "")}</b>${escapeHtml(p.dept || "")}</span></div>
-      <div class="bb-prog"><i style="animation-duration:${AUTO_MS}ms"></i></div>`;
+      <div class="bb-by">${window.Avatar && p.avatar ? Avatar.svg(p.avatar) : ""}<span><b>${escapeHtml(p.name || "")}</b>${escapeHtml(p.dept || "")}</span></div>`;
+    bb.classList.remove("hide", "go"); void bb.offsetWidth; bb.classList.add("go");
+    if (side === "B") { g.innerHTML = ""; return; }
     const sr = st.getBoundingClientRect(), fr = fe.querySelector("circle:not(.fr-halo)").getBoundingClientRect();
     const fx = fr.left + fr.width / 2 - sr.left, fy = fr.top + fr.height / 2 - sr.top;
-    const narrow = sr.width < 900;
-    bb.classList.remove("hide", "left", "right", "bottom");
-    bb.classList.remove("go"); void bb.offsetWidth; bb.classList.add("go");
-    if (narrow) { bb.classList.add("bottom"); bb.style.top = ""; wire.innerHTML = ""; return; }
-    const side = fx < sr.width / 2 ? "left" : "right";
-    bb.classList.add(side);
-    const h = bb.offsetHeight, top = Math.max(110, Math.min(sr.height - h - 30, fy - h / 2));
+    const h = bb.offsetHeight;
+    // 兩則留言錯開高度，避免同一水平
+    const other = slots[side === "R" ? "L" : "R"], oel = root.querySelector(`.bt-bubble[data-slot="${side === "R" ? "L" : "R"}"]`);
+    let top = Math.max(110, Math.min(sr.height - h - 30, fy - h / 2));
+    if (other.i >= 0 && !oel.classList.contains("hide")) {
+      const ot = parseFloat(oel.style.top) || 0, oh = oel.offsetHeight;
+      if (Math.abs(top - ot) < Math.min(h, oh) * .5) top = ot + oh * .55 + h < sr.height - 30 ? ot + oh * .55 : Math.max(110, ot - h * .55);
+    }
     bb.style.top = top + "px";
     const bR = bb.getBoundingClientRect();
-    const x0 = side === "left" ? bR.right - sr.left : bR.left - sr.left, y0 = top + h / 2;
-    const mx = (x0 + fx) / 2;
-    wire.setAttribute("viewBox", `0 0 ${sr.width} ${sr.height}`);
-    wire.innerHTML = `<path d="M${x0},${y0} C${mx},${y0} ${mx},${fy} ${fx},${fy}" stroke="${sc.color}" stroke-width="3" fill="none" stroke-dasharray="8 7" stroke-linecap="round" pathLength="1000"/><circle cx="${x0}" cy="${y0}" r="6" fill="${sc.color}"/><circle cx="${fx}" cy="${fy}" r="${fr.width / 2 + 8}" fill="none" stroke="${sc.color}" stroke-width="3" class="bb-ring"/>`;
+    const x0 = side === "L" ? bR.right - sr.left : bR.left - sr.left, y0 = top + h / 2, mx = (x0 + fx) / 2;
+    root.querySelector(".bt-wire").setAttribute("viewBox", `0 0 ${sr.width} ${sr.height}`);
+    g.innerHTML = `<path d="M${x0},${y0} C${mx},${y0} ${mx},${fy} ${fx},${fy}" stroke="${sc.color}" stroke-width="3" fill="none" stroke-dasharray="8 7" stroke-linecap="round" pathLength="1000"/><circle cx="${x0}" cy="${y0}" r="6" fill="${sc.color}"/><circle cx="${fx}" cy="${fy}" r="${fr.width / 2 + 8}" fill="none" stroke="${sc.color}" stroke-width="3" class="bb-ring"/>`;
   }
   function fruitCard(i) {
     const card = root.querySelector(".bt-card");
@@ -421,11 +443,16 @@
       if (opts.inline) { root.classList.add("inline"); root.classList.remove("hide"); }
       const stage = root.querySelector(".bt-stage");
       isInline = !!opts.inline;
-      stage.insertAdjacentHTML("beforeend", `<div class="bt-card hide"></div><svg class="bt-wire"></svg><div class="bt-bubble hide"></div>`);
-      window.addEventListener("resize", () => { if (autoI >= 0 && !root.querySelector(".bt-bubble").classList.contains("hide")) bubble(autoI); });
+      stage.insertAdjacentHTML("beforeend", `<div class="bt-card hide"></div><svg class="bt-wire"><g data-slot="R"></g><g data-slot="L"></g><g data-slot="B"></g></svg><div class="bt-bubble right hide" data-slot="R"></div><div class="bt-bubble left hide" data-slot="L"></div><div class="bt-bubble bottom hide" data-slot="B"></div>`);
+      let rzT = null;
+      window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { if (!isInline && fruitsShown && curG >= 1) { clearBubbles(); startAuto(300); } }, 400); });
       root.addEventListener("click", (e) => {
         const f = e.target.closest(".fruit");
-        if (f && !isInline) { stopAuto(); autoI = Number(f.dataset.i); bubble(autoI); pauseT = setTimeout(() => startAuto(0), 20000); return; }   // 手動點果實：暫停輪播 20 秒
+        if (f && !isInline) {                               // 手動點果實：顯示在果實那一側，暫停輪播 20 秒
+          const i = Number(f.dataset.i); stopAuto();
+          const side = isNarrow() ? "B" : fruitX(i) >= 0 ? "R" : "L";
+          showSlot(side, i); pauseT = setTimeout(() => startAuto(0), 20000); return;
+        }
         if (f) { fruitCard(Number(f.dataset.i)); return; }
         const r = e.target.closest("[data-fi]"); if (r) { fruitCard(Number(r.dataset.fi)); return; }
         if (e.target.closest(".bt-x")) fruitCard(-1);
@@ -437,7 +464,7 @@
       const was = !root.classList.contains("hide");
       root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on);
       if (window.World) World.skipRender = !!on;
-      if (on && !was) { played = false; autoI = -1; root.querySelector(".bt-bubble").classList.add("hide"); root.querySelector(".bt-wire").innerHTML = ""; }   // 每次打開大樹，都從種子開始長
+      if (on && !was) { played = false; stopAuto(); clearBubbles(); used = new Set(); }   // 每次打開大樹，都從種子開始長
       if (!on) stopAuto();
     },
     get visible() { return root && !root.classList.contains("hide"); },

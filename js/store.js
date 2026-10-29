@@ -181,6 +181,8 @@ window.sentenceRich = function (s, people, edits, highlight) {
  * 資料：waters/{澆水者 pid}/{花主 pid} = 次數
  * ========================================================= */
 window.GARDEN_STEPS = [0, 10, 30, 50, 70, 90, 100];
+/* 澆花：和活動階段分開，主持人沒有關閉前，參加者隨時可以澆花 */
+window.waterOpen = (state) => !(state && state.state && state.state.waterOpen === false);
 window.bloomAt = () => (window.ISLAND_CONFIG && ISLAND_CONFIG.bloomAt) || 6;
 window.waterTotals = function (state) {
   const t = {};

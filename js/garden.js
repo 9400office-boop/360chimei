@@ -20,7 +20,7 @@
 
   const me = () => (pid && S.people && S.people[pid]) || null;
   const phase = () => (S.state && S.state.phase) || "join";
-  const canWater = () => phase() === "water" && !!me();
+  const canWater = () => waterOpen(S) && !!me();
   const myGive = () => ((S.waters || {})[pid]) || {};
   const left = () => Math.max(0, TOTAL - waterUsed(S, pid));
   const dropSvg = (cls) => `<svg class="dd ${cls}" viewBox="0 0 20 26"><path d="M10,1 C14,8 18,12 18,17 A8,8 0 0 1 2,17 C2,12 6,8 10,1Z" fill="#3E95E0" stroke="#fff" stroke-width="1.6"/><ellipse cx="7" cy="16" rx="2" ry="3" fill="#fff" opacity=".6"/></svg>`;
@@ -62,9 +62,8 @@
     const ph = phase();
     $g.querySelector("#banner").innerHTML = !m
       ? `👋 你還沒報到喔！可以先逛逛花園，<a href="index.html">回報到頁</a>報到後就能澆花。`
-      : ph === "join" ? `🌱 大家正在種花。<b>主持人開放澆花後</b>，就能幫喜歡的句子澆水，先逛逛吧！`
-      : ph === "water" ? `💧 點一朵花，看看夥伴寫了什麼，<b>幫它澆水</b>！每朵花澆 <b>${BLOOM}</b> 次就會盛開，你有 <b>${TOTAL}</b> 滴水，可以重複澆同一朵。`
-      : `🌸 澆花時間結束囉！請看大螢幕，<b>揭曉盛開的花</b>，一起收成共識大樹 🌳`;
+      : waterOpen(S) ? `💧 點一朵花，看看夥伴寫了什麼，<b>幫它澆水</b>！每朵花澆 <b>${BLOOM}</b> 次就會盛開，你有 <b>${TOTAL}</b> 滴水，可以重複澆同一朵。`
+      : `🌸 主持人已暫停澆花，請看大螢幕，<b>揭曉盛開的花</b>，一起收成共識大樹 🌳`;
     // 廣場切換
     const cnt = (k) => all.filter((f) => f.p.plaza === k);
     $g.querySelector("#tabs").innerHTML = Object.entries(PLAZA).map(([k, z]) => {

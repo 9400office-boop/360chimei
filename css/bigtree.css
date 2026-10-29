@@ -108,6 +108,7 @@
   .bigtree:not(.inline) .bt-card { display: none; }
   .bt-wire { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; overflow: visible; }
   .bt-wire path { animation: wire .9s ease-out both; }
+  .bt-bubble.bottom ~ .bt-bubble.bottom { display: none; }
   @keyframes wire { from { stroke-dashoffset: 1000; opacity: 0; } to { stroke-dashoffset: 0; opacity: .85; } }
   .bt-wire .bb-ring { animation: ringp 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
   @keyframes ringp { 50% { transform: scale(1.25); opacity: .4; } }
@@ -129,8 +130,5 @@
   .bt-bubble .bb-by { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6B7772; }
   .bt-bubble .bb-by svg { width: 40px; height: 48px; }
   .bt-bubble .bb-by b { display: block; color: #2B2A26; font-size: 17px; }
-  .bt-bubble .bb-prog { height: 4px; background: #EEEAE0; border-radius: 999px; margin-top: 10px; overflow: hidden; }
-  .bt-bubble .bb-prog i { display: block; height: 100%; width: 100%; background: var(--sc); transform-origin: left; animation: bbprog linear both; }
-  @keyframes bbprog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
   .bigtree .fruit.on .fr-in { animation: fruitbeat 1.2s ease-in-out infinite; }
   @keyframes fruitbeat { 50% { transform: scale(1.3); } }

@@ -56,8 +56,7 @@
     b.classList.toggle("done", f.bloomed);
     if (f.bloomed) { b.disabled = true; b.innerHTML = "🌸 已盛開，謝謝大家的深耕"; }
     else if (!me()) { b.disabled = true; b.innerHTML = "報到後就能澆水"; }
-    else if (phase() === "join") { b.disabled = true; b.innerHTML = "⏳ 主持人開放後就能澆水"; }
-    else if (phase() !== "water") { b.disabled = true; b.innerHTML = "澆花時間已結束"; }
+    else if (!waterOpen(S())) { b.disabled = true; b.innerHTML = "主持人已暫停澆花"; }
     else if (!left()) { b.disabled = true; b.innerHTML = "水滴用完了，看看大家的花吧"; }
     else { b.disabled = busy; b.innerHTML = `${dropSvg()} 澆水（剩 ${left()} 滴）`; }
     sh.querySelector("#mygave").textContent = mg ? `你已經幫這朵花澆了 ${mg} 次 💙` : "";
@@ -66,7 +65,7 @@
   function close() { const sh = document.getElementById("wsheet"); if (sh) sh.remove(); const was = openId; openId = null; lastStage = null; if (onClose) onClose(was); }
 
   async function water() {
-    if (busy || !openId || phase() !== "water" || !me()) return;
+    if (busy || !openId || !waterOpen(S()) || !me()) return;
     const f = gardenFlowers(S()).find((x) => x.pid === openId);
     if (!f || f.bloomed || !left()) return;
     busy = true; render();

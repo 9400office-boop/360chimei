@@ -662,7 +662,7 @@
     const doneN = ps.filter(personDone).length;
     const gf = gardenFlowers(S), wDrops = Object.values(waterTotals(S)).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
-      join: ME ? `🕹️ <b>左下搖桿</b>或<b>點地面</b>走路・點地點走過去看介紹` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
+      join: ME ? `🕹️ <b>搖桿</b>或<b>點地面</b>走路・走到花園點花朵就能澆水` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
       water: ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
       harvest: `🌳 <b>收成</b>・我們的共識大樹`

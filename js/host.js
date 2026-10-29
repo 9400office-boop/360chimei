@@ -57,6 +57,7 @@
     const gf = gardenFlowers(S), nb = gf.filter((f) => f.bloomed).length;
     const spot = S.state && S.state.spotlight;
     const tour = S.state && S.state.tour;
+    const joinOpen = !(S.state && S.state.joinOpen === false), waterOn = waterOpen(S);
     const PH = [["join", "🏥", "報到填寫"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "收成大樹"]];
     const inList = new Set(ss.map((s) => s.pid));
     let list = ds.filter((p) => !filter || p.scope === filter);
@@ -71,9 +72,12 @@
       <a href="screen.html" target="_blank">開啟 3D 大螢幕 ↗</a><a href="index.html" target="_blank">開啟參加者頁 ↗</a><a href="garden.html" target="_blank">開啟共識花園 ↗</a></div></header>
 
     <div class="card"><h2>活動階段</h2>
+      <div class="row" style="margin:0 0 10px"><button class="btn small ${joinOpen ? "" : "warn"}" data-act="joinopen">${joinOpen ? "📝 報到與填寫：開放中（點一下關閉）" : "🔒 報到與填寫：已關閉（點一下開放）"}</button>
+        <button class="btn small ${waterOn ? "" : "warn"}" data-act="wateropen">${waterOn ? "💧 澆花：開放中（點一下暫停）" : "⏸ 澆花：已暫停（點一下開放）"}</button>
+        <span class="note">兩者都與活動階段分開：開放時，參加者隨時可以報到填寫、進花園澆花，不用等主持人切換。</span></div>
       <div class="phases">${PH.map(([k, e, n], i) => `<button class="ph ${phase() === k ? "on" : ""}" data-phase="${k}"><b>${e}</b>${i + 1}. ${n}</button>`).join("")}</div>
-      <p class="note">① 報到填寫：選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花（可修改）。<br>
-      ② 澆花：參加者進「共識花園」點花看句子、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
+      <p class="note">① 報到填寫（開場）：大螢幕顯示報到 QR Code。選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花。報到與填寫是否開放，由上方按鈕另外控制，切到其他階段也不受影響。<br>
+      ② 澆花：參加者從報到後就能隨時澆花（上方按鈕可暫停）；切到這個階段時，大螢幕鏡頭飛到花園、QR Code 換成花園頁。參加者進「共識花園」或在院區走到花園點花、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
       ③ 揭曉盛開：自動用澆到 100% 的花產生揭曉清單，逐句聚光。<br>
       ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。</p>
       ${msg ? `<div class="msg">${escapeHtml(msg)}</div>` : ""}
@@ -201,6 +205,8 @@
     }
     const act = b.dataset.act;
     if (act === "build") await doBuild(true);
+    if (act === "wateropen") { const open = waterOpen(S); await setState({ waterOpen: open ? false : null }); msg = open ? "已暫停澆花" : "已開放澆花"; }
+    if (act === "joinopen") { const open = !(S.state && S.state.joinOpen === false); await setState({ joinOpen: open ? false : null }); msg = open ? "已關閉報到與填寫" : "已開放報到與填寫"; }
     if (act === "next" || act === "prev") step(act === "next" ? 1 : -1);
     if (act === "unspot") { stopAuto(); await setState({ spotlight: null }); }
     if (act === "auto") { if (auto) stopAuto(); else { step(1); auto = setInterval(() => step(1), 10000); } render(); }

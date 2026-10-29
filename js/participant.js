@@ -18,11 +18,13 @@
   };
   const me = () => (pid && S.people && S.people[pid]) || null;
   const phase = () => (S.state && S.state.phase) || "join";
+  // 報到與填寫：和活動階段分開，主持人沒有關閉前，任何階段都能報到、填寫、修改
+  const joinOpen = () => !(S.state && S.state.joinOpen === false);
 
   function decideView() {
     const m = me();
     if (!m) return local.view === "pick" ? "pick" : "welcome";
-    if (phase() === "join") {
+    if (joinOpen()) {
       if (!m.scope || local.rescope) return "scope";
       if (!personDone(m) || local.editing) return "write";
     }
@@ -32,7 +34,7 @@
   function render(force) {
     const view = decideView();
     // 填寫、選人物畫面避免打字中被重繪
-    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), S.sentences || null, waterTotals(S)[pid] || 0, waterUsed(S, pid), (S.hide || {})[pid] || 0, gardenFlowers(S).filter((f) => f.bloomed).length, me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
+    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), joinOpen(), waterOpen(S), S.sentences || null, waterTotals(S)[pid] || 0, waterUsed(S, pid), (S.hide || {})[pid] || 0, gardenFlowers(S).filter((f) => f.bloomed).length, me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
     if (!force && key === lastKey && (view === "pick" || view === "write" || view === "scope")) return;
     if (!force && key === lastKey && view === "home" && phase() !== "harvest") return;
     lastKey = key;
@@ -52,7 +54,7 @@
   function vWelcome() {
     return `<div class="hero"><div class="ttl"><h1>360°深耕奇美</h1><p>${escapeHtml(C.vision)}・一起讓院區長出新的連結</p></div></div>
       <div class="steps"><div><b>🧑‍⚕️</b>選人物報到</div><div><b>🌱</b>寫一句行動種下小花</div><div><b>💧</b>進花園澆花讓花盛開</div><div><b>🌳</b>收成共識大樹</div></div>
-      <button class="btn" style="width:100%" data-act="start">我要報到</button>
+      ${joinOpen() ? `<button class="btn" style="width:100%" data-act="start">我要報到</button>` : `<div class="card" style="text-align:center"><b>報到已關閉</b><p class="muted" style="margin:6px 0 0">請看大螢幕，或洽主持人協助報到</p></div>`}
       <p style="text-align:center"><button class="link-btn" data-act="explore">先看看院區有什麼</button></p>`;
   }
 
@@ -135,7 +137,7 @@
       html += `<div class="card seed">${Avatar.svg(m.avatar)}<div style="min-width:0">
         <span class="tagf" style="background:${sc.color}">${sc.tag}・${escapeHtml(sc.name)}</span>
         <div class="mysent">${sentenceRich({ pid }, S.people, S.edits, true)}</div>
-        ${ph === "join" ? `<button class="btn small ghost" data-act="edit">修改</button>` : ""}
+        ${joinOpen() ? `<button class="btn small ghost" data-act="edit">修改</button>` : ""}
       </div></div>`;
       if (!(S.hide || {})[pid]) html += `<a class="myflower" href="garden.html?plaza=${m.plaza || "B"}&f=${encodeURIComponent(pid)}">
         <div class="fa">${FlowerArt.svg(st, look.color, look.kind)}</div>
@@ -143,16 +145,15 @@
           <span>開在「${PLAZA_NAME[m.plaza] || ""}」・被澆了 ${n} 次</span>
           <div class="fbar"><i style="width:${flowerPct(n)}%"></i></div></div></a>`;
     } else if (ph !== "join") {
-      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">填寫時間已經結束，你可以一起看大螢幕${ph === "water" ? "、進花園幫大家的花澆水" : ""}。</p></div>`;
+      html += `<div class="card"><b>歡迎報到！</b><p class="muted" style="margin:6px 0 0">主持人已關閉填寫，你可以一起看大螢幕${waterOpen(S) ? "、進花園幫大家的花澆水" : ""}。</p></div>`;
     }
 
-    if (ph === "join") {
-      html += `<p class="status"><b>請看大螢幕</b>，主持人開放澆花後，就能進花園幫大家的花澆水 💧</p>`;
-      html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 先逛逛共識花園</a>`;
-    } else if (ph === "water") {
+    // 澆花隨時開放（主持人可在後台暫停）
+    if (waterOpen(S)) {
       html += `<a class="btn gardenbtn" href="garden.html">🌸 進共識花園澆花<small>你還有 ${leftN} / ${TOTAL} 滴水・每朵澆 ${bloomAt()} 次盛開</small></a>`;
       html += `<p class="status">全場已經有 <b>${nb}</b> 朵花盛開（共 ${gf.length} 朵）</p>`;
-    } else if (ph === "reveal") {
+    } else html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
+    if (ph === "reveal") {
       const list = sentencesSorted();
       const mine = list.find((s) => s.pid === pid);
       html += `<p class="status">${list.length ? (mine ? "🎉 你的花盛開了，入選揭曉！" : `📣 揭曉 <b>${list.length}</b> 朵澆到 100% 的花`) : "主持人正在整理盛開的花，請看大螢幕…"}</p>`;
@@ -163,7 +164,6 @@
       html += list.map((s) => sentCard(s)).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
-    if (ph !== "water" && ph !== "join") html += `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`;
     html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟我的夥伴一起深耕</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 0">點地面走路、走到各個地點看介紹，走到花園點花朵就能澆水</p>`;
     html += `<p style="text-align:center"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
     return html;
@@ -256,6 +256,7 @@
   async function doJoin() {
     const name = local.name.trim(), dept = local.dept.trim();
     if (!name || !dept || !local.avatar) return;
+    if (!joinOpen()) { toast("主持人已關閉報到"); return; }
     const b = document.getElementById("join"); b.disabled = true; b.textContent = "報到中…";
     pid = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     try { localStorage.setItem(ME_KEY, pid); } catch (e) {}
@@ -277,7 +278,7 @@
     const w = local.words || {};
     const miss = [1, 2, 3, 4, 5, 6].filter((n) => !(w[n] || "").trim());
     if (miss.length) { toast("還有 " + miss.map((n) => F(n).title).join("、") + " 沒填喔"); const el = $app.querySelector(`[data-w="${miss[0]}"]`); if (el) el.focus(); return; }
-    if (phase() !== "join") { toast("填寫時間已結束"); return; }
+    if (!joinOpen()) { toast("主持人已關閉填寫"); return; }
     const b = document.getElementById("plant"); b.disabled = true;
     const words = {}; [1, 2, 3, 4, 5, 6].forEach((n) => (words[n] = w[n].trim().slice(0, 20)));
     const upd = { words, submittedAt: Date.now() };
