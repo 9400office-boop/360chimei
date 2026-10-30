@@ -9,7 +9,7 @@
   .card2 { position: relative; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; background: #FFFCF4; border-radius: 26px 26px 0 0; border-top: 4px solid var(--gold); padding: 10px 18px calc(18px + env(safe-area-inset-bottom)); animation: up .32s cubic-bezier(.3,1.2,.5,1); }
   @keyframes up { from { transform: translateY(60%); } }
   .card2 .x { position: absolute; right: 12px; top: 10px; border: 0; background: #F1EADC; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; color: #5A5148; z-index: 2; }
-  .handle { width: 44px; height: 5px; border-radius: 999px; background: #E2D6BE; margin: 0 auto 6px; }
+  .card2 .handle { width: 44px; height: 5px; border-radius: 999px; background: #E2D6BE; margin: 0 auto 6px; }
   .stagebox { position: relative; height: 210px; border-radius: 20px; background: radial-gradient(ellipse at 50% 100%, #9BD17E 0 45%, transparent 46%), linear-gradient(180deg, #E8F6FF, #F4FBEA); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; }
   .stagebox .big { width: 170px; height: 200px; display: flex; align-items: flex-end; justify-content: center; }
   .stagebox .big svg { width: 100%; height: auto; overflow: visible; }
@@ -24,30 +24,30 @@
   @keyframes plus { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, 0) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -50px) scale(1); } }
   .petal { position: fixed; width: 12px; height: 16px; border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%; z-index: 60; pointer-events: none; animation: petal 2.2s ease-out forwards; }
   @keyframes petal { 0% { opacity: 1; transform: translate(0,0) rotate(0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); } }
-  .stagelabel { text-align: center; margin: 10px 0 4px; font-family: var(--font-round); font-size: 20px; color: #2F4A2A; }
-  .stagelabel b { color: #2F6FC4; }
-  .bloomtxt { color: #C2410C !important; }
-  .steps6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 6px 0 12px; }
-  .steps6 div { text-align: center; font-size: 11px; font-weight: 700; color: #9AA59A; }
-  .steps6 div i { display: block; height: 10px; border-radius: 999px; background: #E3E9DF; margin-bottom: 3px; }
-  .steps6 div.on { color: #2F6FC4; }
-  .steps6 div.on i { background: linear-gradient(90deg, #6FB6F2, #2F6FC4); }
-  .steps6.full div.on i { background: linear-gradient(90deg, #FFD34D, #F59E0B); }
-  .steps6.full div.on { color: #C2410C; }
-  .author { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px dashed #E2D6BE; }
-  .author svg { width: 42px; height: 50px; flex: none; }
-  .author b { display: block; font-size: 17px; }
-  .author span { font-size: 13px; color: var(--ink-soft); }
-  .author .tg { margin-left: auto; color: #fff; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-  .said { font-size: 17px; line-height: 1.8; background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 2px 10px rgba(80,70,40,.08); }
-  .said .w { font-weight: 700; border-radius: 6px; padding: 0 4px; color: #fff; }
-  .waterbtn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; border: 0; border-radius: 999px; padding: 15px; font-size: 19px; font-weight: 900; letter-spacing: .06em; color: #fff; background: linear-gradient(180deg, #5AAEF0, #2F7FD0); box-shadow: 0 5px 0 #1F5C9E; font-family: inherit; }
-  .waterbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #1F5C9E; }
-  .waterbtn:disabled { background: #C9D3DA; box-shadow: 0 5px 0 #A9B3BA; color: #fff; }
-  .waterbtn.done { background: linear-gradient(180deg, #FFD34D, #F59E0B); box-shadow: 0 5px 0 #B86F00; color: #5A3500; }
-  .hint { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
-  .mygave { text-align: center; font-size: 13px; color: #2F6FC4; margin-top: 6px; font-weight: 700; }
+  .card2 .stagelabel { text-align: center; margin: 10px 0 4px; font-family: var(--font-round); font-size: 20px; color: #2F4A2A; }
+  .card2 .stagelabel b { color: #2F6FC4; }
+  .card2 .bloomtxt { color: #C2410C !important; }
+  .card2 .steps6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 6px 0 12px; }
+  .card2 .steps6 div { text-align: center; font-size: 11px; font-weight: 700; color: #9AA59A; }
+  .card2 .steps6 div i { display: block; height: 10px; border-radius: 999px; background: #E3E9DF; margin-bottom: 3px; }
+  .card2 .steps6 div.on { color: #2F6FC4; }
+  .card2 .steps6 div.on i { background: linear-gradient(90deg, #6FB6F2, #2F6FC4); }
+  .card2 .steps6.full div.on i { background: linear-gradient(90deg, #FFD34D, #F59E0B); }
+  .card2 .steps6.full div.on { color: #C2410C; }
+  .card2 .author { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px dashed #E2D6BE; }
+  .card2 .author svg { width: 42px; height: 50px; flex: none; }
+  .card2 .author b { display: block; font-size: 17px; }
+  .card2 .author span { font-size: 13px; color: var(--ink-soft); }
+  .card2 .author .tg { margin-left: auto; color: #fff; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .card2 .said { font-size: 17px; line-height: 1.8; background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 2px 10px rgba(80,70,40,.08); }
+  .card2 .said .w { font-weight: 700; border-radius: 6px; padding: 0 4px; color: #fff; }
+  .card2 .waterbtn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; border: 0; border-radius: 999px; padding: 15px; font-size: 19px; font-weight: 900; letter-spacing: .06em; color: #fff; background: linear-gradient(180deg, #5AAEF0, #2F7FD0); box-shadow: 0 5px 0 #1F5C9E; font-family: inherit; }
+  .card2 .waterbtn:active { transform: translateY(3px); box-shadow: 0 2px 0 #1F5C9E; }
+  .card2 .waterbtn:disabled { background: #C9D3DA; box-shadow: 0 5px 0 #A9B3BA; color: #fff; }
+  .card2 .waterbtn.done { background: linear-gradient(180deg, #FFD34D, #F59E0B); box-shadow: 0 5px 0 #B86F00; color: #5A3500; }
+  .card2 .hint { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+  .card2 .mygave { text-align: center; font-size: 13px; color: #2F6FC4; margin-top: 6px; font-weight: 700; }
   .gtoast { position: fixed; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #2F3A33; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 70; white-space: nowrap; animation: gtoast .3s; }
   @keyframes gtoast { from { opacity: 0; transform: translate(-50%, 10px); } }
   .card2 { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; color: #2F3A33; }
-  .stagelabel { font-family: "Huninn", "Noto Sans TC", sans-serif; }
+  .card2 .stagelabel { font-family: "Huninn", "Noto Sans TC", sans-serif; }

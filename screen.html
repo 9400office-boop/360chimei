@@ -184,7 +184,7 @@
   .writer .where { color: var(--ink-soft); letter-spacing: .08em; }
   .writer .scope { color: var(--sc); background: var(--scs); border-radius: 999px; padding: 2px 10px; font-weight: 700; }
   .writer .wtext { margin: 6px 0 0; font-size: 19px; line-height: 1.7; color: var(--ink); }
-  .writer .wtext .w { font-weight: 700; background: linear-gradient(transparent 62%, var(--scs) 62%); padding: 0 1px; }
+  .writer .wtext .w { color: var(--sc); font-weight: 700; background: linear-gradient(transparent 62%, var(--scs) 62%); padding: 0 1px; }
   .writer .wtext.muted { color: var(--ink-soft); font-size: 15px; }
   /* 手機：底部卡片，直式排版 */
   body.memode .writer { left: 10px; right: 10px; max-width: none; bottom: calc(80px + env(safe-area-inset-bottom));
@@ -279,7 +279,8 @@
   body.memode .mebar button, body.memode .mebar a { flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; font-size: 11px; background: transparent; border-radius: 12px; }
   body.memode .mebar button i, body.memode .mebar a i { font-style: normal; font-size: 18px; line-height: 1.1; }
   body.memode .mebar .on { background: #1E6F5C; color: #fff; }
-  body.memode .mebar em { position: absolute; top: 2px; right: 18%; min-width: 16px; height: 16px; border-radius: 999px; background: #E5484D; color: #fff; font-style: normal; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; }
+  body.memode .mebar em { display: none !important; }
+  body.memode .mebar em.x { position: absolute; top: 2px; right: 18%; min-width: 16px; height: 16px; border-radius: 999px; background: #E5484D; color: #fff; font-style: normal; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; }
   @media (max-width: 380px) { body.memode .mebar .who span { display: none; } }
   /* 手機：清單（底部彈出） */
   .panel-x { display: none; }
@@ -424,8 +425,8 @@
     .mebar .who span { max-width: 4.5em; }
   }
 </style>
-<link rel="stylesheet" href="css/bigtree.css">
-<link rel="stylesheet" href="css/garden.css">
+<link rel="stylesheet" href="css/bigtree.css?v=20261030c">
+<link rel="stylesheet" href="css/garden.css?v=20261030c">
 </head>
 <body>
 <div id="stage"><div id="labels"></div></div>
@@ -492,20 +493,20 @@
 <div class="walkhint hide" id="walkhint"></div>
 <div class="joy" id="joy" aria-label="搖桿"><div class="ring"></div><div class="knob"></div></div>
 
-<script src="js/vendor/three.min.js"></script>
-<script src="js/vendor/OrbitControls.js"></script>
-<script src="js/vendor/BufferGeometryUtils.js"></script>
-<script src="js/vendor/qrcode.js"></script>
-<script src="js/config.js"></script>
-<script src="js/content.js"></script>
-<script src="js/avatars.js"></script>
-<script src="js/store.js"></script>
-<script src="js/world3d.js"></script>
-<script src="js/life3d.js"></script>
-<script src="js/balloons3d.js"></script>
-<script src="js/bigtree.js"></script>
-<script src="js/flowerart.js"></script>
-<script src="js/watercard.js"></script>
-<script src="js/screen3d.js"></script>
+<script src="js/vendor/three.min.js?v=20261030c"></script>
+<script src="js/vendor/OrbitControls.js?v=20261030c"></script>
+<script src="js/vendor/BufferGeometryUtils.js?v=20261030c"></script>
+<script src="js/vendor/qrcode.js?v=20261030c"></script>
+<script src="js/config.js?v=20261030c"></script>
+<script src="js/content.js?v=20261030c"></script>
+<script src="js/avatars.js?v=20261030c"></script>
+<script src="js/store.js?v=20261030c"></script>
+<script src="js/world3d.js?v=20261030c"></script>
+<script src="js/life3d.js?v=20261030c"></script>
+<script src="js/balloons3d.js?v=20261030c"></script>
+<script src="js/bigtree.js?v=20261030c"></script>
+<script src="js/flowerart.js?v=20261030c"></script>
+<script src="js/watercard.js?v=20261030c"></script>
+<script src="js/screen3d.js?v=20261030c"></script>
 </body>
 </html>
