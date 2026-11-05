@@ -145,7 +145,7 @@
       const sc = SC(t.scope);
       tileLabels.push({ ...mkLabel("tl", `<span class="n" style="color:${sc.color}">No.${itemNo(t.id)}</span>${escapeHtml(ITEM[t.id].short)}`, a, () => focusItem(t.id)), id: t.id, scope: t.scope });
     } else if (t.kind === "hub") {
-      tileLabels.push({ ...mkLabel("tl hub", `⛲ 永續噴泉`, new THREE.Vector3(t.x, W.TOP + 2.6, t.z), () => { W.flyTo({ x: t.x, y: 2, z: t.z }, 40, .95); showSupport("fountain"); }), id: "hub" });
+      tileLabels.push({ ...mkLabel("tl hub", `⛲ 永續噴泉`, new THREE.Vector3(t.x, W.TOP + 2.6, t.z + 3), () => { if (ME && curPhase() === "meet") { openWish(); return; } W.flyTo({ x: t.x, y: 2, z: t.z }, 40, .95); showSupport("fountain"); }, { walk: { x: t.x, z: t.z + (W.fountain ? W.fountain.b + 1.2 : 8) } }), id: "hub" });
     }
   });
   // 行政後勤夥伴說明卡
@@ -353,6 +353,7 @@
     const r = pickAt(e);
     if (ME) {
       if (r && r.kind === "flower") { tapFlower(r.pid); return; }
+      if (curPhase() === "meet" && W.fountain) { const g0 = groundAt(e); if (g0 && W.fountain.inside(g0.x, g0.z, 1.25)) { openWish(); return; } }
       if (r && r.kind === "person" && r.pid !== ME) { showWriter(r.pid, r.kind); return; }
       const g = groundAt(e); if (g) { $("writer").classList.add("hide"); hideInfo(); walkTo(g.x, g.z); }
       return;
@@ -398,6 +399,65 @@
   }
   let hintT = null;
   function walkHint(t) { const el = $("walkhint"); el.textContent = t; el.classList.remove("hide"); clearTimeout(hintT); hintT = setTimeout(() => el.classList.add("hide"), 1800); }
+  // ---------- 相遇：大家匯集到永續噴泉，點噴泉許願 ----------
+  const curPhase = () => (S.state && S.state.phase) || "join";
+  // 自然地圍在噴泉旁：依每個人的編號產生固定的隨機位置（每支手機算出來都一樣），彼此保持距離
+  const meetPlaced = [];
+  function meetSpot(id, i) {
+    const f = W.fountain;
+    let h = 0; for (let k = 0; k < id.length; k++) h = (h * 31 + id.charCodeAt(k)) | 0;
+    let seed = Math.abs(h) || 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let best = null;
+    for (let tries = 0; tries < 40; tries++) {
+      const a = rnd() * Math.PI * 2, s = 1.12 + Math.pow(rnd(), 1.4) * (.55 + Math.min(.5, i / 140)) + tries * .01;
+      const x = f.x + Math.cos(a) * f.a * s + (rnd() - .5) * .8, z = f.z + Math.sin(a) * f.b * s + (rnd() - .5) * .8;
+      if (z < -16.5 || W.fountain.inside(x, z, 1.06) || (W.BUILDINGS || []).some((bd) => bd.w && Math.abs(x - bd.x) < bd.w / 2 + 1.5 && Math.abs(z - bd.z) < bd.d / 2 + 1.5) || (W.PLAZAS || []).some((pz) => Math.abs(x - pz.x) < pz.w / 2 + 1 && Math.abs(z - pz.z) < pz.d / 2 + 1)) continue;   // 不站進大樓、水池、廣場
+      const d = meetPlaced.reduce((m, q) => Math.min(m, Math.hypot(q.x - x, q.z - z)), 99);
+      if (!best || d > best.d) best = { x, z, d };
+      if (d > 1.5) break;
+    }
+    meetPlaced.push(best);
+    return best;
+  }
+  const gathered = new Set();
+  function gatherMeet() {
+    const meetAt = (S.state && S.state.meetAt) || 0, mv = Store.moves || {};
+    const ids = Object.keys(People.ents).sort();
+    ids.forEach((id, i) => {
+      if (gathered.has(id)) return;
+      if (mv[id] && mv[id].t > meetAt && id !== ME) { gathered.add(id); return; }      // 已經自己走開（例如許完願去花園）
+      if (id === ME && ((S.wishes || {})[ME])) { gathered.add(id); return; }
+      const sp = meetSpot(id, i); People.drive(id, sp.x, sp.z); gathered.add(id);
+      if (id === ME) { follow = true; meFound = true; }
+    });
+  }
+  function releaseMeet() { meetPlaced.length = 0; gathered.forEach((id) => { if (id !== ME && !(Store.moves || {})[id]) People.release(id); }); gathered.clear(); }
+  let wishedLocal = false;
+  function openWish() { if (window.Wish) { openSheet(null); hideInfo(); Wish.open(); } }
+  function afterWish() {
+    wishedLocal = true;
+    const mp = (S.people || {})[ME] || {}, pz = (W.PLAZAS || []).find((p) => p.key === (mp.plaza || "B")) || W.PLAZAS.find((p) => p.flower);
+    coinDrop();
+    setTimeout(() => walkTo(pz.x, pz.z + pz.d / 2 + .8, () => arriveGarden(pz), pz.name), 600);   // 自動走進共識花園
+    apply();
+  }
+  // 金幣落入噴泉（3D）
+  const coinGeo = new THREE.CylinderGeometry(.35, .35, .08, 18), coinMat = new THREE.MeshStandardMaterial({ color: 0xF2C14E, metalness: .7, roughness: .3, emissive: 0x6B4A10 });
+  function coinDrop() {
+    if (!W.fountain) return;
+    const f = W.fountain, c = new THREE.Mesh(coinGeo, coinMat); W.scene.add(c);
+    const sx = f.x + (Math.random() - .5) * 10, sz = f.z + f.b + 2 + Math.random() * 3, ang = Math.random() * Math.PI * 2, tx = f.x + Math.cos(ang) * (f.a - 2.2), tz = f.z + Math.sin(ang) * (f.b - 2.2);
+    let k = 0;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(.3, .5, 24), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(tx, f.y + .67, tz); W.scene.add(ring);
+    const fn = (dt) => {
+      k += dt / 1.1;
+      if (k < 1) { c.position.set(sx + (tx - sx) * k, f.y + 1.5 + Math.sin(k * Math.PI) * 6 - k * .8, sz + (tz - sz) * k); c.rotation.x += dt * 14; }
+      else { c.visible = false; const u = k - 1; ring.material.opacity = Math.max(0, .9 - u * 1.2); ring.scale.setScalar(1 + u * 8); }
+      if (k > 1.8) { W.scene.remove(c); W.scene.remove(ring); W.anim.splice(W.anim.indexOf(fn), 1); }
+    };
+    W.anim.push(fn);
+  }
   function arriveGarden(pz) {
     walkHint(`🌸 到「${pz.name}」了！點花朵就能看句子、幫它澆水`);
   }
@@ -585,6 +645,7 @@
   // ---------- 資料 ----------
   let S = {};
   const loadedAt = Date.now();
+  let prevWish = null;
   let prevWt = null, meTree = false, meFinale = false, lastFinPhase = null;
   // 手機：收成時點上方提示，切換到共識大樹畫面（在本機繪製，不增加網路負擔）
   if (ME) {
@@ -592,6 +653,7 @@
       const ph = (S.state && S.state.phase) || "join";
       if (ph === "harvest") { meTree = true; openSheet(null); hideInfo(); apply(); }
       if (ph === "finale") { meFinale = true; openSheet(null); hideInfo(); apply(); }
+      if (ph === "meet" && !((S.wishes || {})[ME] || wishedLocal)) openWish();
     });
     $("treeback").addEventListener("click", () => { if (document.body.classList.contains("finalemode")) meFinale = false; else meTree = false; apply(); });
   }
@@ -634,6 +696,15 @@
       if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt()) addEvent(`🌸 <b>${escapeHtml(p.name)}</b> 的行動句澆到 100%，在${PLAZA_NAMES[p.plaza] || "花園"}盛開了！`, p.avatar, "bloom");
     });
     prevWt = wt;
+    // 相遇：新的深耕關鍵字
+    const ws = S.wishes || {};
+    if (prevWish && !settling) Object.entries(ws).forEach(([id, w]) => {
+      if (!w || (prevWish[id] && prevWish[id].t === w.t)) return;
+      const p = people[id]; if (!p) return;
+      addEvent(`🪙 <b>${escapeHtml(p.name)}</b> 在永續噴泉許願：「${escapeHtml(w.text)}」`, p.avatar, "wish");
+      if (!ME) { coinDrop(); if (window.Music) Music.chime(); }
+    });
+    prevWish = JSON.parse(JSON.stringify(ws));
 
     // 名牌
     Object.entries(people).forEach(([id, p]) => {
@@ -680,13 +751,17 @@
     if (phase !== lastPhase) {
       // 進入澆花：大螢幕鏡頭飛到兩座花園
       if (phase === "water" && lastPhase !== null && !ME) { clearFocus(); W.flyTo({ x: 18, y: 0, z: 26 }, 118, .78, 0); }
+      if (phase === "meet" && !ME) { clearFocus(); W.flyTo({ x: W.fountain.x, y: 0, z: W.fountain.z + 3 }, 95, .78, 0); }
+      if (phase === "meet" && ME && lastPhase !== null) { const f = W.fountain; W._flyRaw({ x: f.x, y: 0, z: f.z + 3 }, 48, .8, 0); }
+      if (lastPhase === "meet" && phase !== "meet") releaseMeet();
       treeOverride = null; lastPhase = phase;
     }
+    if (phase === "meet") gatherMeet();
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
     // 參加者手機的地圖（?me=）不切換共識大樹，維持院區全景；大樹只在大螢幕顯示
     if (phase !== "harvest") meTree = false;
     // 活動最後：第二期深耕目標（大螢幕與手機同步）
-    const finStats = () => { const n = (window.FINALE && FINALE.flowers) || gardenFlowers(S).length; return `今天有 <b>${n}</b> 朵盛開的花，結成 <b>${n}</b> 顆共識果實`; };   // 依參加者人數（種下希望花的人）
+    const finStats = () => (window.FINALE && FINALE.line) || "";   // 依參加者人數（種下希望花的人）
     const enteringFinale = phase === "finale" && lastFinPhase !== "finale";
     if (enteringFinale) meFinale = true;
     const showFinale = phase === "finale" && (!ME || meFinale);
@@ -729,10 +804,12 @@
     const gf = gardenFlowers(S), wDrops = Object.values(waterTotals(S)).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
       join: ME ? `🕹️ <b>搖桿</b>或<b>點地面</b>走路・走到花園點花朵就能澆水` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
+      meet: ME ? (((S.wishes || {})[ME] || wishedLocal) ? `🌸 讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。` : `⛲ <b>相遇</b>・大家來到永續噴泉！<span class="phgo">點噴泉許願 ›</span>`)
+        : `⛲ <b>相遇・永續噴泉許願池</b>・已有 <b>${Object.keys(S.wishes || {}).length}</b> 位夥伴許下深耕關鍵字`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
-      water: ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
+      water: ME && ((S.wishes || {})[ME] || wishedLocal) && waterUsed(S, ME) === 0 ? `🌸 讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。` : ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
       finale: ME ? `🎯 <b>第二期深耕目標</b> <span class="phgo">點我看 ›</span>` : `🎯 <b>第二期深耕目標</b>・奇美的承諾`,
-      harvest: ME ? `🌳 <b>收成</b>・我們的共識大樹 <span class="phgo">點我看大樹 ›</span>` : `🌳 <b>收成</b>・我們的共識大樹`
+      harvest: ME ? `🌳 <b>共識延續</b> <span class="phgo">點我看大樹 ›</span>` : `🌳 <b>共識延續</b>`
     }[phase];
     const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
     const nb = gf.filter((f) => f.bloomed).length;
@@ -756,11 +833,12 @@
   }
 
   if (window.WaterCard) WaterCard.init({ getState: () => S, pid: ME });
+  if (window.Wish) Wish.init({ getState: () => S, pid: ME, onDone: afterWish });
   if (!ME && window.Finale) setTimeout(() => Finale.preload(), 3000);
   // 音樂按鈕狀態
   if (!ME && window.Music) {
     const mb = document.querySelector('[data-act="music"]');
-    const upd = () => { if (!mb) return; mb.textContent = Music.locked ? "🔈 點畫面開聲音" : Music.on ? "🔊 音樂" : "🔇 音樂"; mb.classList.toggle("on", Music.on); };
+    const upd = () => { if (!mb) return; mb.textContent = Music.locked ? "🔈 開聲音" : Music.on ? "🔊" : "🔇"; mb.title = "背景音樂"; mb.classList.toggle("on", Music.on); };
     Music.onChange(upd); upd();
   }   // 大螢幕預先載入收尾影片
   Store.init().then(() => Store.subscribe((st) => { S = st || {}; apply(); if (window.WaterCard) WaterCard.refresh(); }))

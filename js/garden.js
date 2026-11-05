@@ -63,7 +63,7 @@
     $g.querySelector("#banner").innerHTML = !m
       ? `👋 你還沒報到喔！可以先逛逛花園，<a href="index.html">回報到頁</a>報到後就能澆花。`
       : waterOpen(S) ? `💧 點一朵花，看看夥伴寫了什麼，<b>幫它澆水</b>！每朵花澆 <b>${BLOOM}</b> 次就會盛開，你有 <b>${TOTAL}</b> 滴水，可以重複澆同一朵。`
-      : `🌸 主持人已暫停澆花，請看大螢幕，<b>揭曉盛開的花</b>，一起收成共識大樹 🌳`;
+      : `🌸 主持人已暫停澆花，請看大螢幕，<b>揭曉盛開的花</b>，一起見證共識延續 🌳`;
     // 廣場切換
     const cnt = (k) => all.filter((f) => f.p.plaza === k);
     $g.querySelector("#tabs").innerHTML = Object.entries(PLAZA).map(([k, z]) => {

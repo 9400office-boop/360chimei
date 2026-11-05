@@ -58,7 +58,7 @@
     const spot = S.state && S.state.spotlight;
     const tour = S.state && S.state.tour;
     const joinOpen = !(S.state && S.state.joinOpen === false), waterOn = waterOpen(S);
-    const PH = [["join", "🏥", "報到填寫"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "收成大樹"], ["finale", "🎯", "第二期目標"]];
+    const PH = [["join", "🏥", "報到填寫"], ["meet", "⛲", "相遇"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "共識延續"], ["finale", "🎯", "第二期目標"]];
     const inList = new Set(ss.map((s) => s.pid));
     let list = ds.filter((p) => !filter || p.scope === filter);
     if (gfilter === "bloom") list = list.filter((p) => (wt[p.id] || 0) >= bloomAt() && !HD[p.id]);
@@ -77,6 +77,7 @@
         <span class="note">兩者都與活動階段分開：開放時，參加者隨時可以報到填寫、進花園澆花，不用等主持人切換。</span></div>
       <div class="phases">${PH.map(([k, e, n], i) => `<button class="ph ${phase() === k ? "on" : ""}" data-phase="${k}"><b>${e}</b>${i + 1}. ${n}</button>`).join("")}</div>
       <p class="note">① 報到填寫（開場）：大螢幕顯示報到 QR Code。選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花。報到與填寫是否開放，由上方按鈕另外控制，切到其他階段也不受影響。<br>
+      ②-0 相遇：所有人物自動匯集到永續噴泉，參加者點噴泉填寫「我的深耕關鍵字：回望第一期，我最有感的一個改變是＿＿」，投下金幣後自動走進共識花園澆花（內容可在下方匯出）。<br>
       ② 澆花：參加者從報到後就能隨時澆花（上方按鈕可暫停）；切到這個階段時，大螢幕鏡頭飛到花園、QR Code 換成花園頁。參加者進「共識花園」或在院區走到花園點花、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
       ③ 揭曉盛開：自動用澆到 100% 的花產生揭曉清單，逐句聚光。<br>
       ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。<br>
@@ -132,6 +133,11 @@
       <div>${ss.map((s) => { const p = (S.people || {})[s.pid] || {}; return `<div class="sent ${spot === s.id ? "on" : ""}"><span class="tag" style="background:${SC(s.scope).color}">${s.order}・${SC(s.scope).tag}</span><span class="tx">${escapeHtml(sentenceText(s, S.people, S.edits))}<br><span class="note">${who(p)}</span></span><span>🌸${wt[s.pid] || 0}</span><button class="btn small ghost" data-spot="${s.id}">聚光</button></div>`; }).join("")}</div>
     </div>
 
+    <div class="card" style="margin-top:14px"><h2>⛲ 相遇・我的深耕關鍵字（${Object.keys(S.wishes || {}).length} 則）</h2>
+      <div class="row"><button class="btn small" data-act="csvwish">📥 匯出深耕關鍵字 CSV</button><span class="note">回望第一期，我最有感的一個改變是…</span></div>
+      <div class="plist" style="max-height:320px">${Object.entries(S.wishes || {}).sort((a, b) => (b[1].t || 0) - (a[1].t || 0)).map(([id, w]) => { const p = (S.people || {})[id] || {}; return `<div class="prow"><span class="tag" style="background:#C99A2E">🪙</span><div class="pmain"><b>${escapeHtml(w.text || "")}</b><div class="note">${who(p)}</div></div></div>`; }).join("") || '<p class="note" style="padding:10px">還沒有人許願。切到「相遇」階段後，參加者點永續噴泉就能填寫。</p>'}</div>
+    </div>
+
     <div class="card" style="margin-top:14px"><h2>參加者名單（${ps.length}）</h2>
       <table><tr><th></th><th>部門</th><th>姓名</th><th>範疇</th><th>行動句</th><th>澆出</th><th></th></tr>
       ${ps.map((p) => `<tr><td>${Avatar.svg(p.avatar)}</td><td>${escapeHtml(p.dept || "")}</td><td>${escapeHtml(p.name)}${p.sim ? ' <span class="note">(模擬)</span>' : ""}</td>
@@ -143,7 +149,7 @@
 
     <div class="cols" style="margin-top:14px">
       <div class="card"><h2>📥 匯出</h2>
-        <div class="row"><button class="btn small" data-act="csv1">盛開句子 CSV</button><button class="btn small" data-act="csv2">全部行動句與澆水 CSV</button><button class="btn small ghost" data-act="json">完整備份 JSON</button></div>
+        <div class="row"><button class="btn small" data-act="csv1">盛開句子 CSV</button><button class="btn small" data-act="csvwish">深耕關鍵字 CSV</button><button class="btn small" data-act="csv2">全部行動句與澆水 CSV</button><button class="btn small ghost" data-act="json">完整備份 JSON</button></div>
         <p class="note">CSV 可直接用 Excel 開啟（已處理中文編碼）。JSON 是整場活動的原始資料備份。</p>
       </div>
       <div class="card"><h2>🧪 彩排工具</h2>
@@ -188,7 +194,7 @@
         if (!blooms().length && !confirm("目前還沒有澆到 100% 盛開的花，確定要進入「" + (ph === "reveal" ? "揭曉" : "收成") + "」嗎？")) return;
         await doBuild(true);
       }
-      await setState({ phase: ph, spotlight: null });
+      await setState(ph === "meet" ? { phase: ph, spotlight: null, meetAt: Date.now() } : { phase: ph, spotlight: null });
       return;
     }
     if (b.dataset.filter !== undefined) { filter = Number(b.dataset.filter); render(); return; }
@@ -200,7 +206,7 @@
       const p = S.people[b.dataset.del];
       if (confirm(`確定移除「${p.name}」？`)) {
         const id = b.dataset.del;
-        await Store.update("", { ["people/" + id]: null, ["waters/" + id]: null, ["edits/" + id]: null, ["hide/" + id]: null });
+        await Store.update("", { ["people/" + id]: null, ["waters/" + id]: null, ["edits/" + id]: null, ["hide/" + id]: null, ["wishes/" + id]: null });
       }
       return;
     }
@@ -212,13 +218,14 @@
     if (act === "unspot") { stopAuto(); await setState({ spotlight: null }); }
     if (act === "auto") { if (auto) stopAuto(); else { step(1); auto = setInterval(() => step(1), 10000); } render(); }
     if (act === "csv1") exportSentences();
+    if (act === "csvwish") exportWishes();
     if (act === "csv2") exportPeople();
     if (act === "json") exportJson();
     if (act === "sim") simulate(simN);
     if (act === "simvote") simulateWaters();
     if (act === "clearsim") {
       const upd = {};
-      people().filter((p) => p.sim).forEach((p) => { ["people", "waters", "edits", "hide"].forEach((k) => (upd[k + "/" + p.id] = null)); });
+      people().filter((p) => p.sim).forEach((p) => { ["people", "waters", "edits", "hide", "wishes"].forEach((k) => (upd[k + "/" + p.id] = null)); });
       await Store.update("", upd);
     }
     if (act === "reset") {
@@ -274,6 +281,15 @@
         n, flowerPct(n) + "%", n >= bloomAt() ? "是" : "", HD[p.id] ? "是" : "", waterUsed(S, p.id), PLAZA_NAMES[p.plaza] || "", p.joinedAt ? new Date(p.joinedAt).toLocaleString("zh-TW") : ""]);
     });
     download(`360深耕奇美_全部行動句_${CFG.eventId}.csv`, csv(rows), "text/csv;charset=utf-8");
+  }
+  function exportWishes() {
+    const P = S.people || {};
+    const rows = [["部門", "姓名", "範疇", "我的深耕關鍵字（回望第一期，我最有感的一個改變是）", "許願時間"]];
+    Object.entries(S.wishes || {}).sort((a, b) => (a[1].t || 0) - (b[1].t || 0)).forEach(([id, w]) => {
+      const p = P[id] || {};
+      rows.push([p.dept || "", p.name || "", p.scope ? SC(p.scope).tag : "", w.text || "", w.t ? new Date(w.t).toLocaleString("zh-TW") : ""]);
+    });
+    download(`360深耕奇美_深耕關鍵字_${CFG.eventId}.csv`, csv(rows), "text/csv;charset=utf-8");
   }
   function exportJson() {
     download(`360深耕奇美_完整備份_${CFG.eventId}_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(S, null, 2), "application/json");

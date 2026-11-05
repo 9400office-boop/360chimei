@@ -120,7 +120,7 @@
     root.className = "bigtree hide";
     root.innerHTML = `
       <div class="bt-stage">
-        <div class="bt-title"><small>360°深耕奇美・永續醫療</small><b>共識大樹</b><span class="bt-sub"></span></div>
+        <div class="bt-title"><small>360°深耕奇美・永續醫療</small><b>共識延續</b><span class="bt-sub"></span></div>
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
           <defs><clipPath id="trunkClip"><rect class="tclip" x="0" y="${GROUND + 10}" width="${W}" height="0"/></clipPath>
             <linearGradient id="sapG" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#C8F2B8" stop-opacity="0"/><stop offset=".5" stop-color="#DFFFD2" stop-opacity=".95"/><stop offset="1" stop-color="#C8F2B8" stop-opacity="0"/></linearGradient>
@@ -340,7 +340,7 @@
     root.querySelector(".bt-bar i").style.width = (g * 100).toFixed(1) + "%";
     const n = fruitData.length;
     root.querySelector(".bt-count").textContent = g >= 1
-      ? (n ? `🌸 ${n} 朵盛開的花，結成 ${n} 顆共識果實・點果實看行動句` : "🌳 共識大樹長成了！")
+      ? "好的改變，不必從很大的事情開始。今晚，我們先決定下一步"
       : g < .06 ? "🌱 種子吸飽了大家的水…" : g < .25 ? "🌱 發芽、長高…" : g < FRUIT_AT ? "🌿 枝葉展開中…" : "🍎 結出共識果實！";
   }
   // 播放整段生長（預設 18 秒），期間水壺持續在樹幹澆水
@@ -443,6 +443,8 @@
       if (opts.inline) { root.classList.add("inline"); root.classList.remove("hide"); }
       const stage = root.querySelector(".bt-stage");
       isInline = !!opts.inline;
+      // 大螢幕：把畫面裁到樹的範圍，樹放大（樹冠約 145～855、樹根 905）
+      if (!isInline) { const sv = root.querySelector(".bt-stage > svg"); sv.setAttribute("viewBox", "130 50 740 880"); sv.style.overflow = "visible"; }
       stage.insertAdjacentHTML("beforeend", `<div class="bt-card hide"></div><svg class="bt-wire"><g data-slot="R"></g><g data-slot="L"></g><g data-slot="B"></g></svg><div class="bt-bubble right hide" data-slot="R"></div><div class="bt-bubble left hide" data-slot="L"></div><div class="bt-bubble bottom hide" data-slot="B"></div>`);
       let rzT = null;
       window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { if (!isInline && fruitsShown && curG >= 1) { clearBubbles(); startAuto(300); } }, 400); });

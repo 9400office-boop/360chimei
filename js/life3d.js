@@ -180,6 +180,17 @@
           e.wait -= dt;
           if (e.wait <= 0) e.target = randInTile(e.tile);
         }
+        // 不能穿越永續噴泉：碰到水池邊就沿著池邊繞過去
+        const F = W.fountain;
+        if (F && F.inside(g.position.x, g.position.z, 1)) {
+          const dx = g.position.x - F.x, dz = g.position.z - F.z, r = Math.hypot(dx / F.a, dz / F.b) || .01;
+          g.position.x = F.x + dx / r * 1.001; g.position.z = F.z + dz / r * 1.001;
+          if (tgt && moving) {
+            let nx = dx / (F.a * F.a), nz = dz / (F.b * F.b); const nl = Math.hypot(nx, nz) || 1; nx /= nl; nz /= nl;
+            let tx = -nz, tz = nx; if (tx * (tgt.x - g.position.x) + tz * (tgt.z - g.position.z) < 0) { tx = -tx; tz = -tz; }
+            g.position.x += tx * 3.2 * dt; g.position.z += tz * 3.2 * dt;
+          }
+        }
         // 跟著地面高度（院區平台、環形步道、外圍地面）
         if (W.groundY) { const gy = W.groundY(g.position.x, g.position.z); g.position.y += (gy - g.position.y) * Math.min(1, dt * 8); }
         e.phase += dt * (moving ? 11 : 2);
@@ -193,6 +204,8 @@
     drive(id, x, z, opts = {}) {
       const e = ents[id]; if (!e) return false;
       const c = W.clampWalk ? W.clampWalk(x, z) : { x, z };
+      const F = W.fountain;
+      if (F && F.inside(c.x, c.z, 1.05)) { const dx = c.x - F.x, dz = c.z - F.z, r = Math.hypot(dx / F.a, dz / F.b) || .01; c.x = F.x + dx / r * 1.08; c.z = F.z + dz / r * 1.08; }
       e.ctrl = new V3(c.x, TOP, c.z); e.onArrive = opts.onArrive || null; e.target = null; e.ctrlSpeed = opts.speed || null;
       if (opts.instant) { e.grp.position.set(c.x, W.groundY ? W.groundY(c.x, c.z) : TOP, c.z); e.falling = false; }
       return true;

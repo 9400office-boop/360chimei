@@ -319,6 +319,7 @@
   @media (max-height: 900px) { body:not(.compact) .feed .ev:not(:nth-last-child(-n+3)) { display: none; } }
   @media (max-height: 560px) { body.memode .info, body.memode.compact .info, body.memode .writer, body.memode.compact .writer { left: auto; width: min(520px, calc(100% - 20px)); max-height: calc(100% - 150px); } }
   @media (max-height: 560px) { body.memode .joy { bottom: calc(70px + env(safe-area-inset-bottom)); width: 104px; height: 104px; } }
+  .feed .ev.k-wish, .mfeed .ev.k-wish { border-left-color: #E8B84A; background: #FFFBEA; }
   .feed .ev.k-bloom { border-left-color: #F59E0B; background: #FFF8E6; }
 
   /* =========================================================
@@ -425,9 +426,9 @@
     .mebar .who span { max-width: 4.5em; }
   }
 </style>
-<link rel="stylesheet" href="css/bigtree.css?v=20261102d">
-<link rel="stylesheet" href="css/garden.css?v=20261102d">
-<link rel="stylesheet" href="css/finale.css?v=20261102d">
+<link rel="stylesheet" href="css/bigtree.css?v=20261105h">
+<link rel="stylesheet" href="css/garden.css?v=20261105h">
+<link rel="stylesheet" href="css/finale.css?v=20261105h">
 </head>
 <body>
 <div id="stage"><div id="labels"></div></div>
@@ -455,7 +456,7 @@
 <div class="side-btns">
   <button class="pill" data-act="home">↗ 全景</button>
   <button class="pill" data-act="panel">☰ 清單</button>
-  <button class="pill" data-act="music">🔈 點畫面開聲音</button>
+  <button class="pill" data-act="music">🔈 開聲音</button>
   <button class="pill" data-act="help">?</button>
 </div>
 </div>
@@ -495,23 +496,24 @@
 <div class="walkhint hide" id="walkhint"></div>
 <div class="joy" id="joy" aria-label="搖桿"><div class="ring"></div><div class="knob"></div></div>
 
-<script src="js/vendor/three.min.js?v=20261102d"></script>
-<script src="js/vendor/OrbitControls.js?v=20261102d"></script>
-<script src="js/vendor/BufferGeometryUtils.js?v=20261102d"></script>
-<script src="js/vendor/qrcode.js?v=20261102d"></script>
-<script src="js/config.js?v=20261102d"></script>
-<script src="js/content.js?v=20261102d"></script>
-<script src="js/avatars.js?v=20261102d"></script>
-<script src="js/store.js?v=20261102d"></script>
-<script src="js/world3d.js?v=20261102d"></script>
-<script src="js/life3d.js?v=20261102d"></script>
-<script src="js/balloons3d.js?v=20261102d"></script>
-<script src="js/bigtree.js?v=20261102d"></script>
-<script src="js/flowerart.js?v=20261102d"></script>
-<script src="js/watercard.js?v=20261102d"></script>
-<script src="js/taiwan_path.js?v=20261102d"></script>
-<script src="js/finale.js?v=20261102d"></script>
-<script src="js/music.js?v=20261102d"></script>
-<script src="js/screen3d.js?v=20261102d"></script>
+<script src="js/vendor/three.min.js?v=20261105h"></script>
+<script src="js/vendor/OrbitControls.js?v=20261105h"></script>
+<script src="js/vendor/BufferGeometryUtils.js?v=20261105h"></script>
+<script src="js/vendor/qrcode.js?v=20261105h"></script>
+<script src="js/config.js?v=20261105h"></script>
+<script src="js/content.js?v=20261105h"></script>
+<script src="js/avatars.js?v=20261105h"></script>
+<script src="js/store.js?v=20261105h"></script>
+<script src="js/taiwan_path.js?v=20261105h"></script>
+<script src="js/world3d.js?v=20261105h"></script>
+<script src="js/life3d.js?v=20261105h"></script>
+<script src="js/balloons3d.js?v=20261105h"></script>
+<script src="js/bigtree.js?v=20261105h"></script>
+<script src="js/flowerart.js?v=20261105h"></script>
+<script src="js/watercard.js?v=20261105h"></script>
+<script src="js/wish.js?v=20261105h"></script>
+<script src="js/finale.js?v=20261105h"></script>
+<script src="js/music.js?v=20261105h"></script>
+<script src="js/screen3d.js?v=20261105h"></script>
 </body>
 </html>

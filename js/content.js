@@ -161,7 +161,7 @@ window.FINALE = {
   eyebrow: "帶著今天的共識，邁向第二期深耕",
   title: "奇美的承諾",
   headline: "兩項倍增，兩成減碳",
-  flowers: 70,          // 最後一行「今天有 70 朵盛開的花，結成 70 顆共識果實」的數字（固定顯示）
+  line: "匯聚經驗與專業，共創更健康的未來",   // 最後一行中間那句
   goals: [
     { label: "創新服務量", num: "2", badge: "倍人數", dir: "up", notes: ["急症在宅住院", "生活習慣諮商"] },
     { label: "人才轉型規模", num: "2", badge: "倍人數", dir: "up", notes: ["雙軸人才", "AI/ESG"] },

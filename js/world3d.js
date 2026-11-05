@@ -515,11 +515,51 @@
       glow("box", "#3FBF7F", L(P(x, z), 0, TOP + y, 0, 2, .6, .2)); glow("box", "#3FBF7F", L(P(x, z), 0, TOP + y, 0, .6, 2, .2));
     }
 
+    // 永續噴泉＝台灣噴泉：橢圓水池中央，一座層層堆疊的台灣島雕塑，水從島上一層層流下；台南亮著金光
+    function buildTaiwanFountain(t) {
+      const OZ = 3, cx0 = t.x, cz0 = t.z + OZ, T0 = P(cx0, cz0), SH = window.TAIWAN_SHAPE;
+      const PA = 7.2, PB = 9.6;                                  // 水池（橢圓）半徑
+      const LEN = 14;                                            // 台灣雕塑南北長
+      put("cyl16", "#F3ECDD", L(T0, 0, TOP + .02, 0, PA + 3.2, .04, PB + 3.2));          // 淡色鋪面
+      put("cyl16", "#E9E2D2", L(T0, 0, TOP + .3, 0, PA + .7, .6, PB + .7));              // 池邊石
+      { const pts = []; for (let i = 0; i <= 96; i++) { const q = i / 96 * Math.PI * 2; pts.push(new V3(Math.cos(q) * (PA + .4), 0, Math.sin(q) * (PB + .4))); }   // 池緣細金邊
+        const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xD9A93E })); ln.position.set(cx0, TOP + .62, cz0); scene.add(ln); }
+      const pool = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .1, 48), new THREE.MeshStandardMaterial({ color: 0x5DB8E3, roughness: .12, metalness: .15, transparent: true, opacity: .92 }));
+      pool.scale.set(PA, 1, PB); pool.position.set(cx0, TOP + .6, cz0); scene.add(pool);
+      let tn = { x: -1.5, z: 1.5, y: 2.6 }, tiers = [];
+      if (SH) {
+        const subs = SH.d.split("M").filter(Boolean).map((sp) => sp.replace("Z", "").trim().split(/\s+/).map((q) => q.split(",").map(Number)));
+        const main = subs.sort((a, b) => b.length - a.length)[0];
+        let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+        main.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
+        const k = LEN / (y1 - y0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+        // 每一層往島中央（中央山脈）縮
+        const mk = (sc) => { const sh = new THREE.Shape(); main.forEach(([x, y], i) => { const X = (x - cx) * k * sc, Z = (y - cy) * k * sc; i ? sh.lineTo(X, -Z) : sh.moveTo(X, -Z); }); return sh; };
+        const ext = (sh, d) => { const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false, curveSegments: 1 }); g.rotateX(-Math.PI / 2); return g; };
+        const stone = new THREE.MeshStandardMaterial({ color: 0xF4F0E6, roughness: .7 }), stone2 = new THREE.MeshStandardMaterial({ color: 0xE6DECB, roughness: .75 });
+        const waterM = new THREE.MeshStandardMaterial({ color: 0x8FD6F2, roughness: .1, metalness: .1, transparent: true, opacity: .55, depthWrite: false });
+        // 一整塊台灣島（不再堆疊），表面覆一層薄水、四周水幕緩緩流下
+        const slab = new THREE.Mesh(ext(mk(1), 1.15), stone); slab.position.set(cx0, TOP + .55, cz0); slab.castShadow = true; slab.receiveShadow = true; scene.add(slab);
+        const sheet = new THREE.Mesh(ext(mk(1.03), 1.08), waterM); sheet.position.set(cx0, TOP + .58, cz0); scene.add(sheet); tiers.push(sheet);
+        const topW = new THREE.Mesh(ext(mk(.96), .04), new THREE.MeshStandardMaterial({ color: 0xCDEFF7, roughness: .08, metalness: .2, transparent: true, opacity: .5 })); topW.position.set(cx0, TOP + 1.7, cz0); scene.add(topW);
+        const gold = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(main.map(([x, y]) => new V3((x - cx) * k, 0, (y - cy) * k))), new THREE.LineBasicMaterial({ color: 0xE8C46A }));
+        gold.position.set(cx0, TOP + 1.72, cz0); scene.add(gold);
+        const edge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(main.map(([x, y]) => new V3((x - cx) * k * 1.035, 0, (y - cy) * k * 1.035))), new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: .9 }));
+        edge.position.set(cx0, TOP + .67, cz0); scene.add(edge);
+        const tx = (SH.tainan.x * SH.w - cx) * k, tz = (SH.tainan.y * SH.h - cy) * k;
+        tn = { x: tx + .9, z: tz, y: 1.75 };                                              // 台南：島上西南側
+      }
+      W._fountainGeo = { pa: PA, pb: PB, tn, cx: cx0, cz: cz0, tiers, pool };
+      // 長椅與路燈：圍著水池
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + .3, x = Math.cos(a) * (PA + 2.4), z = Math.sin(a) * (PB + 2.4); if (z < -PB) continue; Pr.bench(T0, x, z, -a + Math.PI / 2); }
+      for (const a of [.8, 2.35, 3.9, 5.5]) Pr.lamp(T0, Math.cos(a) * (PA + 3), Math.sin(a) * (PB + 3));
+    }
+
     // 範疇展台
     W.tiles.forEach((t) => {
       W.tileById[t.id] = t;
       const T = P(t.x, t.z);
-      if (t.kind === "hub") { THEMES.hub(L(T, 0, TOP, 0, 1, 1, 1)); return; }
+      if (t.kind === "hub") { buildTaiwanFountain(t); return; }   // 永續噴泉：台灣造型水池（相遇時大家在這裡許願）
       const sc = C.scopes[t.scope - 1];
       put("cyl16", sc.color, L(T, 0, TOP + .02, 0, R + .25, .08, R + .25));
       put("cyl16", "#" + new THREE.Color(sc.soft).lerp(new THREE.Color("#FFFFFF"), .35).getHexString(), L(T, 0, TOP + .06, 0, R, .08, R));
@@ -571,7 +611,7 @@
     // 行道樹
     for (let x = -68; x <= 68; x += 8) { Pr.tree(P(0, 0), x, -37, .9); Pr.tree(P(0, 0), x, 44, .95); }
     for (let z = -30; z <= 38; z += 8) { Pr.tree(P(0, 0), -70, z, .9); Pr.tree(P(0, 0), 70, z, .9); }
-    for (let x = -10; x <= 10; x += 5) Pr.bush(P(0, 0), x, -2, .9);
+    // （噴泉旁的灌木移除：讓出台灣造型水池的空間）
 
     // 外部道路
     ROADS.forEach((r) => {
@@ -717,6 +757,43 @@
 
     // 動態物件：風車、湖上天鵝、噴泉水光
     W.anim = [];
+    // 台灣噴泉動態：池邊一圈拱形水柱噴向台灣、台南的金色光芒與小水柱、層層水幕閃動
+    {
+      const fg = W._fountainGeo || { pa: 7, pb: 9, tn: { x: 0, z: 0, y: 2 }, cx: W.tileById.hub.x, cz: W.tileById.hub.z, tiers: [] };
+      const CX = fg.cx, CZ = fg.cz;
+      const wm = new THREE.MeshBasicMaterial({ color: 0xD8F3FF, transparent: true, opacity: .9, depthWrite: false });
+      const dropG = new THREE.SphereGeometry(.1, 6, 4);
+      const g = new THREE.Group(); g.position.set(CX, TOP, CZ); scene.add(g);
+      // 池邊 16 道拱形水柱，往台灣噴
+      const arcs = [];
+      for (let i = 0; i < 10; i++) {
+        const a = i / 10 * Math.PI * 2 + .31, sx = Math.cos(a) * (fg.pa - .3), sz = Math.sin(a) * (fg.pb - .3), ex = sx * .62, ez = sz * .7;
+        const nz = new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, .3, 8), new THREE.MeshStandardMaterial({ color: 0xC9A24E, metalness: .6, roughness: .3 })); nz.position.set(sx, .75, sz); g.add(nz);
+        const st = []; for (let j = 0; j < 14; j++) { const d = new THREE.Mesh(dropG, wm); d.scale.setScalar(.8); g.add(d); st.push(d); }
+        arcs.push({ sx, sz, ex, ez, st, ph: i * .1 });
+      }
+      // 台南：金色光芒＋小水柱
+      const tg = new THREE.Group(); tg.position.set(CX + fg.tn.x, TOP + fg.tn.y, CZ + fg.tn.z); scene.add(tg);
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.35, 16, 12), new THREE.MeshBasicMaterial({ color: 0xFFF2C0 })); tg.add(core);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xFFD66B, transparent: true, opacity: .3, depthWrite: false })); tg.add(halo);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(.06, .35, 7, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xFFE7A0, transparent: true, opacity: .22, side: THREE.DoubleSide, depthWrite: false })); beam.position.y = 3.6; tg.add(beam);
+      const tj = []; for (let i = 0; i < 18; i++) { const d = new THREE.Mesh(dropG, wm); d.userData = { a: i / 18 * Math.PI * 2, u: Math.random() }; tg.add(d); tj.push(d); }
+      // 人物不可穿越的範圍：水池外緣
+      const RA = fg.pa + 1.1, RB = fg.pb + 1.1;
+      W.fountain = { x: CX, z: CZ, y: TOP, a: RA, b: RB, tn: { x: CX + fg.tn.x, z: CZ + fg.tn.z },
+        inside: (x, z, k = 1) => Math.hypot((x - CX) / (RA * k), (z - CZ) / (RB * k)) < 1 };
+      W.anim.push((dt, t) => {
+        arcs.forEach((a) => a.st.forEach((d, j) => {
+          const u = (t * .55 + a.ph + j / a.st.length) % 1;
+          d.position.set(a.sx + (a.ex - a.sx) * u, .75 + Math.sin(u * Math.PI) * 1.9, a.sz + (a.ez - a.sz) * u);
+        }));
+        tj.forEach((d) => { const u = d.userData; u.u = (u.u + dt * .7) % 1; const r = u.u * 1.1; d.position.set(Math.cos(u.a) * r, .3 + 1.6 * u.u - 1.9 * u.u * u.u, Math.sin(u.a) * r); });
+        const k = .5 + .5 * Math.sin(t * 2.2);
+        halo.scale.setScalar(1 + k * .35); halo.material.opacity = .2 + k * .2; beam.material.opacity = .14 + k * .12;
+        fg.tiers.forEach((w, i) => { w.material.opacity = .38 + .12 * Math.sin(t * 2.4 - i); });
+        if (fg.pool) fg.pool.material.opacity = .88 + Math.sin(t * 1.6) * .05;
+      });
+    }
     if (W._corridor) {   // 光廊：半透明玻璃頂、沿走廊流動的光點、地面光波
       const c = W._corridor, grp = new THREE.Group(); grp.position.set(c.x, c.y, c.z); scene.add(grp);
       const glass = new THREE.Mesh(new THREE.BoxGeometry(c.len + 1, .06, c.HW * 2), new THREE.MeshBasicMaterial({ color: 0xBFEFFF, transparent: true, opacity: .28, depthWrite: false }));

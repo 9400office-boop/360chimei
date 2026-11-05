@@ -40,7 +40,7 @@
     const conn = firebase.database().ref(".info/connected");
     conn.on("value", (s) => { Store.online = !!s.val(); Store.onConnection && Store.onConnection(Store.online); });
     // 分開監聽各個資料區塊：走動資料（moves）不會讓整個畫面重算
-    const KEYS = ["people", "waters", "state", "sentences", "edits", "hide", "fieldCounts"];
+    const KEYS = ["people", "waters", "state", "sentences", "edits", "hide", "fieldCounts", "wishes"];
     let pend = false;
     const flush = () => { pend = false; emit(); };
     KEYS.forEach((k) => root.child(k).on("value", (snap) => {

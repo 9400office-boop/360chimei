@@ -34,7 +34,7 @@
   function render(force) {
     const view = decideView();
     // 填寫、選人物畫面避免打字中被重繪
-    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), joinOpen(), waterOpen(S), S.sentences || null, waterTotals(S)[pid] || 0, waterUsed(S, pid), (S.hide || {})[pid] || 0, gardenFlowers(S).filter((f) => f.bloomed).length, me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
+    const key = view + "|" + ((view === "home") ? JSON.stringify([phase(), joinOpen(), (S.wishes || {})[pid] || 0, waterOpen(S), S.sentences || null, waterTotals(S)[pid] || 0, waterUsed(S, pid), (S.hide || {})[pid] || 0, gardenFlowers(S).filter((f) => f.bloomed).length, me() && me().words, me() && me().scope, (S.edits || {})[pid]]) : "");
     if (!force && key === lastKey && (view === "pick" || view === "write" || view === "scope")) return;
     if (!force && key === lastKey && view === "home" && phase() !== "harvest") return;
     lastKey = key;
@@ -110,10 +110,10 @@
     }).join("");
     return `<div class="scopebar" style="background:${sc.color}">${sc.emoji} ${sc.tag}・${escapeHtml(sc.name)} <button class="link-btn" data-act="rescope" style="color:#fff">換範疇</button></div>
       <div class="example"><div class="exh">💡 參考範例</div>${exHtml}</div>
-      <label class="label">你的行動句（填完六欄會自動組成）</label>
+      <label class="label">迎賓小品</label>
       <div class="scaffold" id="scaf">${preview()}</div>
       ${blocks}
-      <div class="sticky"><div class="inner"><button class="btn" id="plant">種下行動句 🌸</button></div></div>`;
+      <div class="sticky"><div class="inner"><button class="btn" id="plant">相遇前菜 🌸</button></div></div>`;
   }
 
   // ---------- 首頁（依活動階段） ----------
@@ -149,7 +149,13 @@
     }
 
     // 進入院區：放在上方
-    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟我的夥伴一起深耕</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 10px">搖桿或點地面走路、看清單與院區直播，走到花園點花朵就能澆水</p>`;
+    html += `<a class="btn mapbtn" href="screen.html?me=${encodeURIComponent(pid)}">🎮 進入院區，跟夥伴一同交流</a><p class="muted" style="text-align:center;font-size:13px;margin:4px 0 10px">搖桿或點地面走路、看清單與院區直播，走到花園點花朵就能澆水</p>`;
+    if (ph === "meet") {
+      const w = (S.wishes || {})[pid];
+      html += w
+        ? `<div class="card meetcard done"><b>🪙 你的深耕關鍵字</b><p>回望第一期，我最有感的一個改變是<br><span>「${escapeHtml(w.text)}」</span></p><p class="muted" style="margin:6px 0 0">讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。</p></div>`
+        : `<a class="card meetcard" href="screen.html?me=${encodeURIComponent(pid)}"><b>⛲ 相遇時間！</b><p>大家都來到永續噴泉了，點噴泉許下你的<br><span>「我的深耕關鍵字」</span></p><em>前往永續噴泉 ›</em></a>`;
+    }
     if (ph === "reveal") {
       const list = sentencesSorted();
       const mine = list.find((s) => s.pid === pid);
@@ -159,7 +165,7 @@
       html += `<p class="status">🎯 <b>帶著今天的共識，邁向第二期深耕</b></p>` + Finale.card();
     } else if (ph === "harvest") {
       const list = sentencesSorted();
-      html += `<p class="status">🌳 收成時間！請看大螢幕，共識大樹從一顆種子長成大樹，<br>樹上的 <b>${list.length}</b> 顆果實，就是大家澆到盛開的行動句</p>`;
+      html += `<p class="status">🌳 共識延續！請看大螢幕，大樹從一顆種子長成大樹，<br>樹上的 <b>${list.length}</b> 顆果實，就是大家澆到盛開的行動句</p>`;
       html += list.map((s) => sentCard(s)).join("");
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }

@@ -149,3 +149,12 @@
   .gather-fx { position: fixed; inset: 0; z-index: 41; pointer-events: none; }
   .gather-dot { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #FFF8DC 0%, #F6D27A 45%, rgba(246,210,122,0) 72%); box-shadow: 0 0 18px 6px rgba(246,210,122,.55); transform: translate(-50%,-50%); }
   .gather-orb { --k: 0; position: absolute; width: 360px; height: 360px; border-radius: 50%; transform: translate(-50%,-50%) scale(calc(.12 + var(--k) * .88)); background: radial-gradient(circle, #FFFBEA 0%, #F6D27A 9%, rgba(246,210,122,.45) 22%, rgba(246,210,122,.12) 45%, rgba(246,210,122,0) 70%); transition: transform .3s, opacity .8s; will-change: transform; }
+
+  /* 大螢幕：樹更大，標題與底部文字縮小讓位給樹 */
+  .bigtree:not(.inline) .bt-stage > svg:not(.bt-wire) { margin-top: 44px; }
+  .bigtree:not(.inline) .bt-title b { font-size: 30px; }
+  .bigtree:not(.inline) .bt-title .bt-sub { display: none; }
+  .bigtree:not(.inline) .bt-foot { padding-bottom: 4px; }
+  .bigtree:not(.inline) .bt-foot b { font-size: 22px; }
+  .bigtree:not(.inline) .bt-bar { height: 6px; margin: 4px auto 2px; }
+  .bigtree:not(.inline) .bt-count { font-size: 13px; }

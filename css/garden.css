@@ -51,3 +51,33 @@
   @keyframes gtoast { from { opacity: 0; transform: translate(-50%, 10px); } }
   .card2 { font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; color: #2F3A33; }
   .card2 .stagelabel { font-family: "Huninn", "Noto Sans TC", sans-serif; }
+
+/* 相遇：永續噴泉許願池 */
+.ws-shade { position: fixed; inset: 0; z-index: 60; background: rgba(12,30,40,.55); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s; font-family: "Noto Sans TC", "PingFang TC", sans-serif; }
+.ws-card { position: relative; width: 100%; max-width: 520px; background: linear-gradient(180deg, #FFFDF4, #FFF6DE); border-radius: 26px 26px 0 0; border-top: 4px solid #E8B84A; padding: 16px 20px calc(22px + env(safe-area-inset-bottom)); animation: up .35s cubic-bezier(.3,1.2,.5,1); color: #3A3326; }
+.ws-x { position: absolute; right: 12px; top: 10px; border: 0; background: #F1EADC; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; color: #5A5148; }
+.ws-eyebrow { font-size: 12px; font-weight: 900; letter-spacing: .2em; color: #B08A3E; }
+.ws-card h2 { margin: 4px 0 6px; font-size: 24px; color: #1E6F5C; font-family: "Huninn", "Noto Sans TC", sans-serif; }
+.ws-stage { position: relative; height: 150px; margin: 0 -6px; }
+.ws-well { width: 100%; height: 100%; }
+.ws-jet { animation: wsJet 1.6s ease-in-out infinite; transform-origin: 150px 48px; }
+@keyframes wsJet { 50% { transform: scaleY(1.08); opacity: .65; } }
+.ws-rip { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.ws-stage.splash .ws-rip.r1 { animation: wsRip 1.2s .9s ease-out; }
+.ws-stage.splash .ws-rip.r2 { animation: wsRip 1.2s 1.15s ease-out; }
+@keyframes wsRip { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(4); } }
+.ws-fly { position: absolute; inset: 0; pointer-events: none; }
+.ws-coin { width: 46px; height: 46px; }
+.ws-coin.sm { width: 26px; height: 26px; flex: none; }
+.ws-coin.throw { position: absolute; left: 50%; top: 100%; margin-left: -23px; animation: wsThrow 1s cubic-bezier(.3,.6,.5,1) forwards; filter: drop-shadow(0 4px 8px rgba(160,110,20,.45)); }
+@keyframes wsThrow { 0% { transform: translate(-60px, 150px) rotate(0) scale(1.1); } 55% { transform: translate(-10px, -150px) rotate(540deg) scale(1); } 100% { transform: translate(0, -60px) rotate(900deg) scale(.25); opacity: 0; } }
+.ws-q { display: block; font-weight: 700; font-size: 16px; margin: 6px 0 8px; }
+.ws-fill input { width: 100%; box-sizing: border-box; font-size: 18px; padding: 13px 14px; border-radius: 14px; border: 2px solid #E8D49A; background: #fff; outline: none; font-family: inherit; }
+.ws-fill input:focus { border-color: #E8B84A; box-shadow: 0 0 0 4px rgba(232,184,74,.2); }
+.ws-done { font-size: 13px; color: #8A7A52; margin-top: 6px; }
+.ws-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 14px; border: 0; border-radius: 999px; padding: 15px; font-size: 18px; font-weight: 900; letter-spacing: .06em; color: #5A3500; background: linear-gradient(180deg, #FFD86B, #F2B43A); box-shadow: 0 5px 0 #B87A10; font-family: inherit; }
+.ws-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #B87A10; }
+.ws-card.ok .ws-btn, .ws-card.ok .ws-fill, .ws-card.ok .ws-q, .ws-card.ok .ws-done { opacity: .25; pointer-events: none; }
+.ws-thanks { position: absolute; left: 0; right: 0; bottom: 34%; text-align: center; font-size: 20px; font-weight: 900; color: #B07A12; text-shadow: 0 0 12px #fff, 0 0 4px #fff; animation: fnUpW .5s both; }
+.ws-thanks small { display: block; font-size: 14px; color: #1E6F5C; margin-top: 4px; }
+@keyframes fnUpW { from { opacity: 0; transform: translateY(14px); } }

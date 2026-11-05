@@ -80,7 +80,7 @@
       <b><span>深耕台南</span><span>健康台灣</span></b>
       <i class="sc-rule"></i>
       <small>奇美醫院・深耕共識之夜</small>
-      <small class="sc-em">今晚，讓朵朵繁花，匯聚成一棵大樹</small>
+      <small class="sc-em">今晚，點點微光，匯聚成長的力量</small>
     </div>`;
     document.body.appendChild(el);
     return { el, g };
