@@ -262,8 +262,8 @@
   body.memode.cardopen .joy, body.memode.cardopen .walkhint { display: none; }
   /* 手機：收成時看共識大樹 */
   .treeback { display: none; }
-  body.memode.treemode .treeback { display: block; position: fixed; left: 12px; top: calc(12px + env(safe-area-inset-top)); z-index: 40; border: 0; border-radius: 999px; padding: 10px 16px; font-size: 15px; font-weight: 700; background: #1E6F5C; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.2); font-family: inherit; }
-  body.memode.treemode .mebar, body.memode.treemode .joy { display: none !important; }
+  body.memode.finalemode .treeback, body.memode.treemode .treeback { display: block; position: fixed; left: 12px; top: calc(12px + env(safe-area-inset-top)); z-index: 40; border: 0; border-radius: 999px; padding: 10px 16px; font-size: 15px; font-weight: 700; background: #1E6F5C; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.2); font-family: inherit; }
+  body.memode.treemode .mebar, body.memode.treemode .joy, body.memode.finalemode .mebar, body.memode.finalemode .joy, body.memode.finalemode .topbar { display: none !important; }
   body.memode .phase .phgo { display: inline-block; margin-left: 6px; background: #E8B84A; color: #2B2310; border-radius: 999px; padding: 1px 10px; font-weight: 700; animation: gpulse2 1.6s ease-in-out infinite; }
   body.memode .phase { cursor: pointer; }
   @keyframes gpulse2 { 50% { transform: scale(1.06); } }
@@ -425,8 +425,9 @@
     .mebar .who span { max-width: 4.5em; }
   }
 </style>
-<link rel="stylesheet" href="css/bigtree.css?v=20261030c">
-<link rel="stylesheet" href="css/garden.css?v=20261030c">
+<link rel="stylesheet" href="css/bigtree.css?v=20261102d">
+<link rel="stylesheet" href="css/garden.css?v=20261102d">
+<link rel="stylesheet" href="css/finale.css?v=20261102d">
 </head>
 <body>
 <div id="stage"><div id="labels"></div></div>
@@ -454,6 +455,7 @@
 <div class="side-btns">
   <button class="pill" data-act="home">↗ 全景</button>
   <button class="pill" data-act="panel">☰ 清單</button>
+  <button class="pill" data-act="music">🔈 點畫面開聲音</button>
   <button class="pill" data-act="help">?</button>
 </div>
 </div>
@@ -493,20 +495,23 @@
 <div class="walkhint hide" id="walkhint"></div>
 <div class="joy" id="joy" aria-label="搖桿"><div class="ring"></div><div class="knob"></div></div>
 
-<script src="js/vendor/three.min.js?v=20261030c"></script>
-<script src="js/vendor/OrbitControls.js?v=20261030c"></script>
-<script src="js/vendor/BufferGeometryUtils.js?v=20261030c"></script>
-<script src="js/vendor/qrcode.js?v=20261030c"></script>
-<script src="js/config.js?v=20261030c"></script>
-<script src="js/content.js?v=20261030c"></script>
-<script src="js/avatars.js?v=20261030c"></script>
-<script src="js/store.js?v=20261030c"></script>
-<script src="js/world3d.js?v=20261030c"></script>
-<script src="js/life3d.js?v=20261030c"></script>
-<script src="js/balloons3d.js?v=20261030c"></script>
-<script src="js/bigtree.js?v=20261030c"></script>
-<script src="js/flowerart.js?v=20261030c"></script>
-<script src="js/watercard.js?v=20261030c"></script>
-<script src="js/screen3d.js?v=20261030c"></script>
+<script src="js/vendor/three.min.js?v=20261102d"></script>
+<script src="js/vendor/OrbitControls.js?v=20261102d"></script>
+<script src="js/vendor/BufferGeometryUtils.js?v=20261102d"></script>
+<script src="js/vendor/qrcode.js?v=20261102d"></script>
+<script src="js/config.js?v=20261102d"></script>
+<script src="js/content.js?v=20261102d"></script>
+<script src="js/avatars.js?v=20261102d"></script>
+<script src="js/store.js?v=20261102d"></script>
+<script src="js/world3d.js?v=20261102d"></script>
+<script src="js/life3d.js?v=20261102d"></script>
+<script src="js/balloons3d.js?v=20261102d"></script>
+<script src="js/bigtree.js?v=20261102d"></script>
+<script src="js/flowerart.js?v=20261102d"></script>
+<script src="js/watercard.js?v=20261102d"></script>
+<script src="js/taiwan_path.js?v=20261102d"></script>
+<script src="js/finale.js?v=20261102d"></script>
+<script src="js/music.js?v=20261102d"></script>
+<script src="js/screen3d.js?v=20261102d"></script>
 </body>
 </html>

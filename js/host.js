@@ -58,7 +58,7 @@
     const spot = S.state && S.state.spotlight;
     const tour = S.state && S.state.tour;
     const joinOpen = !(S.state && S.state.joinOpen === false), waterOn = waterOpen(S);
-    const PH = [["join", "🏥", "報到填寫"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "收成大樹"]];
+    const PH = [["join", "🏥", "報到填寫"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "收成大樹"], ["finale", "🎯", "第二期目標"]];
     const inList = new Set(ss.map((s) => s.pid));
     let list = ds.filter((p) => !filter || p.scope === filter);
     if (gfilter === "bloom") list = list.filter((p) => (wt[p.id] || 0) >= bloomAt() && !HD[p.id]);
@@ -79,7 +79,8 @@
       <p class="note">① 報到填寫（開場）：大螢幕顯示報到 QR Code。選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花。報到與填寫是否開放，由上方按鈕另外控制，切到其他階段也不受影響。<br>
       ② 澆花：參加者從報到後就能隨時澆花（上方按鈕可暫停）；切到這個階段時，大螢幕鏡頭飛到花園、QR Code 換成花園頁。參加者進「共識花園」或在院區走到花園點花、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
       ③ 揭曉盛開：自動用澆到 100% 的花產生揭曉清單，逐句聚光。<br>
-      ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。</p>
+      ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。<br>
+      ⑤ 第二期目標：大螢幕播放完整收尾（約 20 秒）：共識大樹轉為深綠金色 → 果實化成光點匯聚到台南 → 影片「深耕台南・健康台灣」→ 閃光 → 222 第二期目標定格。參加者手機不播影片，直接顯示 222（內容在 js/content.js 的 FINALE 修改）。</p>
       ${msg ? `<div class="msg">${escapeHtml(msg)}</div>` : ""}
     </div>
 

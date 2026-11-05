@@ -155,6 +155,8 @@
       const mine = list.find((s) => s.pid === pid);
       html += `<p class="status">${list.length ? (mine ? "🎉 你的花盛開了，入選揭曉！" : `📣 揭曉 <b>${list.length}</b> 朵澆到 100% 的花`) : "主持人正在整理盛開的花，請看大螢幕…"}</p>`;
       html += list.map((s) => sentCard(s)).join("");
+    } else if (ph === "finale") {
+      html += `<p class="status">🎯 <b>帶著今天的共識，邁向第二期深耕</b></p>` + Finale.card();
     } else if (ph === "harvest") {
       const list = sentencesSorted();
       html += `<p class="status">🌳 收成時間！請看大螢幕，共識大樹從一顆種子長成大樹，<br>樹上的 <b>${list.length}</b> 顆果實，就是大家澆到盛開的行動句</p>`;

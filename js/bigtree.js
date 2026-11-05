@@ -463,14 +463,50 @@
       if (!root) return;
       const was = !root.classList.contains("hide");
       root.classList.toggle("hide", !on); document.body.classList.toggle("treemode", !!on);
-      if (window.World) World.skipRender = !!on;
+      if (window.World) World.skipRender = !!on || document.body.classList.contains("finalemode");
       if (on && !was) { played = false; stopAuto(); clearBubbles(); used = new Set(); }   // 每次打開大樹，都從種子開始長
       if (!on) stopAuto();
     },
     get visible() { return root && !root.classList.contains("hide"); },
     replay(dur) { played = true; fruitCard(-1); playGrow(dur); },
+    // 活動最後：果實亮起金光 → 化成光點飛向 (tx, ty) 匯聚成一顆光球（接影片裡的台南光點）
+    gather(tx, ty) {
+      return new Promise((resolve) => {
+        if (!root || root.classList.contains("hide")) { resolve(null); return; }
+        stopAuto(); clearBubbles(); clearTimeout(pauseT);
+        if (tween) { cancelAnimationFrame(tween); tween = null; }
+        clearInterval(pourIv);
+        if (curG < 1) { curG = 1; lastG = 1; render(1); }
+        root.classList.add("dusk");
+        const fr = [...root.querySelectorAll(".fruit")];
+        fr.forEach((f, i) => { f.style.setProperty("--lit", (i % 30) * 45 + "ms"); f.classList.add("lit"); });
+        // 1.6 秒後：果實化成光點，飛向光球
+        setTimeout(() => {
+          const fx = document.createElement("div"); fx.className = "gather-fx"; document.body.appendChild(fx);
+          const orb = document.createElement("div"); orb.className = "gather-orb"; orb.style.left = tx + "px"; orb.style.top = ty + "px"; fx.appendChild(orb);
+          const pts = [...root.querySelectorAll(".fruit")].map((f) => { const c = f.querySelector("circle:not(.fr-halo)").getBoundingClientRect(); return { x: c.left + c.width / 2, y: c.top + c.height / 2 }; });
+          if (!pts.length) pts.push({ x: innerWidth / 2, y: innerHeight * .4 });
+          fruitLayer.style.transition = "opacity .4s"; fruitLayer.style.opacity = 0;
+          let done = 0;
+          pts.forEach((p, i) => {
+            const d = document.createElement("i"); d.className = "gather-dot"; d.style.left = p.x + "px"; d.style.top = p.y + "px"; fx.appendChild(d);
+            const dx = tx - p.x, dy = ty - p.y, bend = (Math.random() - .5) * 260;
+            const delay = Math.random() * 500, dur = 1300 + Math.random() * 500;
+            const an = d.animate([
+              { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+              { transform: `translate(calc(-50% + ${dx * .45 + bend}px), calc(-50% + ${dy * .45 - Math.abs(bend) * .4}px)) scale(1.3)`, opacity: 1, offset: .45 },
+              { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.5)`, opacity: .9 }
+            ], { duration: dur, delay, easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" });
+            an.onfinish = () => { d.remove(); done++; orb.style.setProperty("--k", Math.min(1, done / pts.length)); };
+          });
+          root.classList.add("gone");                       // 金色線條的樹慢慢淡出
+          setTimeout(() => resolve(fx), 2500);
+        }, 1600);
+      });
+    },
+    resetDusk() { if (!root) return; root.classList.remove("dusk", "gone"); fruitLayer.style.opacity = 1; root.querySelectorAll(".fruit.lit").forEach((f) => f.classList.remove("lit")); },
     update({ sents, people, edits, totals }) {
-      if (!root) return;
+      if (!root || root.classList.contains("dusk")) return;   // 收尾轉場中：不要重畫果實
       cur = { people: people || {}, edits };
       fruitData = sents.slice().sort((a, b) => a.order - b.order);
       root.querySelector(".bt-sub").textContent = "收成・從一顆種子，灌溉成一棵大樹";

@@ -527,6 +527,7 @@
     if (a === "home") { clearFocus(); topView = false; document.querySelector('[data-mode="top"]').classList.remove("on"); W.home(); }
     if (a === "panel") { document.body.classList.toggle("nopanel"); b.classList.toggle("on", !document.body.classList.contains("nopanel")); if (!document.body.classList.contains("compact")) setTimeout(W.resize, 420); }
     if (a === "help") $("help").classList.toggle("hide");
+    if (a === "music" && window.Music) Music.toggle();
   }));
 
   // ---------- 日誌 ----------
@@ -584,11 +585,15 @@
   // ---------- 資料 ----------
   let S = {};
   const loadedAt = Date.now();
-  let prevWt = null, meTree = false;
+  let prevWt = null, meTree = false, meFinale = false, lastFinPhase = null;
   // 手機：收成時點上方提示，切換到共識大樹畫面（在本機繪製，不增加網路負擔）
   if (ME) {
-    $("phase").addEventListener("click", () => { if (((S.state && S.state.phase) || "join") === "harvest") { meTree = true; openSheet(null); hideInfo(); apply(); } });
-    $("treeback").addEventListener("click", () => { meTree = false; apply(); });
+    $("phase").addEventListener("click", () => {
+      const ph = (S.state && S.state.phase) || "join";
+      if (ph === "harvest") { meTree = true; openSheet(null); hideInfo(); apply(); }
+      if (ph === "finale") { meFinale = true; openSheet(null); hideInfo(); apply(); }
+    });
+    $("treeback").addEventListener("click", () => { if (document.body.classList.contains("finalemode")) meFinale = false; else meTree = false; apply(); });
   }
   let prevPeople = null, prevSentCount = 0, lastSpot = null, lastTour = "init", lastPhase = null, sentKey = "", firstSync = true;
   const sentsSorted = () => Object.entries(S.sentences || {}).map(([id, s]) => ({ id, ...s })).sort((a, b) => a.order - b.order);
@@ -625,6 +630,7 @@
     // 花朵盛開：直播
     if (prevWt && !settling) Object.entries(wt).forEach(([fid, n]) => {
       const p = people[fid]; if (!p || hidden[fid]) return;
+      if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt() && !ME && window.Music) Music.chime();
       if (n >= bloomAt() && (prevWt[fid] || 0) < bloomAt()) addEvent(`🌸 <b>${escapeHtml(p.name)}</b> 的行動句澆到 100%，在${PLAZA_NAMES[p.plaza] || "花園"}盛開了！`, p.avatar, "bloom");
     });
     prevWt = wt;
@@ -679,7 +685,20 @@
     const drops = Object.values(totals).reduce((a, b) => a + b, 0);
     // 參加者手機的地圖（?me=）不切換共識大樹，維持院區全景；大樹只在大螢幕顯示
     if (phase !== "harvest") meTree = false;
-    const showTree = ME ? meTree : (treeOverride !== null ? treeOverride : (phase === "harvest" && !spotId));
+    // 活動最後：第二期深耕目標（大螢幕與手機同步）
+    const finStats = () => { const n = (window.FINALE && FINALE.flowers) || gardenFlowers(S).length; return `今天有 <b>${n}</b> 朵盛開的花，結成 <b>${n}</b> 顆共識果實`; };   // 依參加者人數（種下希望花的人）
+    const enteringFinale = phase === "finale" && lastFinPhase !== "finale";
+    if (enteringFinale) meFinale = true;
+    const showFinale = phase === "finale" && (!ME || meFinale);
+    if (window.Finale) {
+      // 大螢幕：主持人按下「第二期目標」的當下，播放 大樹 → 光點 → 影片 → 222 的完整轉場
+      if (!ME && enteringFinale && lastFinPhase !== null) Finale.cinematic(finStats);
+      else Finale.show(showFinale, finStats());
+    }
+    lastFinPhase = phase;
+    // 大螢幕背景音樂：遊戲中→遊戲配樂；收成→大樹音樂；第二期目標→收斂音樂
+    if (!ME && window.Music) Music.setScene(phase === "finale" ? "finale" : (phase === "harvest" || (treeOverride === true)) ? "tree" : "game");
+    const showTree = (window.Finale && Finale.playing) ? BigTree.visible : showFinale ? false : ME ? meTree : (treeOverride !== null ? treeOverride : (phase === "harvest" && !spotId));
     BigTree.show(showTree);
     document.querySelector('[data-mode="tree"]') && document.querySelector('[data-mode="tree"]').classList.toggle("on", showTree);
     if (showTree) BigTree.update({ sents, people, edits: S.edits });
@@ -712,6 +731,7 @@
       join: ME ? `🕹️ <b>搖桿</b>或<b>點地面</b>走路・走到花園點花朵就能澆水` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
       water: ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
+      finale: ME ? `🎯 <b>第二期深耕目標</b> <span class="phgo">點我看 ›</span>` : `🎯 <b>第二期深耕目標</b>・奇美的承諾`,
       harvest: ME ? `🌳 <b>收成</b>・我們的共識大樹 <span class="phgo">點我看大樹 ›</span>` : `🌳 <b>收成</b>・我們的共識大樹`
     }[phase];
     const sc = {}; ps.forEach((p) => { if (p.scope) sc[p.scope] = (sc[p.scope] || 0) + 1; });
@@ -736,6 +756,13 @@
   }
 
   if (window.WaterCard) WaterCard.init({ getState: () => S, pid: ME });
+  if (!ME && window.Finale) setTimeout(() => Finale.preload(), 3000);
+  // 音樂按鈕狀態
+  if (!ME && window.Music) {
+    const mb = document.querySelector('[data-act="music"]');
+    const upd = () => { if (!mb) return; mb.textContent = Music.locked ? "🔈 點畫面開聲音" : Music.on ? "🔊 音樂" : "🔇 音樂"; mb.classList.toggle("on", Music.on); };
+    Music.onChange(upd); upd();
+  }   // 大螢幕預先載入收尾影片
   Store.init().then(() => Store.subscribe((st) => { S = st || {}; apply(); if (window.WaterCard) WaterCard.refresh(); }))
     .catch((e) => { $("phase").textContent = "無法連線：" + e.message; });
 

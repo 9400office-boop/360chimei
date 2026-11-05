@@ -1,0 +1,154 @@
+/* 活動最後：第二期深耕目標（深綠金色版，與收尾影片同色調） */
+.finale { --cu: #D07F42; --gold: #E8D49A; --gold2: #F6D27A; --ink2: #F4E9C8; position: fixed; inset: 0; z-index: 36; display: flex; flex-direction: column; overflow: hidden; font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; color: var(--ink2); background: #0B241D; }
+.finale.hide { display: none; }
+.finale .fn-bg { position: absolute; inset: 0; z-index: 0; background:
+  radial-gradient(ellipse at 14% 74%, rgba(246,210,122,.16), transparent 38%),
+  radial-gradient(ellipse at 70% 30%, rgba(60,120,95,.35), transparent 60%),
+  linear-gradient(160deg, #0F3128 0%, #0B261F 55%, #071B16 100%); }
+.finale .fn-rays { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.finale .fn-rays circle, .finale .fn-rays line { fill: none; stroke: rgba(232,212,154,.13); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.finale > *:not(.fn-bg):not(.fn-rays) { position: relative; z-index: 1; }
+/* 標題帶 */
+.finale .fn-band { margin-top: 5vh; padding: 2.2vh 4vw; display: flex; align-items: center; justify-content: center; gap: 5vw; background: linear-gradient(90deg, transparent 0%, rgba(232,212,154,.14) 15%, rgba(232,212,154,.2) 50%, rgba(232,212,154,.14) 85%, transparent 100%); border-top: 1px solid rgba(232,212,154,.35); border-bottom: 1px solid rgba(232,212,154,.35); }
+.finale .fn-band span { font-weight: 900; font-size: clamp(30px, 7.4vh, 92px); color: #FFF4D6; letter-spacing: .06em; line-height: 1.1; text-shadow: 0 0 22px rgba(246,210,122,.65), 0 0 6px rgba(246,210,122,.5); white-space: nowrap; }
+/* 主體 */
+.finale .fn-body { flex: 1; display: flex; align-items: stretch; gap: 2vw; padding: 4vh 3vw 0; min-height: 0; }
+.finale .fn-map { position: relative; flex: 0 0 18%; display: flex; align-items: flex-end; padding-bottom: 2vh; }
+.finale .fn-map img { position: relative; z-index: 2; width: 100%; max-height: 66vh; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 0 12px rgba(246,210,122,.35)); }
+.finale .fn-pin { position: absolute; z-index: 3; left: 3%; bottom: 25%; width: 26%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--gold2); box-shadow: 0 0 20px rgba(246,210,122,.6); opacity: 0; }
+.finale .fn-cone { position: absolute; z-index: 1; left: 20%; bottom: 8%; width: 115%; height: 62%; }
+.finale .fn-cone polygon { fill: rgba(246,210,122,.08); }
+.finale .fn-goals { position: relative; z-index: 2; flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vw; min-width: 0; }
+.finale .fn-goal { display: flex; flex-direction: column; min-width: 0; }
+.finale .fn-label { background: rgba(232,212,154,.08); border: 1px solid rgba(232,212,154,.45); text-align: center; font-weight: 900; font-size: clamp(18px, 5vh, 64px); color: #F4E2AE; padding: 1.4vh 0; letter-spacing: .04em; white-space: nowrap; }
+.finale .fn-big { position: relative; flex: 1; min-height: 0; }
+.finale .fn-num { position: absolute; left: 0; bottom: 0; font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif; font-weight: 900; font-size: clamp(120px, 56vh, 680px); line-height: .78; color: var(--cu); letter-spacing: -.04em; transform-origin: 40% 100%; text-shadow: 0 0 40px rgba(208,127,66,.35); }
+.finale .fn-notes { position: absolute; left: 68%; right: -4%; bottom: 23%; white-space: nowrap; font-weight: 900; font-size: clamp(13px, 2.7vh, 34px); line-height: 1.55; color: var(--gold); text-align: left; }
+.finale .fn-badge { position: absolute; left: 30%; right: 0; bottom: 0; display: flex; align-items: center; gap: 1.2vw; }
+.finale .fn-badge b { background: var(--cu); color: #FFF4E0; font-weight: 900; font-size: clamp(20px, 6vh, 76px); padding: .6vh 1.4vw .4vh; line-height: 1.25; letter-spacing: .02em; white-space: nowrap; }
+.finale .fn-arrow { width: clamp(28px, 4.6vw, 86px); height: auto; flex: none; filter: drop-shadow(0 0 8px rgba(246,210,122,.35)); }
+.finale .fn-arrow path { fill: var(--cu); stroke: #FFF4D6; stroke-width: 3; stroke-linejoin: round; }
+.finale .fn-foot { display: flex; justify-content: center; align-items: center; gap: 22px; flex-wrap: wrap; padding: 2.4vh 3vw 3vh; font-size: clamp(14px, 2.6vh, 30px); }
+.finale .fn-eyebrow { font-weight: 900; color: var(--gold); letter-spacing: .12em; }
+.finale .fn-stats { color: #CFE0D6; }
+.finale .fn-stats b { color: var(--gold2); font-size: 1.15em; }
+.finale .fn-tag { font-weight: 900; color: #FFF4D6; letter-spacing: .2em; text-shadow: 0 0 14px rgba(246,210,122,.6); }
+
+/* 依序出場動畫 */
+.finale.play::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(circle at 14% 74%, #FFFBEA 0%, rgba(246,210,122,.75) 25%, rgba(246,210,122,0) 65%); animation: fnGlowOut 1.4s ease-out both; }
+.finale.play .fn-band { animation: fnBand 1s .3s cubic-bezier(.3,.9,.3,1) both; }
+.finale.play .fn-t1 { animation: fnUp .7s .7s both; }
+.finale.play .fn-t2 { animation: fnUp .7s 1.1s both; }
+.finale.play .fn-rays { animation: fnFade 2s both; }
+.finale.play .fn-map img { animation: fnFade 1.2s .2s both; }
+.finale.play .fn-cone { animation: fnFade 1s 1.9s both; }
+.finale.play .fn-pin { animation: fnPin 2s 1.4s ease-out infinite; }
+.finale.play .fn-label { animation: fnDrop .6s calc(2s + var(--i) * .9s) both; }
+.finale.play .fn-num { animation: fnPop .9s calc(2.3s + var(--i) * .9s) cubic-bezier(.3,1.5,.5,1) both; }
+.finale.play .fn-badge { animation: fnUp .6s calc(2.9s + var(--i) * .9s) both; }
+.finale.play .fn-notes { animation: fnFade .8s calc(3.2s + var(--i) * .9s) both; }
+.finale.play .fn-arrow.up { animation: fnBobUp 1.6s calc(4s + var(--i) * .9s) ease-in-out infinite; }
+.finale.play .fn-arrow.down { animation: fnBobDown 1.6s calc(4s + var(--i) * .9s) ease-in-out infinite; }
+.finale.play .fn-foot { animation: fnFade 1s 5.2s both; }
+@keyframes fnGlowOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fnBand { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes fnUp { from { opacity: 0; transform: translateY(24px); } }
+@keyframes fnFade { from { opacity: 0; } }
+@keyframes fnDrop { from { opacity: 0; transform: translateY(-20px); } }
+@keyframes fnPop { 0% { opacity: 0; transform: scale(.2); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fnPin { 0% { opacity: .9; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.8); } }
+@keyframes fnBobUp { 50% { transform: translateY(-10px); } }
+@keyframes fnBobDown { 50% { transform: translateY(10px); } }
+
+/* 大螢幕：收尾時收起其他元素 */
+body.finalemode .phase, body.finalemode .feed, body.finalemode .writer, body.finalemode .info, body.finalemode .spot { display: none !important; }
+body.finalemode .topbar { z-index: 45; }
+body.finalemode .topbar > *:not(.side-btns), body.finalemode .side-btns > *:not([data-act=music]) { visibility: hidden; }
+body.finalemode .side-btns [data-act=music] { opacity: .35; }
+body.finalemode .side-btns [data-act=music]:hover { opacity: 1; }
+
+/* 收尾場景：深耕台南・健康台灣（程式繪製） */
+.fn-scene { position: fixed; inset: 0; z-index: 39; pointer-events: none; opacity: 0; transition: opacity .8s ease;
+  background: radial-gradient(ellipse at 30% 62%, #1E4638 0%, #12342A 35%, #0B241D 70%, #081C17 100%); }
+.fn-scene.on { opacity: 1; }
+.fn-scene.out { opacity: 0; transition-duration: .6s; }
+.fn-scene .sc-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fn-scene .sc-fill { fill: rgba(255,255,255,.035); opacity: 0; animation: scIn 1.6s 1s forwards; }
+.fn-scene .sc-line { fill: none; stroke: #FFF2C8; stroke-width: 2.2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: scDraw 2.6s .2s cubic-bezier(.4,0,.3,1) forwards; }
+@keyframes scDraw { 99% { stroke-dashoffset: 0; stroke-dasharray: 1 1; } 100% { stroke-dashoffset: 0; stroke-dasharray: none; } }
+@keyframes scIn { to { opacity: 1; } }
+.fn-scene .sc-rings circle { fill: none; stroke: rgba(232,212,154,.32); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0; transform-box: fill-box; transform-origin: center; animation: scRing 1.8s var(--d) ease-out forwards; }
+@keyframes scRing { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+.fn-scene .sc-rays line { stroke: rgba(246,226,160,.55); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: scRay 1.6s var(--d) ease-out forwards; }
+@keyframes scRay { to { stroke-dashoffset: 0; } }
+.fn-scene .sc-arcs path { fill: none; stroke: rgba(246,226,160,.4); stroke-width: 1.2; vector-effect: non-scaling-stroke; stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: scDraw 2.2s var(--d) ease-in-out forwards; }
+.fn-scene .sc-dots circle { fill: #F6E7B0; opacity: 0; animation: scTwinkle var(--t) ease-in-out infinite; }
+@keyframes scTwinkle { 50% { opacity: var(--o); } }
+.fn-scene .sc-flare { transform-box: fill-box; transform-origin: center; animation: scFlare 3.2s ease-in-out infinite; }
+@keyframes scFlare { 0%, 100% { transform: scale(.9); opacity: .85; } 50% { transform: scale(1.12); opacity: 1; } }
+.fn-scene .sc-star line { stroke: rgba(255,250,225,.85); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.fn-scene .sc-star { animation: scSpin 14s linear infinite; }
+@keyframes scSpin { to { transform: rotate(360deg); } }
+.fn-scene .sc-core { fill: #FFFFF4; filter: drop-shadow(0 0 10px #FFF6D0); }
+.fn-scene .sc-text { position: absolute; color: #FFF4D6; font-family: "Noto Serif TC", "Songti TC", serif; }
+.fn-scene .sc-text b { display: block; font-weight: 900; font-size: clamp(36px, 8.4vh, 110px); line-height: 1.32; letter-spacing: .18em; text-shadow: 0 0 22px rgba(246,210,122,.6), 0 0 6px rgba(246,210,122,.45); }
+.fn-scene .sc-text b span { display: block; opacity: 0; animation: scTxt 1.6s ease-out forwards; }
+.fn-scene .sc-text b span:nth-child(1) { animation-delay: 3.2s; }
+.fn-scene .sc-text b span:nth-child(2) { animation-delay: 4s; }
+.fn-scene .sc-text small { display: block; margin-top: 1.6vh; font-family: "Noto Sans TC", sans-serif; font-size: clamp(13px, 2.1vh, 26px); letter-spacing: .14em; color: rgba(244,233,200,.78); opacity: 0; animation: scIn 1.4s 5.2s forwards; }
+.fn-scene .sc-text small + small { animation-delay: 5.8s; }
+@keyframes scTxt { from { opacity: 0; filter: blur(8px); transform: translateY(10px); letter-spacing: .4em; } to { opacity: 1; filter: blur(0); transform: none; } }
+.fn-dusk { position: fixed; inset: 0; z-index: 35; background: radial-gradient(ellipse at 29% 78%, #1F4A3C 0%, #0E2A22 55%, #08201A 100%); animation: fnFade 1.6s both; }
+.gather-fx.out { opacity: 0; transition: opacity .8s; }
+.fn-flash { position: fixed; inset: 0; z-index: 42; pointer-events: none; background: radial-gradient(circle at var(--x) var(--y), #FFFFFF 0%, #FFF4D0 18%, rgba(246,210,122,.85) 40%, rgba(246,210,122,0) 80%); animation: fnFlash 2.4s ease-out both; }
+@keyframes fnFlash { 0% { opacity: 0; transform: scale(.4); transform-origin: var(--x) var(--y); } 22% { opacity: 1; transform: scale(1.6); } 100% { opacity: 0; transform: scale(2.2); } }
+
+/* 手機、平板直式：上下排列 */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .finale { overflow-y: auto; }
+  .finale .fn-band { flex-direction: column; gap: 4px; margin-top: calc(64px + env(safe-area-inset-top)); padding: 14px 10px; }
+  .finale .fn-band span { font-size: clamp(26px, 8.5vw, 44px); }
+  .finale .fn-body { flex-direction: column; padding: 14px 16px 0; gap: 12px; flex: none; }
+  .finale .fn-map { display: none; }
+  .finale .fn-goals { grid-template-columns: 1fr; gap: 12px; }
+  .finale .fn-goal { display: grid; grid-template-columns: 34% 1fr; grid-template-rows: auto 1fr; background: rgba(232,212,154,.06); border: 1px solid rgba(232,212,154,.3); border-radius: 16px; overflow: hidden; }
+  .finale .fn-label { grid-column: 1 / -1; font-size: 20px; padding: 8px 0; border: 0; border-bottom: 1px solid rgba(232,212,154,.3); }
+  .finale .fn-big { display: contents; }
+  .finale .fn-num { position: static; font-size: 118px; line-height: .9; text-align: center; padding: 8px 0 4px; grid-row: 2; }
+  .finale .fn-notes { position: static; grid-row: 2; grid-column: 2; font-size: 16px; padding: 12px 10px 0 4px; }
+  .finale .fn-badge { position: static; grid-column: 2; grid-row: 2; align-self: end; padding: 0 10px 12px 4px; gap: 10px; }
+  .finale .fn-badge b { font-size: 26px; padding: 2px 12px; }
+  .finale .fn-arrow { width: 34px; }
+  .finale .fn-foot { flex-direction: column; gap: 6px; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); font-size: 15px; text-align: center; }
+  .finale.play::after { background: radial-gradient(circle at 50% 30%, #FFFBEA 0%, rgba(246,210,122,.75) 25%, rgba(246,210,122,0) 70%); }
+  .finale.play .fn-label { animation-delay: calc(1.2s + var(--i) * .6s); }
+  .finale.play .fn-num { animation-delay: calc(1.4s + var(--i) * .6s); }
+  .finale.play .fn-badge, .finale.play .fn-notes { animation-delay: calc(1.8s + var(--i) * .6s); }
+  .finale.play .fn-foot { animation-delay: 3.2s; }
+}
+/* 手機首頁的卡片版：一律直式 */
+.finale.card-mode { position: relative; inset: auto; z-index: auto; border-radius: 20px; margin: 10px 0; box-shadow: 0 6px 24px rgba(20,40,30,.25); overflow: hidden; display: flex; }
+.finale.card-mode .fn-band { flex-direction: column; gap: 4px; margin-top: 0; padding: 14px 10px; }
+.finale.card-mode .fn-band span { font-size: 26px; }
+.finale.card-mode .fn-body { flex-direction: column; padding: 14px 14px 0; gap: 12px; flex: none; }
+.finale.card-mode .fn-map { display: none; }
+.finale.card-mode .fn-goals { grid-template-columns: 1fr; gap: 12px; }
+.finale.card-mode .fn-goal { display: grid; grid-template-columns: 34% 1fr; grid-template-rows: auto 1fr; background: rgba(232,212,154,.06); border: 1px solid rgba(232,212,154,.3); border-radius: 16px; overflow: hidden; }
+.finale.card-mode .fn-label { grid-column: 1 / -1; font-size: 18px; padding: 8px 0; border: 0; border-bottom: 1px solid rgba(232,212,154,.3); }
+.finale.card-mode .fn-big { display: contents; }
+.finale.card-mode .fn-num { position: static; font-size: 100px; line-height: .9; text-align: center; padding: 8px 0 4px; grid-row: 2; }
+.finale.card-mode .fn-notes { position: static; grid-row: 2; grid-column: 2; font-size: 15px; padding: 12px 10px 0 4px; }
+.finale.card-mode .fn-badge { position: static; grid-column: 2; grid-row: 2; align-self: end; padding: 0 10px 12px 4px; gap: 10px; }
+.finale.card-mode .fn-badge b { font-size: 22px; padding: 2px 10px; }
+.finale.card-mode .fn-arrow { width: 28px; }
+.finale.card-mode .fn-foot { flex-direction: column; gap: 6px; padding: 14px 14px 16px; font-size: 14px; text-align: center; }
+.finale.card-mode.play::after { display: none; }
+
+.fn-scene .sc-rule { display: block; width: 5.5vh; height: 1px; margin: 2.6vh 0 .4vh; background: rgba(244,233,200,.6); opacity: 0; animation: scIn 1s 4.8s forwards; }
+.fn-scene .sc-text small.sc-em { font-style: italic; color: rgba(244,233,200,.9); letter-spacing: .08em; }
+
+/* 大螢幕：「倍人數／21%」直接寫在 2 的底座上（不另外加色塊，避免 2 的輪廓被切出缺角） */
+@media (min-width: 761px) and (min-aspect-ratio: 1/1) {
+  .finale:not(.card-mode) .fn-badge { left: 0; right: -6%; bottom: 0; height: calc(clamp(120px, 56vh, 680px) * .148); justify-content: flex-end; padding-right: 0; }
+  .finale:not(.card-mode) .fn-badge b { background: none; padding: 0; margin-right: auto; margin-left: 28%; line-height: 1; color: #FFF4E0; text-shadow: 0 2px 0 rgba(120,60,20,.35); }
+}

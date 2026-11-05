@@ -156,6 +156,19 @@ window.ISLAND_CONTENT = {
   }
 };
 
+/* 活動最後：第二期深耕目標（主持人切到「第二期目標」時，大螢幕與手機同步顯示） */
+window.FINALE = {
+  eyebrow: "帶著今天的共識，邁向第二期深耕",
+  title: "奇美的承諾",
+  headline: "兩項倍增，兩成減碳",
+  flowers: 70,          // 最後一行「今天有 70 朵盛開的花，結成 70 顆共識果實」的數字（固定顯示）
+  goals: [
+    { label: "創新服務量", num: "2", badge: "倍人數", dir: "up", notes: ["急症在宅住院", "生活習慣諮商"] },
+    { label: "人才轉型規模", num: "2", badge: "倍人數", dir: "up", notes: ["雙軸人才", "AI/ESG"] },
+    { label: "溫室氣體排放量", num: "2", badge: "21%", dir: "down", notes: ["廢棄物減量", "能耗降低"] }
+  ]
+};
+
 /* 三座花園（希望花隨機種在其中一座） */
 window.PLAZA_NAMES = { B: "社會情緒學習廣場", C: "復原力廣場", D: "專業續航廣場" };
 window.PLAZA_ICONS = { B: "🌸", C: "🌼", D: "🌻" };
