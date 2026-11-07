@@ -415,7 +415,7 @@
     "4a": [-52, 21], "4b": [-38, 21], "4c": [-24, 21], "4d": [46, -2], "4e": [58, -2]
   };
   const PLAZAS = [
-    { name: "AI智慧光廊", x: -6, z: 14, w: 16, d: 10, info: true },
+    { name: "奇美光廊", x: -6, z: 14, w: 16, d: 10, info: true },
     { name: "社會情緒學習廣場", key: "B", flower: true, x: 22, z: 31, w: 26, d: 12 },
     { name: "復原力廣場", key: "C", flower: true, x: 52, z: 20, w: 20, d: 14 },
     { name: "專業續航廣場", key: "D", flower: true, x: -9, z: 31, w: 18, d: 12 }
@@ -607,6 +607,25 @@
         glow("box", "#8FD8FF", L(T, sx * (pz.w / 2 - .5) - sx * .31, TOP + 1.1, -3.6, .02, .5, .7));
       }
       W._corridor = { x: pz.x, z: pz.z, y: TOP, len: pz.w - 2.2, HW, H };
+      // 奇美光廊：屋脊上的展名牌＋走廊內兩側掛畫
+      {
+        const cv = document.createElement("canvas"); cv.width = 1024; cv.height = 256; const g = cv.getContext("2d");
+        g.fillStyle = "#3D2E17"; g.fillRect(0, 0, 1024, 256); g.strokeStyle = "#E3C27A"; g.lineWidth = 10; g.strokeRect(10, 10, 1004, 236);
+        g.fillStyle = "#F6E2B0"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.font = "900 118px 'Noto Serif TC', serif"; g.fillText("奇美光廊", 512, 134);
+        const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+        const sign = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 1.8), new THREE.MeshBasicMaterial({ map: tex }));
+        sign.position.set(pz.x, TOP + H + 1.5, pz.z + HW + .05); scene.add(sign);
+        const back = sign.clone(); back.rotation.y = Math.PI; back.position.z = pz.z - HW - .05; scene.add(back);
+        put("box", "#3D2E17", L(T, -3.2, TOP + H + .9, HW, .12, 1.1, .12)); put("box", "#3D2E17", L(T, 3.2, TOP + H + .9, HW, .12, 1.1, .12));
+        // 走廊內側：一幅幅金框畫作
+        const N = 6;
+        for (let i = 0; i < N; i++) for (const sz of [-1, 1]) {
+          const x = -pz.w / 2 + 2 + i * (pz.w - 4) / (N - 1);
+          put("box", "#C9A24E", L(T, x, TOP + 2, sz * (HW - .35), 1.5, .95, .08));
+          glow("box", i % 2 ? "#F7EEDB" : "#EAF2F6", L(T, x, TOP + 2, sz * (HW - .4), 1.3, .75, .02));
+        }
+      }
     });
     // 行道樹
     for (let x = -68; x <= 68; x += 8) { Pr.tree(P(0, 0), x, -37, .9); Pr.tree(P(0, 0), x, 44, .95); }

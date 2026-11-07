@@ -113,7 +113,7 @@
       <label class="label">迎賓小品</label>
       <div class="scaffold" id="scaf">${preview()}</div>
       ${blocks}
-      <div class="sticky"><div class="inner"><button class="btn" id="plant">相遇前菜 🌸</button></div></div>`;
+      <div class="sticky"><div class="inner"><button class="btn" id="plant">確認報到 🌸</button></div></div>`;
   }
 
   // ---------- 首頁（依活動階段） ----------
@@ -162,7 +162,7 @@
       html += `<p class="status">${list.length ? (mine ? "🎉 你的花盛開了，入選揭曉！" : `📣 揭曉 <b>${list.length}</b> 朵澆到 100% 的花`) : "主持人正在整理盛開的花，請看大螢幕…"}</p>`;
       html += list.map((s) => sentCard(s)).join("");
     } else if (ph === "finale") {
-      html += `<p class="status">🎯 <b>帶著今天的共識，邁向第二期深耕</b></p>` + Finale.card();
+      html += `<p class="status">🎯 <b>帶著今天的共識，邁向第二期深耕</b></p>` + Finale.card() + Finale.mapCard();   // 結尾頁：222 之後接聯盟地圖
     } else if (ph === "harvest") {
       const list = sentencesSorted();
       html += `<p class="status">🌳 共識延續！請看大螢幕，大樹從一顆種子長成大樹，<br>樹上的 <b>${list.length}</b> 顆果實，就是大家澆到盛開的行動句</p>`;

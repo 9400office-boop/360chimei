@@ -37,7 +37,7 @@
       <label class="ws-q">${PROMPT}</label>
       <div class="ws-fill"><input id="wsInput" maxlength="30" placeholder="例：跨團隊更願意互相支援" value="${m ? escapeHtml(m.text) : ""}" autocomplete="off"></div>
       ${m ? `<div class="ws-done">你已許下：「${escapeHtml(m.text)}」，可以修改後再投一次</div>` : ""}
-      <button class="ws-btn" id="wsGo">${coinSvg("sm")}<span>投下金幣・許下心願</span></button>
+      <button class="ws-btn" id="wsGo">${coinSvg("sm")}<span>投下金幣・分享觀察</span></button>
     </div>`;
     document.body.appendChild(el);
     el.addEventListener("click", (e) => { if (e.target === el || e.target.closest("[data-close]")) close(); if (e.target.closest("#wsGo")) submit(); });

@@ -35,27 +35,27 @@
 .finale .fn-tag { font-weight: 900; color: #FFF4D6; letter-spacing: .2em; text-shadow: 0 0 14px rgba(246,210,122,.6); }
 
 /* 依序出場動畫 */
-.finale.play::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(circle at 14% 74%, #FFFBEA 0%, rgba(246,210,122,.75) 25%, rgba(246,210,122,0) 65%); animation: fnGlowOut 1.4s ease-out both; }
-.finale.play .fn-band { animation: fnBand 1s .3s cubic-bezier(.3,.9,.3,1) both; }
-.finale.play .fn-t1 { animation: fnUp .7s .7s both; }
-.finale.play .fn-t2 { animation: fnUp .7s 1.1s both; }
-.finale.play .fn-rays { animation: fnFade 2s both; }
-.finale.play .fn-map img { animation: fnFade 1.2s .2s both; }
-.finale.play .fn-cone { animation: fnFade 1s 1.9s both; }
-.finale.play .fn-pin { animation: fnPin 2s 1.4s ease-out infinite; }
-.finale.play .fn-label { animation: fnDrop .6s calc(2s + var(--i) * .9s) both; }
-.finale.play .fn-num { animation: fnPop .9s calc(2.3s + var(--i) * .9s) cubic-bezier(.3,1.5,.5,1) both; }
-.finale.play .fn-badge { animation: fnUp .6s calc(2.9s + var(--i) * .9s) both; }
-.finale.play .fn-notes { animation: fnFade .8s calc(3.2s + var(--i) * .9s) both; }
-.finale.play .fn-arrow.up { animation: fnBobUp 1.6s calc(4s + var(--i) * .9s) ease-in-out infinite; }
-.finale.play .fn-arrow.down { animation: fnBobDown 1.6s calc(4s + var(--i) * .9s) ease-in-out infinite; }
-.finale.play .fn-foot { animation: fnFade 1s 5.2s both; }
+.finale.play::after { content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(circle at 14% 74%, #FFFBEA 0%, rgba(246,210,122,.75) 25%, rgba(246,210,122,0) 65%); animation: fnGlowOut 3.2s ease-out both; }
+.finale.play .fn-band { animation: fnBand 2.2s .4s cubic-bezier(.4,0,.2,1) both; }
+.finale.play .fn-t1 { animation: fnUp 1.6s 1s cubic-bezier(.25,.1,.25,1) both; }
+.finale.play .fn-t2 { animation: fnUp 1.6s 1.7s cubic-bezier(.25,.1,.25,1) both; }
+.finale.play .fn-rays { animation: fnFade 3.5s both; }
+.finale.play .fn-map img { animation: fnFade 2.6s .3s both; }
+.finale.play .fn-cone { animation: fnFade 2s 2.6s both; }
+.finale.play .fn-pin { animation: fnPin 3s 2.4s ease-out infinite; }
+.finale.play .fn-label { animation: fnDrop 1.4s calc(3s + var(--i) * 1.5s) cubic-bezier(.25,.1,.25,1) both; }
+.finale.play .fn-num { animation: fnPop 1.8s calc(3.5s + var(--i) * 1.5s) cubic-bezier(.22,1.15,.36,1) both; }
+.finale.play .fn-badge { animation: fnUp 1.4s calc(4.6s + var(--i) * 1.5s) cubic-bezier(.25,.1,.25,1) both; }
+.finale.play .fn-notes { animation: fnFade 1.6s calc(5s + var(--i) * 1.5s) both; }
+.finale.play .fn-arrow.up { animation: fnBobUp 2.4s calc(6s + var(--i) * 1.5s) ease-in-out infinite; }
+.finale.play .fn-arrow.down { animation: fnBobDown 2.4s calc(6s + var(--i) * 1.5s) ease-in-out infinite; }
+.finale.play .fn-foot { animation: fnFade 2s 7s both; }
 @keyframes fnGlowOut { 0% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes fnBand { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes fnUp { from { opacity: 0; transform: translateY(24px); } }
+@keyframes fnUp { from { opacity: 0; transform: translateY(18px); } }
 @keyframes fnFade { from { opacity: 0; } }
 @keyframes fnDrop { from { opacity: 0; transform: translateY(-20px); } }
-@keyframes fnPop { 0% { opacity: 0; transform: scale(.2); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fnPop { 0% { opacity: 0; transform: scale(.55); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
 @keyframes fnPin { 0% { opacity: .9; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.8); } }
 @keyframes fnBobUp { 50% { transform: translateY(-10px); } }
 @keyframes fnBobDown { 50% { transform: translateY(10px); } }
@@ -64,7 +64,7 @@
 body.finalemode .phase, body.finalemode .feed, body.finalemode .writer, body.finalemode .info, body.finalemode .spot { display: none !important; }
 body.finalemode .topbar { z-index: 45; }
 body.finalemode .topbar > *:not(.side-btns), body.finalemode .side-btns > *:not([data-act=music]) { visibility: hidden; }
-body.finalemode .side-btns [data-act=music] { opacity: .35; }
+body.finalemode .side-btns [data-act=music] { opacity: .35; position: fixed; top: 4px; right: 12px; left: auto; bottom: auto; z-index: 60; transform: scale(.82); transform-origin: top right; }   /* 喇叭移到右上角，不壓到標題帶 */
 body.finalemode .side-btns [data-act=music]:hover { opacity: 1; }
 
 /* 收尾場景：深耕台南・健康台灣（程式繪製） */
@@ -100,7 +100,7 @@ body.finalemode .side-btns [data-act=music]:hover { opacity: 1; }
 @keyframes scTxt { from { opacity: 0; filter: blur(8px); transform: translateY(10px); letter-spacing: .4em; } to { opacity: 1; filter: blur(0); transform: none; } }
 .fn-dusk { position: fixed; inset: 0; z-index: 35; background: radial-gradient(ellipse at 29% 78%, #1F4A3C 0%, #0E2A22 55%, #08201A 100%); animation: fnFade 1.6s both; }
 .gather-fx.out { opacity: 0; transition: opacity .8s; }
-.fn-flash { position: fixed; inset: 0; z-index: 42; pointer-events: none; background: radial-gradient(circle at var(--x) var(--y), #FFFFFF 0%, #FFF4D0 18%, rgba(246,210,122,.85) 40%, rgba(246,210,122,0) 80%); animation: fnFlash 2.4s ease-out both; }
+.fn-flash { position: fixed; inset: 0; z-index: 42; pointer-events: none; background: radial-gradient(circle at var(--x) var(--y), #FFFFFF 0%, #FFF4D0 18%, rgba(246,210,122,.85) 40%, rgba(246,210,122,0) 80%); animation: fnFlash 4.8s cubic-bezier(.25,.1,.25,1) both; }
 @keyframes fnFlash { 0% { opacity: 0; transform: scale(.4); transform-origin: var(--x) var(--y); } 22% { opacity: 1; transform: scale(1.6); } 100% { opacity: 0; transform: scale(2.2); } }
 
 /* 手機、平板直式：上下排列 */
@@ -152,3 +152,65 @@ body.finalemode .side-btns [data-act=music]:hover { opacity: 1; }
   .finale:not(.card-mode) .fn-badge { left: 0; right: -6%; bottom: 0; height: calc(clamp(120px, 56vh, 680px) * .148); justify-content: flex-end; padding-right: 0; }
   .finale:not(.card-mode) .fn-badge b { background: none; padding: 0; margin-right: auto; margin-left: 28%; line-height: 1; color: #FFF4E0; text-shadow: 0 2px 0 rgba(120,60,20,.35); }
 }
+
+/* ---------- 222 之後的下一頁：同版面，222 區塊換成奇美醫療體系聯盟地圖＋英文標語 ---------- */
+.finale .fn-en, .finale .fn-alliance { display: none; }
+.finale.ally .fn-t1, .finale.ally .fn-t2, .finale.ally .fn-goals, .finale.ally .fn-foot { display: none; }
+.finale.ally:not(.card-mode) .fn-body { padding-bottom: 4vh; }
+.finale.ally .fn-en { display: inline; font-style: italic; font-weight: 700; letter-spacing: .01em; font-family: "Segoe UI", "Helvetica Neue", Arial, "Noto Sans TC", sans-serif; font-size: clamp(22px, 5.6vh, 70px); }
+.finale.ally .fn-alliance { position: relative; z-index: 2; flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 1vh; }
+.finale .fa-frame { box-sizing: border-box; width: 100%; aspect-ratio: 1181 / 710; }
+.finale .fa-frame img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(246,210,122,.22)); }
+/* 大螢幕橫式：地圖依剩餘空間等比放到最大，不擠掉下方字幕 */
+@media (min-width: 761px) and (min-aspect-ratio: 1/1) {
+  .finale:not(.card-mode) .fn-alliance { container-type: size; }
+  .finale:not(.card-mode) .fa-frame { width: min(100cqw, 100cqh * 1181 / 710); }
+}
+.finale.ally .fa-frame { animation: faIn 2.8s .3s cubic-bezier(.25,.1,.25,1) both; }        /* 地圖先出現 */
+.finale.ally .fn-cone { animation: fnFade 2s 1.2s both; }
+.finale.ally .fn-band { animation: fnBand2 2.2s 2.6s cubic-bezier(.4,0,.2,1) both; }               /* 2～3 秒後標語帶展開 */
+.finale.ally .fn-en { background: none; filter: none; }
+/* 三段依序流光寫出：每段約 0.9 秒寫完，段與段之間隔 1 秒；全部寫完後持續流動光 */
+.finale.ally .fn-band .en-p { font-size: inherit; font-weight: inherit; letter-spacing: inherit; white-space: nowrap; }
+.finale.ally .en-p { display: inline-block; background: linear-gradient(100deg, #F6E3A8 0%, #F6E3A8 38%, #FFF8E0 45%, #FFFFFF 50%, #FFF8E0 55%, #F6E3A8 62%, #F6E3A8 100%);
+  background-size: 250% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  text-shadow: none; filter: drop-shadow(0 0 12px rgba(246,210,122,.55)) drop-shadow(0 0 3px rgba(246,210,122,.45));
+  line-height: 1.3; padding: .02em .14em .16em; margin-bottom: -.14em;     /* 下方留空間，避免 g、y 被切到 */
+  animation: enReveal 1.8s calc(3.4s + var(--k) * 2.8s) cubic-bezier(.4,.05,.3,1) both, enFlow 5s calc(12.5s + var(--k) * .6s) linear infinite; }
+@keyframes fnBand2 { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes enFlow { 0% { background-position: 100% 0; } 100% { background-position: 0% 0; } }
+@keyframes enReveal {
+  0% { opacity: 0; clip-path: inset(-30% 100% -40% -2%); background-position: 100% 0; }
+  12% { opacity: 1; }
+  100% { opacity: 1; clip-path: inset(-30% -6% -40% -2%); background-position: 0% 0; } }
+@keyframes faIn { from { opacity: 0; transform: translateY(26px) scale(.96); } }
+/* 手機、直式：地圖在上下排列裡完整顯示 */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .finale.ally .fn-en { font-size: clamp(18px, 5.4vw, 30px); white-space: normal; text-align: center; }
+  .finale.ally .fa-frame { height: auto; width: 100%; }
+}
+.finale.card-mode.ally .fn-en { font-size: 17px; white-space: normal; text-align: center; }
+.finale.card-mode.ally .fa-frame { height: auto; width: 100%; }
+
+/* ---------- 緩慢推進：222 與聯盟頁的文字、圖片持續慢慢放大（大螢幕） ---------- */
+.finale .fn-push { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+@media (min-width: 761px) and (min-aspect-ratio: 1/1) {
+  .finale:not(.card-mode).play .fn-push { transform-origin: 50% 50%; animation: fnPush 45s cubic-bezier(.25,.1,.4,1) both; }
+  .finale:not(.card-mode).play .fn-rays { transform-origin: 15% 75%; animation: fnFade 2s both, fnPushBg 60s linear both; }
+  .finale:not(.card-mode).ally .fn-push { animation: fnPush2 45s cubic-bezier(.25,.1,.4,1) both; }
+}
+@keyframes fnPush { from { transform: scale(1); } to { transform: scale(1.05); } }
+@keyframes fnPush2 { from { transform: scale(1); } to { transform: scale(1.05); } }
+@keyframes fnPushBg { from { transform: scale(1); } to { transform: scale(1.12); } }
+@media (max-width: 760px), (max-aspect-ratio: 1/1) { .finale .fn-push { flex: none; } }
+.finale.card-mode .fn-push { flex: none; }
+
+/* 右下角署名：深耕辦公室（斜體） */
+.finale:not(.card-mode) > .fn-sign:not(.fn-bg) { position: absolute; z-index: 3; right: 3vw; bottom: 2.4vh; font-style: italic; font-weight: 700; font-size: clamp(15px, 2.6vh, 32px); letter-spacing: .22em;
+  color: #F0DDA4; text-shadow: 0 0 12px rgba(246,210,122,.45); transform: skewX(-10deg); opacity: 0; pointer-events: none; }
+/* 只在聯盟頁、英文三段都寫完後才淡入 */
+.finale.ally:not(.card-mode) > .fn-sign:not(.fn-bg) { animation: fnSignIn 2s 11.4s forwards; }
+@keyframes fnSignIn { from { opacity: 0; } to { opacity: .92; } }
+@media (max-width: 760px), (max-aspect-ratio: 1/1) { .finale:not(.card-mode) > .fn-sign:not(.fn-bg) { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: -70px 18px 90px 0; font-size: 15px; } }
+.finale.card-mode:not(.ally) > .fn-sign { display: none; }
+.finale.card-mode > .fn-sign { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: -6px 14px 12px 0; font-size: 14px; opacity: 0; animation: fnSignIn 2s 11.4s forwards; }

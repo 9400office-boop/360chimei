@@ -58,7 +58,7 @@
     const spot = S.state && S.state.spotlight;
     const tour = S.state && S.state.tour;
     const joinOpen = !(S.state && S.state.joinOpen === false), waterOn = waterOpen(S);
-    const PH = [["join", "🏥", "報到填寫"], ["meet", "⛲", "相遇"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "共識延續"], ["finale", "🎯", "第二期目標"]];
+    const PH = [["join", "🏥", "報到填寫"], ["meet", "⛲", "相遇"], ["water", "🌸", "澆花"], ["reveal", "📣", "揭曉盛開"], ["harvest", "🌳", "共識延續"], ["finale", "🎯", "第二期目標"], ["alliance", "🤝", "醫療體系聯盟"]];
     const inList = new Set(ss.map((s) => s.pid));
     let list = ds.filter((p) => !filter || p.scope === filter);
     if (gfilter === "bloom") list = list.filter((p) => (wt[p.id] || 0) >= bloomAt() && !HD[p.id]);
@@ -75,13 +75,14 @@
       <div class="row" style="margin:0 0 10px"><button class="btn small ${joinOpen ? "" : "warn"}" data-act="joinopen">${joinOpen ? "📝 報到與填寫：開放中（點一下關閉）" : "🔒 報到與填寫：已關閉（點一下開放）"}</button>
         <button class="btn small ${waterOn ? "" : "warn"}" data-act="wateropen">${waterOn ? "💧 澆花：開放中（點一下暫停）" : "⏸ 澆花：已暫停（點一下開放）"}</button>
         <span class="note">兩者都與活動階段分開：開放時，參加者隨時可以報到填寫、進花園澆花，不用等主持人切換。</span></div>
-      <div class="phases">${PH.map(([k, e, n], i) => `<button class="ph ${phase() === k ? "on" : ""}" data-phase="${k}"><b>${e}</b>${i + 1}. ${n}</button>`).join("")}</div>
+      <div class="phases">${((curPh) => PH.map(([k, e, n], i) => `<button class="ph ${curPh === k ? "on" : ""}" data-phase="${k}"><b>${e}</b>${i + 1}. ${n}</button>`).join(""))(phase() === "finale" && S.state && S.state.finaleMap ? "alliance" : phase())}</div>
       <p class="note">① 報到填寫（開場）：大螢幕顯示報到 QR Code。選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花。報到與填寫是否開放，由上方按鈕另外控制，切到其他階段也不受影響。<br>
       ②-0 相遇：所有人物自動匯集到永續噴泉，參加者點噴泉填寫「我的深耕關鍵字：回望第一期，我最有感的一個改變是＿＿」，投下金幣後自動走進共識花園澆花（內容可在下方匯出）。<br>
       ② 澆花：參加者從報到後就能隨時澆花（上方按鈕可暫停）；切到這個階段時，大螢幕鏡頭飛到花園、QR Code 換成花園頁。參加者進「共識花園」或在院區走到花園點花、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
       ③ 揭曉盛開：自動用澆到 100% 的花產生揭曉清單，逐句聚光。<br>
       ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。<br>
-      ⑤ 第二期目標：大螢幕播放完整收尾（約 20 秒）：共識大樹轉為深綠金色 → 果實化成光點匯聚到台南 → 影片「深耕台南・健康台灣」→ 閃光 → 222 第二期目標定格。參加者手機不播影片，直接顯示 222（內容在 js/content.js 的 FINALE 修改）。</p>
+      ⑤ 第二期目標：大螢幕播放完整收尾（約 20 秒）：共識大樹轉為深綠金色 → 果實化成光點匯聚到台南 → 影片「深耕台南・健康台灣」→ 閃光 → 222 第二期目標定格。參加者手機不播影片，直接顯示 222（內容在 js/content.js 的 FINALE 修改）。<br>
+      ⑥ 醫療體系聯盟（結尾頁）：222 出現約 14 秒後自動換到這頁，不用另外按；想提早換可按「7. 醫療體系聯盟」。大螢幕與手機換成「奇美醫療體系聯盟」地圖，上方是英文標語 Stronger Collaboration, Better Care, Healthier Community（英文在 js/content.js 的 FINALE.allianceEn 修改）。按回「6. 第二期目標」可回到 222，14 秒後會再自動換到聯盟頁。</p>
       ${msg ? `<div class="msg">${escapeHtml(msg)}</div>` : ""}
     </div>
 
@@ -194,7 +195,8 @@
         if (!blooms().length && !confirm("目前還沒有澆到 100% 盛開的花，確定要進入「" + (ph === "reveal" ? "揭曉" : "收成") + "」嗎？")) return;
         await doBuild(true);
       }
-      await setState(ph === "meet" ? { phase: ph, spotlight: null, meetAt: Date.now() } : { phase: ph, spotlight: null });
+      if (ph === "alliance") { await setState({ phase: "finale", finaleMap: true, spotlight: null }); return; }
+      await setState(ph === "meet" ? { phase: ph, spotlight: null, meetAt: Date.now(), finaleMap: null } : ph === "finale" ? { phase: ph, spotlight: null, finaleMap: null, finaleAt: Date.now() } : { phase: ph, spotlight: null, finaleMap: null });
       return;
     }
     if (b.dataset.filter !== undefined) { filter = Number(b.dataset.filter); render(); return; }

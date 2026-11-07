@@ -1,13 +1,16 @@
 /* =========================================================
  * 大螢幕背景音樂（只在大螢幕播放，參加者手機不播）
  *  - 遊戲中（報到、澆花、揭曉）：assets/music/game.mp3（循環；沒有檔案時改用程式合成配樂）
- *  - 收成大樹 → 第二期目標：assets/music/ending.mp3（同一首連續播放、循環；沒有檔案時保持安靜）
+ *  - 共識大樹：assets/music/ending.mp3 從頭播（循環）
+ *  - 第二期目標（含聯盟結尾頁）：另外一軌 ending.mp3，從 01:37 開始播，播完回到 01:37 循環
  *  瀏覽器規定要先點一下畫面才能出聲；右上角「音樂」按鈕可開關。
  * ========================================================= */
 (function () {
-  const FILES = { game: "assets/music/game.mp3", ending: "assets/music/ending.mp3" };
-  const VOL = { game: .7, ending: .85, synth: 1 };
+  const FILES = { game: "assets/music/game.mp3", ending: "assets/music/ending.mp3", finale: "assets/music/ending.mp3" };
+  const VOL = { game: .7, ending: .85, finale: .85, synth: 1 };
+  const FINALE_START = 97;               // 第二期目標：ending.mp3 從 01:37 開始播（與共識大樹的音樂分開）
   let ac = null, master = null, gameBus = null, verb = null;
+  let finaleFresh = true;               // 每次進入「第二期目標」都從 01:37 開始
   let scene = null, wantOn = true, unlocked = false, timer = null, nextT = 0, step = 0;
   const files = {}, listeners = [];
 
@@ -76,9 +79,14 @@
     clearInterval(a._fade); const v0 = a.volume, t0 = performance.now();
     a._fade = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / (sec * 1000)); a.volume = v0 + (v - v0) * k; if (k >= 1) { clearInterval(a._fade); if (done) done(); } }, 40);
   }
+  function seekStart(a) {
+    const go = () => { try { a.currentTime = FINALE_START; } catch (e) {} };
+    if (a.readyState >= 1) go(); else a.addEventListener("loadedmetadata", go, { once: true });
+  }
   function fileEl(k) {
     if (files[k] !== undefined) return files[k];
-    const a = new Audio(); a.src = FILES[k]; a.loop = true; a.preload = "auto"; a.volume = 0;
+    const a = new Audio(); a.src = FILES[k]; a.loop = k !== "finale"; a.preload = "auto"; a.volume = 0;
+    if (k === "finale") a.addEventListener("ended", () => { a.currentTime = FINALE_START; a.play().catch(() => {}); });   // 播完回到 01:37 再循環
     a.onerror = () => { files[k] = null; if (k === "game") apply(); };
     return (files[k] = a);
   }
@@ -88,17 +96,21 @@
     if (!ac || !unlocked) return;
     const on = wantOn;
     fadeTo(master.gain, on ? 1 : 0, .5);
-    const track = scene === "game" ? "game" : (scene === "tree" || scene === "finale") ? "ending" : null;
+    const track = scene === "game" ? "game" : scene === "tree" ? "ending" : scene === "finale" ? "finale" : null;
     const gEl = fileEl("game");
     const useSynth = on && track === "game" && files.game === null;          // game.mp3 不存在時的備案
     if (useSynth && !timer) { nextT = ac.currentTime + .1; timer = setInterval(schedule, 40); }
     fadeTo(gameBus.gain, useSynth ? VOL.synth : 0, fade);
     if (!useSynth && timer) { const tt = timer; setTimeout(() => { if (timer === tt) { clearInterval(timer); timer = null; } }, fade * 1000 + 200); }
-    ["game", "ending"].forEach((k) => {
+    ["game", "ending", "finale"].forEach((k) => {
       const want = on && track === k, a = want ? fileEl(k) : files[k];
       if (!a) return;
-      if (want) { if (a.paused) a.play().catch(() => {}); fadeEl(a, VOL[k], k === "ending" ? Math.max(fade, 3) : fade); }   // 大樹音樂慢慢淡入
-      else if (!a.paused) fadeEl(a, 0, fade, () => a.pause());                // 從大樹到第二期目標是同一首，不會重新開始
+      if (want) {
+        if (k === "finale" && finaleFresh) { finaleFresh = false; seekStart(a); }
+        if (a.paused) a.play().catch(() => {});
+        fadeEl(a, VOL[k], k === "ending" ? Math.max(fade, 3) : k === "finale" ? 1.2 : fade);   // 大樹音樂慢慢淡入；第二期目標較快淡入
+      }
+      else if (!a.paused) fadeEl(a, 0, fade, () => a.pause());
     });
     void gEl;
     listeners.forEach((f) => f());
@@ -111,10 +123,11 @@
 
   window.Music = {
     // 依活動階段切換：game / tree / finale
-    setScene(s) { if (s === scene) return; scene = s; fileEl("game"); fileEl("ending"); apply(); },
+    setScene(s) { if (s === scene) return; if (s === "finale") finaleFresh = true; scene = s; fileEl("game"); fileEl("ending"); fileEl("finale"); apply(); },
     toggle() { wantOn = !wantOn; if (!unlocked) unlock(); else apply(.6); },
     get on() { return wantOn && unlocked; },
     get locked() { return !unlocked; },
+    debug() { const o = {}; Object.keys(files).forEach((k) => { const a = files[k]; o[k] = a ? { t: +a.currentTime.toFixed(1), paused: a.paused, vol: +a.volume.toFixed(2) } : null; }); return { scene, o }; },
     onChange(f) { listeners.push(f); },
     // 花朵盛開的小鈴聲
     chime() {

@@ -169,6 +169,7 @@
     const icon = C.supports[key].icon;
     tileLabels.push({ ...mkLabel(pz.info ? "tl plaza sup" : "tl plaza" + (pz.flower ? " garden" : ""), `${icon} ${escapeHtml(pz.name)}${pz.flower && ME ? " <b class=\"gopen\">走過去澆花 ›</b>" : ""}`, new THREE.Vector3(pz.x, W.TOP + .3, pz.z + pz.d / 2 + 1), () => {
       if (pz.flower && ME) { arriveGarden(pz); return; }   // 手機：走到花園，點花朵澆水
+      if (pz.info && window.Gallery) { if (!ME) W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); Gallery.open(); return; }   // 奇美光廊：開啟畫廊
       W.flyTo({ x: pz.x, y: 0, z: pz.z }, 45, .85); showSupport(key); }, { walk: { x: pz.x, z: pz.z + pz.d / 2 + .8 } }), id: "plaza" });
   });
   W.stages.forEach((st) => { if (st.bridgeMid) tileLabels.push({ ...mkLabel("tl sup small", `🌉 採購橋`, st.bridgeMid, () => showSupport("purchaseBridge")), id: "bridge" }); });
@@ -249,6 +250,7 @@
       const target = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), proPlaza: () => W.PLAZAS.find((p) => p.key === "D"), hrBalloon: () => W.vehicles.find((v) => v.key === k).obj.position, accountBoat: () => W.vehicles.find((v) => v.key === k).obj.position, purchaseBridge: () => W.stages[1].bridgeMid, careRoad: () => ({ x: 0, z: 0 }), infoCar: () => W.vehicles.find((v) => v.key === k).obj.position }[k];
       const p = target && target();
       if (p) W.flyTo({ x: p.x, y: k === "hrBalloon" ? p.y : 0, z: p.z }, k === "careRoad" ? 330 : k === "hrBalloon" ? 45 : 55, k === "careRoad" ? .3 : k === "hrBalloon" ? 1.1 : .85);
+      if (k === "infoPlaza" && window.Gallery) { Gallery.open(); return; }
       showSupport(k); return;
     }
     if (e.target.closest("[data-stages]")) { clearFocus(); W.top(); return; }
@@ -620,7 +622,7 @@
         e.stopImmediatePropagation(); const k = sp.dataset.sup; openSheet(null);
         const fixed = { fountain: () => W.tileById.hub, infoPlaza: () => W.PLAZAS.find((p) => p.info), accountDock: () => W.docks.find((d) => d.key === "accountDock").pos, selPlaza: () => W.PLAZAS.find((p) => p.key === "B"), resPlaza: () => W.PLAZAS.find((p) => p.key === "C"), proPlaza: () => W.PLAZAS.find((p) => p.key === "D"), purchaseBridge: () => W.stages[1].bridgeMid }[k];
         const p = fixed && fixed();
-        if (p) walkTo(p.x, p.z + (k === "fountain" ? 6 : 2), () => showSupport(k), C.supports[k].name); else showSupport(k);
+        if (p) walkTo(p.x, p.z + (k === "fountain" ? 6 : 2), () => (k === "infoPlaza" && window.Gallery ? Gallery.open() : showSupport(k)), C.supports[k].name); else showSupport(k);
         return;
       }
       if (e.target.closest("[data-stages]")) { e.stopImmediatePropagation(); openSheet(null); follow = false; renderMeBar(); W._flyRaw({ x: 0, y: 0, z: 0 }, 300, .12, 0); return; }
@@ -646,7 +648,7 @@
   let S = {};
   const loadedAt = Date.now();
   let prevWish = null;
-  let prevWt = null, meTree = false, meFinale = false, lastFinPhase = null;
+  let prevWt = null, meTree = false, meFinale = false, lastFinPhase = null; let lastFinaleAt = null;
   // 手機：收成時點上方提示，切換到共識大樹畫面（在本機繪製，不增加網路負擔）
   if (ME) {
     $("phase").addEventListener("click", () => {
@@ -769,6 +771,10 @@
       // 大螢幕：主持人按下「第二期目標」的當下，播放 大樹 → 光點 → 影片 → 222 的完整轉場
       if (!ME && enteringFinale && lastFinPhase !== null) Finale.cinematic(finStats);
       else Finale.show(showFinale, finStats());
+      const fAt = (S.state && S.state.finaleAt) || 0;
+      if (showFinale && lastFinaleAt !== null && fAt !== lastFinaleAt && !enteringFinale) Finale.back222();
+      lastFinaleAt = fAt;
+      Finale.showMap(showFinale && !!(S.state && S.state.finaleMap));   // 222 之後：醫療體系聯盟地圖（也會在 222 出現 10 秒後自動換頁）
     }
     lastFinPhase = phase;
     // 大螢幕背景音樂：遊戲中→遊戲配樂；收成→大樹音樂；第二期目標→收斂音樂
@@ -804,8 +810,8 @@
     const gf = gardenFlowers(S), wDrops = Object.values(waterTotals(S)).reduce((a, b) => a + b, 0);
     $("phase").innerHTML = {
       join: ME ? `🕹️ <b>搖桿</b>或<b>點地面</b>走路・走到花園點花朵就能澆水` : `🏥 <b>報到中</b>・掃描右側 QR Code，選人物、選範疇、寫一句行動種下花朵`,
-      meet: ME ? (((S.wishes || {})[ME] || wishedLocal) ? `🌸 讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。` : `⛲ <b>相遇</b>・大家來到永續噴泉！<span class="phgo">點噴泉許願 ›</span>`)
-        : `⛲ <b>相遇・永續噴泉許願池</b>・已有 <b>${Object.keys(S.wishes || {}).length}</b> 位夥伴許下深耕關鍵字`,
+      meet: ME ? (((S.wishes || {})[ME] || wishedLocal) ? `🌸 讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。` : `⛲ 全員<b>相遇</b>永續噴泉 <span class="phgo">點噴泉許願 ›</span>`)
+        : `⛲ 全員<b>相遇</b>永續噴泉・已有 <b>${Object.keys(S.wishes || {}).length}</b> 位夥伴許下深耕關鍵字`,
       reveal: `📣 <b>揭曉盛開的花</b>・${sents.length} 朵澆到 100%`,
       water: ME && ((S.wishes || {})[ME] || wishedLocal) && waterUsed(S, ME) === 0 ? `🌸 讓我們走進共識花園，讓共識化為行動，澆灌希望之花，讓改變發生。` : ME ? `🌸 <b>澆花時間</b>・走到花園，點花朵幫夥伴澆水（你還有 ${Math.max(0, CFG.dropsPerPerson - waterUsed(S, ME))} 滴）` : `🌸 <b>共識花園開放澆花</b>・盛開 ${gf.filter((f) => f.bloomed).length} / ${gf.length} 朵・全場澆了 ${wDrops} 滴`,
       finale: ME ? `🎯 <b>第二期深耕目標</b> <span class="phgo">點我看 ›</span>` : `🎯 <b>第二期深耕目標</b>・奇美的承諾`,

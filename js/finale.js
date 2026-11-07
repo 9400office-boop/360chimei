@@ -25,13 +25,25 @@
   function html(stats) {
     const f = F();
     return `<div class="fn-bg"></div>${rays()}
-      <div class="fn-band"><span class="fn-t1">${escapeHtml(f.title)}</span><span class="fn-t2">${escapeHtml(f.headline)}</span></div>
+      <div class="fn-push"><div class="fn-band"><span class="fn-t1">${escapeHtml(f.title)}</span><span class="fn-t2">${escapeHtml(f.headline)}</span><span class="fn-en">${allyParts()}</span></div>
       <div class="fn-body">
         <div class="fn-map"><img src="assets/taiwan_gold.png" alt=""><i class="fn-pin"></i><svg class="fn-cone" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,62 100,0 100,100"/></svg></div>
         <div class="fn-goals">${f.goals.map(goalHtml).join("")}</div>
+        <div class="fn-alliance"><div class="fa-frame"><img src="assets/alliance_map.png?v=20261107k" alt="奇美醫療體系聯盟"></div></div>
       </div>
-      <div class="fn-foot"><span class="fn-eyebrow">${escapeHtml(f.eyebrow)}</span>${stats ? `<span class="fn-stats">${stats}</span>` : ""}<span class="fn-tag">深耕台南・健康台灣</span></div>`;
+      <div class="fn-foot"><span class="fn-eyebrow">${escapeHtml(f.eyebrow)}</span>${stats ? `<span class="fn-stats">${stats}</span>` : ""}<span class="fn-tag">深耕台南・健康台灣</span></div></div>
+      <div class="fn-sign">深耕辦公室</div>`;
   }
+
+  // ---------- 222 之後的下一頁：同一個深綠台灣版面，只把 222 區塊換成「奇美醫療體系聯盟」地圖與英文標語 ----------
+  const allyEn = () => (F() && F().allianceEn) || "Stronger Collaboration, Better Care, Healthier Community";
+  // 英文標語拆成三段，依序流光出現（Stronger Collaboration, → Better Care, → Healthier Community）
+  const allyParts = () => allyEn().split(/(?<=,)\s*/).map((s, i) => `<span class="en-p" style="--k:${i}">${escapeHtml(s)}</span>`).join(" ");
+  let mapWanted = false, autoT = null;
+  const AUTO_MS = 14000;                 // 222 出現約 14 秒後，自動換到聯盟頁（結尾頁）
+  function armAuto() { clearTimeout(autoT); autoT = setTimeout(() => { if (shown && !cine) mapOn(); }, AUTO_MS); }
+  function mapOn() { clearTimeout(autoT); if (root && shown && !root.classList.contains("ally")) { void root.offsetWidth; root.classList.add("ally"); } }
+  function mapOff() { if (root) root.classList.remove("ally"); }
 
   let root = null, shown = false, cine = null;
   function ensureRoot() { if (!root) { root = document.createElement("div"); root.className = "finale hide"; document.body.appendChild(root); } }
@@ -39,6 +51,7 @@
     ensureRoot();
     root.innerHTML = html(stats); root.classList.remove("hide", "play"); void root.offsetWidth; root.classList.add("play");
     shown = true; document.body.classList.add("finalemode");
+    armAuto();
     if (window.World) World.skipRender = true;            // 222 蓋住院區時，不必繪製 3D
   }
   // ---------- 收尾場景「深耕台南・健康台灣」：以程式繪製（完整台灣輪廓、台南光芒擴散），不需影片檔 ----------
@@ -88,7 +101,7 @@
   function flash(x, y) {
     const f = document.createElement("div"); f.className = "fn-flash";
     f.style.setProperty("--x", x + "px"); f.style.setProperty("--y", y + "px");
-    document.body.appendChild(f); setTimeout(() => f.remove(), 2600);
+    document.body.appendChild(f); setTimeout(() => f.remove(), 5000);
   }
 
   window.Finale = {
@@ -119,7 +132,7 @@
             if (my.dusk) my.dusk.remove();
             document.body.classList.remove("cinema");
             cine = null;
-          }, 450);
+          }, 900);
         }, SCENE_MS);
       });
     },
@@ -134,8 +147,20 @@
         if (root) { root.classList.add("hide"); root.classList.remove("play"); }
         if (shown && window.World) World.skipRender = false;
         shown = false; document.body.classList.remove("finalemode", "cinema");
+        mapWanted = false; mapOff(); clearTimeout(autoT);
       }
     },
+    // 222 之後的聯盟地圖頁
+    // 主持人在結尾頁時再按一次「6. 第二期目標」：回到 222，10 秒後再自動換頁
+    back222() { if (shown && !cine) { mapOff(); armAuto(); } },
+    // 主持人按「7. 醫療體系聯盟」→ 立即換頁；按回「6. 第二期目標」→ 回到 222，10 秒後再自動換頁
+    showMap(on) {
+      on = !!on;
+      if (on && !cine && !(root && root.classList.contains("ally"))) mapOn();
+      if (!on && mapWanted) { mapOff(); if (shown && !cine) armAuto(); }
+      mapWanted = on;
+    },
+    mapCard() { return `<div class="finale card-mode ally">${html("")}</div>`; },
     get visible() { return shown || !!cine; },
     get playing() { return !!cine; },
     card() { return `<div class="finale card-mode play">${html("")}</div>`; }
