@@ -315,18 +315,31 @@
     const mx = ev.clientX - r.left, my = ev.clientY - r.top;
     ndc.set((mx / r.width) * 2 - 1, -(my / r.height) * 2 + 1);
     ray.setFromCamera(ndc, W.camera);
-    const hits = Object.values(Life.Flowers.flowers).map((f) => f.m.children[0]).filter(Boolean);
-    const h = ray.intersectObjects(hits, false)[0];
+    const fl = Object.values(Life.Flowers.flowers);
+    const h = ray.intersectObjects(fl.map((f) => f.m.children[0]).filter(Boolean), false)[0];
     if (h) return { pid: h.object.userData.pid, kind: "flower" };
+    // 沒直接點中：改用螢幕距離找最近的花（手指點擊容許範圍放大，點花附近就算點到）
+    const touch = ev.pointerType === "touch" || ev.pointerType === "pen" || matchMedia("(pointer: coarse)").matches;
+    const minR = touch ? 38 : 26;
+    let best = null, bd = Infinity, bk = null;
+    fl.forEach((f) => {
+      const pid = f.m.userData.pid; if (!pid || !f.m.visible) return;
+      const p = f.m.position, q = W.project(p.x, p.y + .7, p.z);
+      if (!q.vis) return;
+      const q2 = W.project(p.x + .9, p.y + .7, p.z);
+      const R = Math.min(80, Math.max(minR, Math.hypot(q2.x - q.x, q2.y - q.y) * 1.3));   // 近的花範圍大、遠的花至少 minR
+      const d = Math.hypot(q.x - mx, q.y - my);
+      if (d < R && d / R < bd) { bd = d / R; best = pid; bk = "flower"; }
+    });
     // 人物：以螢幕距離判斷（比逐面偵測省很多效能）
-    let best = null, bd = 28;
+    const pr = touch ? 34 : 28;
     Object.entries(People.ents).forEach(([pid, e]) => {
       const g = e.grp.position, q = W.project(g.x, g.y + .9, g.z);
       if (!q.vis) return;
       const d = Math.hypot(q.x - mx, q.y - my);
-      if (d < bd) { bd = d; best = pid; }
+      if (d < pr && d / pr < bd) { bd = d / pr; best = pid; bk = "person"; }
     });
-    return best ? { pid: best, kind: "person" } : null;
+    return best ? { pid: best, kind: bk } : null;
   }
   function showWriter(pid, kind) {
     const p = (S.people || {})[pid]; if (!p) return;
@@ -351,7 +364,7 @@
   $("writer").addEventListener("click", (e) => { if (e.target.closest("[data-wx]")) $("writer").classList.add("hide"); });
   cv.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
   cv.addEventListener("pointerup", (e) => {
-    if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
+    if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > (e.pointerType === "touch" ? 14 : 8)) return;   // 手指點擊容許些微滑動
     const r = pickAt(e);
     if (ME) {
       if (r && r.kind === "flower") { tapFlower(r.pid); return; }

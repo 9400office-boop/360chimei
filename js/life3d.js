@@ -400,7 +400,7 @@
   }
   const flowers = {};
   const plazaSlots = {};
-  const hitGeo = new THREE.SphereGeometry(.55, 8, 6);
+  const hitGeo = new THREE.SphereGeometry(.85, 8, 6);   // 點擊感應球加大
   const hitMat = new THREE.MeshBasicMaterial({ visible: false });   // 不繪製，只供點擊偵測
   const glowGeo = new THREE.RingGeometry(.5, .75, 24);
   function slotsFor(pz) {
