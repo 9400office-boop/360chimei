@@ -49,7 +49,7 @@
 .finale.play .fn-notes { animation: fnFade 1.6s calc(5s + var(--i) * 1.5s) both; }
 .finale.play .fn-arrow.up { animation: fnBobUp 2.4s calc(6s + var(--i) * 1.5s) ease-in-out infinite; }
 .finale.play .fn-arrow.down { animation: fnBobDown 2.4s calc(6s + var(--i) * 1.5s) ease-in-out infinite; }
-.finale.play .fn-foot { animation: fnFade 2s 7s both; }
+.finale.play .fn-foot { animation: fnFade 2s 10s both; }   /* 等三組 222 的數字、文字都出來（約 9.6 秒）再出現 */
 @keyframes fnGlowOut { 0% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes fnBand { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes fnUp { from { opacity: 0; transform: translateY(18px); } }
@@ -124,7 +124,7 @@ body.finalemode .side-btns [data-act=music]:hover { opacity: 1; }
   .finale.play .fn-label { animation-delay: calc(1.2s + var(--i) * .6s); }
   .finale.play .fn-num { animation-delay: calc(1.4s + var(--i) * .6s); }
   .finale.play .fn-badge, .finale.play .fn-notes { animation-delay: calc(1.8s + var(--i) * .6s); }
-  .finale.play .fn-foot { animation-delay: 3.2s; }
+  .finale.play .fn-foot { animation-delay: 4.8s; }
 }
 /* 手機首頁的卡片版：一律直式 */
 .finale.card-mode { position: relative; inset: auto; z-index: auto; border-radius: 20px; margin: 10px 0; box-shadow: 0 6px 24px rgba(20,40,30,.25); overflow: hidden; display: flex; }
