@@ -6,13 +6,14 @@
 (function () {
   const SLIDES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14];   // 目前收到的投影片頁碼
   const FUTURE = [2027, 2028, 2029];
+  const IMGV = "20261107y";   // 換投影片圖檔時改這個，避免手機讀到舊圖
   const pad = (n) => String(n).padStart(2, "0");
   let el = null, idx = -1;
 
   function frame(n, i) {
     return `<figure class="gl-art" data-i="${i}" style="--d:${(i % 6) * 80}ms">
       <div class="gl-light"></div>
-      <div class="gl-frame"><div class="gl-mat"><img src="assets/gallery/${pad(n)}_s.jpg" alt="第 ${n} 幅" loading="lazy"></div></div>
+      <div class="gl-frame"><div class="gl-mat"><img src="assets/gallery/${pad(n)}_s.jpg?v=${IMGV}" alt="第 ${n} 幅" loading="lazy"></div></div>
       <figcaption><span>2025–2026</span></figcaption>
     </figure>`;
   }
@@ -52,7 +53,7 @@
     const v = el.querySelector(".gl-view");
     if (i < 0) { v.classList.add("hide"); return; }
     const n = SLIDES[i];
-    v.querySelector("img").src = `assets/gallery/${pad(n)}.jpg`;
+    v.querySelector("img").src = `assets/gallery/${pad(n)}.jpg?v=${IMGV}`;
     v.querySelector(".gl-cap").textContent = `${i + 1} / ${SLIDES.length}`;
     v.classList.remove("hide");
   }
