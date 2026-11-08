@@ -1,4 +1,4 @@
-/* 奇美拾光：明亮的美術館展廳＋時光回放 */
+/* 深耕拾光：明亮的美術館展廳＋時光回放 */
 .ms-shade { position: fixed; inset: 0; z-index: 55; font-family: "Noto Sans TC", "PingFang TC", sans-serif; color: #2E2418; }
 .ms-shade.hide { display: none; }
 .ms-room { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
