@@ -6,7 +6,7 @@
 (function () {
   const SLIDES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14];   // 目前收到的投影片頁碼
   const FUTURE = [2027, 2028, 2029];
-  const IMGV = "20261107y";   // 換投影片圖檔時改這個，避免手機讀到舊圖
+  const IMGV = "20261108d";   // 換投影片圖檔時改這個，避免手機讀到舊圖
   const pad = (n) => String(n).padStart(2, "0");
   let el = null, idx = -1;
 
@@ -28,7 +28,7 @@
     el = document.createElement("div"); el.className = "gl-shade";
     el.innerHTML = `<div class="gl-room">
       <button class="gl-x" data-close aria-label="關閉">×</button>
-      <header class="gl-head"><small>CHI MEI GALLERY</small><h2>奇美光廊</h2><p>2025 – 2026・我們一起走過的深耕足跡</p><nav class="gl-tabs"><button class="on" type="button">🖼️ 深耕成果展</button><button class="gl-mem" type="button" data-mem>📷 奇美拾光</button></nav></header>
+      <header class="gl-head"><small>CHI MEI GALLERY</small><h2>奇美光廊</h2><p>2025 – 2026・我們一起走過的深耕足跡</p><nav class="gl-tabs"><button class="on" type="button">🖼️ 深耕成果展</button><button class="gl-mem" type="button" data-mem>📷 深耕拾光</button></nav></header>
       <div class="gl-wall">${SLIDES.map(frame).join("")}${FUTURE.map(future).join("")}</div>
       <div class="gl-floor"></div>
       <div class="gl-view hide"><button class="gl-nav prev" aria-label="上一幅">‹</button><div class="gl-big"><img alt=""></div><button class="gl-nav next" aria-label="下一幅">›</button><div class="gl-cap"></div><button class="gl-x2" data-viewclose aria-label="關閉">×</button></div>

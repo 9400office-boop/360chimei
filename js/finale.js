@@ -29,7 +29,7 @@
       <div class="fn-body">
         <div class="fn-map"><img src="assets/taiwan_gold.png" alt=""><i class="fn-pin"></i><svg class="fn-cone" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,62 100,0 100,100"/></svg></div>
         <div class="fn-goals">${f.goals.map(goalHtml).join("")}</div>
-        <div class="fn-alliance"><div class="fa-frame"><img src="assets/alliance_map.png?v=20261107y" alt="奇美醫療體系聯盟"></div></div>
+        <div class="fn-alliance"><div class="fa-frame"><img src="assets/alliance_map.png?v=20261108d" alt="奇美醫療體系聯盟"></div></div>
       </div>
       <div class="fn-foot"><span class="fn-eyebrow">${escapeHtml(f.eyebrow)}</span>${stats ? `<span class="fn-stats">${stats}</span>` : ""}<span class="fn-tag">深耕台南・健康台灣</span></div></div>
       <div class="fn-sign">深耕辦公室</div>`;

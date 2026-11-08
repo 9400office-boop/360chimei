@@ -33,7 +33,6 @@
       <div class="ms-sky"></div><div class="ms-sun"></div><div class="ms-dust">${dust()}</div>
       <button class="ms-back" data-back>‹ 回奇美光廊</button>
       <header class="ms-head">
-        <small>CHI MEI MEMORIES ・ SPECIAL EXHIBITION</small>
         <h2>深耕拾光</h2>
         <i class="ms-rule"></i>
         <p>拾起一起走過的每一道光　2025 – 2026</p>
