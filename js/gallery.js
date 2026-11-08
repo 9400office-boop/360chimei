@@ -6,7 +6,7 @@
 (function () {
   const SLIDES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14];   // 目前收到的投影片頁碼
   const FUTURE = [2027, 2028, 2029];
-  const IMGV = "20261108d";   // 換投影片圖檔時改這個，避免手機讀到舊圖
+  const IMGV = "20261108k";   // 換投影片圖檔時改這個，避免手機讀到舊圖
   const pad = (n) => String(n).padStart(2, "0");
   let el = null, idx = -1;
 
