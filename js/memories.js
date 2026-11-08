@@ -1,5 +1,5 @@
 /* =========================================================
- * 奇美拾光：活動照片回顧（從「奇美光廊」進入）
+ * 深耕拾光：活動照片回顧（從「奇美光廊」進入）
  *  - 明亮的美術館展牆：作品掛在畫軌上緩緩流動，天窗的光慢慢掃過牆面（時光流動）
  *  - 作品帶著淡淡的舊時光色調，滑過或點選才顯出原色
  *  - 時光回放：一幅幅作品在聚光下由淡轉濃地「顯影」，看過的作品掛到後方展牆
@@ -34,7 +34,7 @@
       <button class="ms-back" data-back>‹ 回奇美光廊</button>
       <header class="ms-head">
         <small>CHI MEI MEMORIES ・ SPECIAL EXHIBITION</small>
-        <h2>奇美拾光</h2>
+        <h2>深耕拾光</h2>
         <i class="ms-rule"></i>
         <p>拾起一起走過的每一道光　2025 – 2026</p>
         <button class="ms-play" data-play><span>▶</span> 時光回放</button>
