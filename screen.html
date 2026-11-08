@@ -426,11 +426,11 @@
     .mebar .who span { max-width: 4.5em; }
   }
 </style>
-<link rel="stylesheet" href="css/bigtree.css?v=20261108i">
-<link rel="stylesheet" href="css/gallery.css?v=20261108i">
-<link rel="stylesheet" href="css/memories.css?v=20261108i">
-<link rel="stylesheet" href="css/garden.css?v=20261108i">
-<link rel="stylesheet" href="css/finale.css?v=20261108i">
+<link rel="stylesheet" href="css/bigtree.css?v=20261108j">
+<link rel="stylesheet" href="css/gallery.css?v=20261108j">
+<link rel="stylesheet" href="css/memories.css?v=20261108j">
+<link rel="stylesheet" href="css/garden.css?v=20261108j">
+<link rel="stylesheet" href="css/finale.css?v=20261108j">
 <style id="topbar-compact">
   /* 大螢幕上方導覽列縮小，避免擋到畫面 */
   body:not(.compact):not(.memode) .topbar { top: 10px; left: 14px; }
@@ -445,6 +445,9 @@
   body.treemode:not(.compact):not(.memode) .side-btns [data-act=help] { transform: scale(.58); transform-origin: top right; opacity: .45; }
   body.treemode:not(.compact):not(.memode) .side-btns [data-act=music] { position: fixed; top: 8px; right: 12px; z-index: 60; transform: scale(.82); transform-origin: top right; opacity: .55; }
   body.treemode:not(.compact):not(.memode) .side-btns [data-act=music]:hover { opacity: 1; }
+  /* 手機：卡片一律在下方按鈕列之上（依按鈕列實際高度），不被遮住 */
+  html body.memode .writer, html body.memode .info { bottom: calc(var(--mebarH, 76px) + 18px + env(safe-area-inset-bottom)) !important;
+    max-height: calc(100% - var(--mebarH, 76px) - 150px - env(safe-area-inset-bottom)) !important; }
 </style>
 </head>
 <body>
@@ -513,26 +516,26 @@
 <div class="walkhint hide" id="walkhint"></div>
 <div class="joy" id="joy" aria-label="搖桿"><div class="ring"></div><div class="knob"></div></div>
 
-<script src="js/vendor/three.min.js?v=20261108i"></script>
-<script src="js/vendor/OrbitControls.js?v=20261108i"></script>
-<script src="js/vendor/BufferGeometryUtils.js?v=20261108i"></script>
-<script src="js/vendor/qrcode.js?v=20261108i"></script>
-<script src="js/config.js?v=20261108i"></script>
-<script src="js/content.js?v=20261108i"></script>
-<script src="js/avatars.js?v=20261108i"></script>
-<script src="js/store.js?v=20261108i"></script>
-<script src="js/taiwan_path.js?v=20261108i"></script>
-<script src="js/world3d.js?v=20261108i"></script>
-<script src="js/life3d.js?v=20261108i"></script>
-<script src="js/balloons3d.js?v=20261108i"></script>
-<script src="js/bigtree.js?v=20261108i"></script>
-<script src="js/flowerart.js?v=20261108i"></script>
-<script src="js/watercard.js?v=20261108i"></script>
-<script src="js/gallery.js?v=20261108i"></script>
-<script src="js/memories.js?v=20261108i"></script>
-<script src="js/wish.js?v=20261108i"></script>
-<script src="js/finale.js?v=20261108i"></script>
-<script src="js/music.js?v=20261108i"></script>
-<script src="js/screen3d.js?v=20261108i"></script>
+<script src="js/vendor/three.min.js?v=20261108j"></script>
+<script src="js/vendor/OrbitControls.js?v=20261108j"></script>
+<script src="js/vendor/BufferGeometryUtils.js?v=20261108j"></script>
+<script src="js/vendor/qrcode.js?v=20261108j"></script>
+<script src="js/config.js?v=20261108j"></script>
+<script src="js/content.js?v=20261108j"></script>
+<script src="js/avatars.js?v=20261108j"></script>
+<script src="js/store.js?v=20261108j"></script>
+<script src="js/taiwan_path.js?v=20261108j"></script>
+<script src="js/world3d.js?v=20261108j"></script>
+<script src="js/life3d.js?v=20261108j"></script>
+<script src="js/balloons3d.js?v=20261108j"></script>
+<script src="js/bigtree.js?v=20261108j"></script>
+<script src="js/flowerart.js?v=20261108j"></script>
+<script src="js/watercard.js?v=20261108j"></script>
+<script src="js/gallery.js?v=20261108j"></script>
+<script src="js/memories.js?v=20261108j"></script>
+<script src="js/wish.js?v=20261108j"></script>
+<script src="js/finale.js?v=20261108j"></script>
+<script src="js/music.js?v=20261108j"></script>
+<script src="js/screen3d.js?v=20261108j"></script>
 </body>
 </html>
