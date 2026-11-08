@@ -84,6 +84,8 @@
       `<button data-me="list" class="${sheet === "list" ? "on" : ""}"><i>☰</i>清單</button><button data-me="feed" class="${sheet === "feed" ? "on" : ""}"><i>📡</i>直播</button>` +
       `<button data-me="all"><i>🗺️</i>全景</button><a href="index.html"><i>←</i>詞卡</a>`;
   }
+  // 依下方按鈕列的實際高度，讓說明卡／作者卡停在它上面
+  if (ME) { const setMB = () => { const m = $("mebar"); if (m && m.offsetHeight) document.documentElement.style.setProperty("--mebarH", m.offsetHeight + "px"); }; setMB(); addEventListener("resize", setMB); setTimeout(setMB, 800); }
   if (ME) $("mebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-me]"); if (!b) return;
     if (b.dataset.me === "list" || b.dataset.me === "feed") { openSheet(document.body.classList.contains(b.dataset.me + "open") ? null : b.dataset.me); return; }
@@ -148,7 +150,7 @@
       tileLabels.push({ ...mkLabel("tl hub", `⛲ 永續噴泉`, new THREE.Vector3(t.x, W.TOP + 2.6, t.z + 3), () => { if (ME && curPhase() === "meet") { openWish(); return; } W.flyTo({ x: t.x, y: 2, z: t.z }, 40, .95); showSupport("fountain"); }, { walk: { x: t.x, z: t.z + (W.fountain ? W.fountain.b + 1.2 : 8) } }), id: "hub" });
     }
   });
-  // 行政後勤夥伴說明卡
+  // 行政夥伴說明卡
   function showSupport(key) {
     const sp = C.supports[key]; if (!sp) return;
     showInfo(`<div class="eyebrow">${escapeHtml(C.supportsTitle)}</div><h3>${sp.icon} ${escapeHtml(sp.name)}</h3><div class="ln">${escapeHtml(sp.text)}</div>`);
