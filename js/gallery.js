@@ -28,7 +28,7 @@
     el = document.createElement("div"); el.className = "gl-shade";
     el.innerHTML = `<div class="gl-room">
       <button class="gl-x" data-close aria-label="關閉">×</button>
-      <header class="gl-head"><small>CHI MEI GALLERY</small><h2>奇美光廊</h2><p>2025 – 2026・我們一起走過的深耕足跡</p></header>
+      <header class="gl-head"><small>CHI MEI GALLERY</small><h2>奇美光廊</h2><p>2025 – 2026・我們一起走過的深耕足跡</p><nav class="gl-tabs"><button class="on" type="button">🖼️ 深耕成果展</button><button class="gl-mem" type="button" data-mem>📷 奇美拾光</button></nav></header>
       <div class="gl-wall">${SLIDES.map(frame).join("")}${FUTURE.map(future).join("")}</div>
       <div class="gl-floor"></div>
       <div class="gl-view hide"><button class="gl-nav prev" aria-label="上一幅">‹</button><div class="gl-big"><img alt=""></div><button class="gl-nav next" aria-label="下一幅">›</button><div class="gl-cap"></div><button class="gl-x2" data-viewclose aria-label="關閉">×</button></div>
@@ -36,6 +36,7 @@
     document.body.appendChild(el);
     el.addEventListener("click", (e) => {
       if (e.target.closest("[data-close]")) return close();
+      if (e.target.closest("[data-mem]") && window.Memories) return Memories.open();
       if (e.target.closest("[data-viewclose]") || e.target.classList.contains("gl-view")) return view(-1);
       if (e.target.closest(".gl-nav.prev")) return view((idx - 1 + SLIDES.length) % SLIDES.length);
       if (e.target.closest(".gl-nav.next")) return view((idx + 1) % SLIDES.length);
@@ -58,13 +59,13 @@
     v.classList.remove("hide");
   }
   function onKey(e) {
-    if (!el || el.classList.contains("hide")) return;
+    if (!el || el.classList.contains("hide") || (window.Memories && Memories.visible)) return;
     if (e.key === "Escape") { if (idx >= 0) view(-1); else close(); }
     if (idx >= 0 && e.key === "ArrowRight") view((idx + 1) % SLIDES.length);
     if (idx >= 0 && e.key === "ArrowLeft") view((idx - 1 + SLIDES.length) % SLIDES.length);
   }
   window.addEventListener("keydown", onKey);
-  function open() { if (!el) build(); el.classList.remove("hide"); el.classList.remove("in"); void el.offsetWidth; el.classList.add("in"); document.body.classList.add("gallerymode"); }
-  function close() { if (el) { el.classList.add("hide"); view(-1); } document.body.classList.remove("gallerymode"); }
+  function open() { if (window.World) World.skipRender = true; if (!el) build(); el.classList.remove("hide"); el.classList.remove("in"); void el.offsetWidth; el.classList.add("in"); document.body.classList.add("gallerymode"); }
+  function close() { if (window.Memories) Memories.close(); if (el) { el.classList.add("hide"); view(-1); } document.body.classList.remove("gallerymode"); if (window.World) World.skipRender = document.body.classList.contains("finalemode") || !!(window.BigTree && BigTree.visible); }
   window.Gallery = { open, close, get visible() { return !!el && !el.classList.contains("hide"); } };
 })();
