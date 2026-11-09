@@ -25,7 +25,7 @@
     document.getElementById("treewrap").classList.remove("hide");
     BigTree.init(document.getElementById("treebox"), { inline: true });
     document.getElementById("tree-sim").onclick = async () => {
-      if (!blooms().length) { await simulateWaters(); }
+      if (!picks().length) { await simulateWaters(); }
       if (!sents().length) { const r = await doBuild(true); if (!r) return; }
       renderTree(); BigTree.replay(14000);
     };
@@ -41,6 +41,9 @@
   const done = () => people().filter(personDone);
   const hidden = () => S.hide || {};
   const blooms = () => gardenFlowers(S).filter((f) => f.bloomed);
+  // 揭曉範圍：預設「全部的花」（就算沒澆滿也會揭曉、結成果實）；可切換成只揭曉盛開的花
+  const revealAll = () => !(S.state && S.state.revealAll === false);
+  const picks = () => revealAll() ? gardenFlowers(S) : blooms();
   const who = (p) => `${p.dept ? escapeHtml(p.dept) + " " : ""}${escapeHtml(p.name || "")}`;
 
   // 正在編輯句子時，暫停重繪，避免打字被洗掉
@@ -79,8 +82,8 @@
       <p class="note">① 報到填寫（開場）：大螢幕顯示報到 QR Code。選人物、填部門姓名、選範疇、寫六欄行動句，種下一朵小花。報到與填寫是否開放，由上方按鈕另外控制，切到其他階段也不受影響。<br>
       ②-0 相遇：所有人物自動匯集到永續噴泉，參加者點噴泉填寫「我的深耕關鍵字：回望第一期，我最有感的一個改變是＿＿」，投下金幣後自動走進共識花園澆花（內容可在下方匯出）。<br>
       ② 澆花：參加者從報到後就能隨時澆花（上方按鈕可暫停）；切到這個階段時，大螢幕鏡頭飛到花園、QR Code 換成花園頁。參加者進「共識花園」或在院區走到花園點花、按澆水；每人 ${CFG.dropsPerPerson} 滴，可重複澆同一朵、也可澆自己的；每朵澆 ${BL} 次（10%→30%→50%→70%→90%→100%）盛開。<br>
-      ③ 揭曉盛開：自動用澆到 100% 的花產生揭曉清單，逐句聚光。<br>
-      ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是盛開的句子，點果實看內容。<br>
+      ③ 揭曉盛開：自動產生揭曉清單（預設花園裡全部的花，沒澆滿也會揭曉；可在下方改成只揭曉盛開的花），逐句聚光。<br>
+      ④ 收成大樹：大螢幕播放共識大樹從種子長成大樹，樹上的果實就是揭曉清單裡的句子，點果實看內容。<br>
       ⑤ 第二期目標：大螢幕播放完整收尾（約 20 秒）：共識大樹轉為深綠金色 → 果實化成光點匯聚到台南 → 影片「深耕台南・健康台灣」→ 閃光 → 222 第二期目標定格。參加者手機不播影片，直接顯示 222（內容在 js/content.js 的 FINALE 修改）。<br>
       ⑥ 醫療體系聯盟（結尾頁）：222 出現約 14 秒後自動換到這頁，不用另外按；想提早換可按「7. 醫療體系聯盟」。大螢幕與手機換成「奇美醫療體系聯盟」地圖，上方是英文標語 Stronger Collaboration, Better Care, Healthier Community（英文在 js/content.js 的 FINALE.allianceEn 修改）。按回「6. 第二期目標」可回到 222，14 秒後會再自動換到聯盟頁。</p>
       ${msg ? `<div class="msg">${escapeHtml(msg)}</div>` : ""}
@@ -122,15 +125,18 @@
       }).join("") || '<p class="note">沒有符合的花朵。</p>'}</div>
     </div>
 
-    <div class="card" style="margin-top:14px"><h2>② 揭曉盛開的花（${ss.length} 句）</h2>
+    <div class="card" style="margin-top:14px"><h2>② 揭曉希望花（${ss.length} 句）</h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn small ${revealAll() ? "" : "warn"}" data-act="revealall">${revealAll() ? "🌱 揭曉範圍：全部的花（含未澆滿）・點一下改成只揭曉盛開" : "🌸 揭曉範圍：只揭曉盛開的花・點一下改成全部的花"}</button>
+      </div>
       <div class="row">
-        <button class="btn small" data-act="build">📣 用目前 ${nb} 朵盛開的花${ss.length ? "重新" : ""}產生揭曉清單</button>
+        <button class="btn small" data-act="build">📣 用目前 ${revealAll() ? gf.length + " 朵花" : nb + " 朵盛開的花"}${ss.length ? "重新" : ""}產生揭曉清單</button>
         <button class="btn small ghost" data-act="prev" ${ss.length ? "" : "disabled"}>◀ 上一句</button>
         <button class="btn small ghost" data-act="next" ${ss.length ? "" : "disabled"}>下一句 ▶</button>
         <button class="btn small ghost" data-act="auto" ${ss.length ? "" : "disabled"}>${auto ? "⏸ 停止輪播" : "▶ 自動輪播（10 秒）"}</button>
         <button class="btn small ghost" data-act="unspot" ${spot ? "" : "disabled"}>回到全院區</button>
       </div>
-      <p class="note">切換到「揭曉盛開」時會自動用澆到 100% 的花產生清單；澆花期間如果又有花盛開，可按上方按鈕重新產生。這份清單也就是收成大樹上的果實。</p>
+      <p class="note">切換到「揭曉盛開」時會自動產生清單。預設是<b>花園裡全部的花</b>（就算沒澆滿也會揭曉、在大樹上結成果實，盛開的排在一起）；也可以改成只揭曉澆到 100% 的花。澆花期間如果又有變化，可按上方按鈕重新產生。這份清單也就是收成大樹上的果實。</p>
       <div>${ss.map((s) => { const p = (S.people || {})[s.pid] || {}; return `<div class="sent ${spot === s.id ? "on" : ""}"><span class="tag" style="background:${SC(s.scope).color}">${s.order}・${SC(s.scope).tag}</span><span class="tx">${escapeHtml(sentenceText(s, S.people, S.edits))}<br><span class="note">${who(p)}</span></span><span>🌸${wt[s.pid] || 0}</span><button class="btn small ghost" data-spot="${s.id}">聚光</button></div>`; }).join("")}</div>
     </div>
 
@@ -167,7 +173,7 @@
   function renderTree() {
     const nb = blooms().length;
     document.getElementById("treenote").innerHTML = `收成時，大螢幕會播放共識大樹<b>從種子長成大樹</b>，樹上的果實就是揭曉清單中的盛開句子（目前 <b>${sents().length}</b> 顆；花園裡已盛開 <b>${nb}</b> 朵）。點果實可看句子。` +
-      (sents().length ? "" : "<br>按「預覽收成」時，若還沒有盛開的花會先模擬澆花，再產生清單。");
+      (sents().length ? "" : "<br>按「預覽收成」時，若花園還沒有花會先模擬，再產生清單。");
     BigTree.update({ sents: sents(), people: S.people || {}, edits: S.edits });
   }
 
@@ -192,7 +198,7 @@
     if (b.dataset.phase) {
       const ph = b.dataset.phase;
       if (ph === "reveal" || (ph === "harvest" && !sents().length)) {
-        if (!blooms().length && !confirm("目前還沒有澆到 100% 盛開的花，確定要進入「" + (ph === "reveal" ? "揭曉" : "收成") + "」嗎？")) return;
+        if (!picks().length && !confirm((revealAll() ? "花園裡還沒有花" : "目前還沒有澆到 100% 盛開的花") + "，確定要進入「" + (ph === "reveal" ? "揭曉" : "收成") + "」嗎？")) return;
         await doBuild(true);
       }
       if (ph === "alliance") { await setState({ phase: "finale", finaleMap: true, spotlight: null }); return; }
@@ -214,6 +220,7 @@
     }
     const act = b.dataset.act;
     if (act === "build") await doBuild(true);
+    if (act === "revealall") { const all = revealAll(); await setState({ revealAll: all ? false : null }); msg = all ? "已改成只揭曉盛開的花（請按產生揭曉清單更新）" : "已改成揭曉全部的花（請按產生揭曉清單更新）"; }
     if (act === "wateropen") { const open = waterOpen(S); await setState({ waterOpen: open ? false : null }); msg = open ? "已暫停澆花" : "已開放澆花"; }
     if (act === "joinopen") { const open = !(S.state && S.state.joinOpen === false); await setState({ joinOpen: open ? false : null }); msg = open ? "已關閉報到與填寫" : "已開放報到與填寫"; }
     if (act === "next" || act === "prev") step(act === "next" ? 1 : -1);
@@ -245,14 +252,14 @@
     await setState({ spotlight: ss[next].id });
   }
 
-  // 揭曉清單＝澆到 100% 盛開的花（依範疇排序）
+  // 揭曉清單＝花園裡全部的花（或只取盛開的花，依主持人設定），依範疇排序
   async function doBuild(quiet) {
-    const chosen = blooms().map((f) => ({ id: f.pid, ...f.p }));
+    const chosen = picks().map((f) => ({ id: f.pid, ...f.p }));
     chosen.sort((a, b) => a.scope - b.scope || (a.submittedAt || 0) - (b.submittedAt || 0));
     const out = {};
     chosen.forEach((p, i) => { out["s" + String(i + 1).padStart(3, "0")] = { pid: p.id, scope: p.scope, order: i + 1 }; });
     await Store.update("", { sentences: chosen.length ? out : null, "state/spotlight": null });
-    msg = chosen.length ? `揭曉清單已產生：${chosen.length} 朵盛開的花 📣` : "目前沒有盛開的花，揭曉清單是空的。";
+    msg = chosen.length ? `揭曉清單已產生：${chosen.length} 朵${revealAll() ? "花（含未澆滿）" : "盛開的花"} 📣` : "目前沒有可揭曉的花，揭曉清單是空的。";
     render();
     return true;
   }

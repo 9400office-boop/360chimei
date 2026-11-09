@@ -159,7 +159,7 @@
     if (ph === "reveal") {
       const list = sentencesSorted();
       const mine = list.find((s) => s.pid === pid);
-      html += `<p class="status">${list.length ? (mine ? "🎉 你的花盛開了，入選揭曉！" : `📣 揭曉 <b>${list.length}</b> 朵澆到 100% 的花`) : "主持人正在整理盛開的花，請看大螢幕…"}</p>`;
+      html += `<p class="status">${list.length ? (mine ? "🎉 你的希望花揭曉了，將結成共識果實！" : `📣 揭曉 <b>${list.length}</b> 朵希望花`) : "主持人正在整理希望花，請看大螢幕…"}</p>`;
       html += list.map((s) => sentCard(s)).join("");
     } else if (ph === "finale") {
       html += `<p class="status">🎯 <b>帶著今天的共識，邁向第二期深耕</b></p>` + Finale.card() + Finale.mapCard();   // 結尾頁：222 之後接聯盟地圖
@@ -170,12 +170,7 @@
       html += `<p class="status">謝謝你和大家一起，<br><b>${escapeHtml(C.vision)}</b></p>`;
     }
     html += `<p style="text-align:center;margin:6px 0 0"><button class="link-btn" data-act="explore">📖 四大範疇與政策關聯</button></p>`;
-    // 進共識花園澆花：放在最下方
     html += `<p class="status" style="margin-bottom:0">🌸 全場已經有 <b>${nb}</b> 朵花盛開（共 ${gf.length} 朵）</p>`;
-    html += `<div class="sticky"><div class="inner">${waterOpen(S)
-      ? `<a class="btn gardenbtn" href="garden.html">🌸 進共識花園澆花<small>你還有 ${leftN} / ${TOTAL} 滴水・每朵澆 ${bloomAt()} 次盛開</small></a>`
-      : `<a class="btn gardenbtn ghostg" href="garden.html">🌸 看看共識花園</a>`}</div></div>`;
-
     return html;
   }
 

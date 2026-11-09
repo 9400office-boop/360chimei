@@ -541,12 +541,12 @@
       setBar(curG < 0 ? 0 : curG);
       // 右側：共識果實清單
       const side = root.querySelector(".bt-side");
-      const html = `<h3>🍎 共識果實（${fruitData.length}）</h3><p class="bt-more" style="text-align:left;margin:-4px 0 6px">每一顆果實都是一朵澆到 100% 盛開的花</p>` +
+      const html = `<h3>🍎 共識果實（${fruitData.length}）</h3><p class="bt-more" style="text-align:left;margin:-4px 0 6px">每一顆果實都是一朵大家一起澆灌的希望花</p>` +
         (fruitData.map((s, i) => {
           const p = (people || {})[s.pid] || {}, sc = SC(s.scope);
           return `<div class="bt-row" data-fi="${i}"><div class="bt-rk" style="color:${sc.color}">${s.order}</div><div class="bt-tx">${escapeHtml(sentenceText(s, people, edits))}
             <div class="bt-meta"><span class="bt-tag" style="background:${sc.color}">${sc.tag}</span>${escapeHtml((p.dept ? p.dept + " " : "") + (p.name || ""))}</div></div></div>`;
-        }).join("") || `<p class="bt-more">還沒有盛開的花</p>`);
+        }).join("") || `<p class="bt-more">還沒有揭曉的希望花</p>`);
       if (side.dataset.h !== html) { side.dataset.h = html; side.innerHTML = html; }
       if (!played && this.visible) { played = true; playGrow(); }
     }

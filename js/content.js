@@ -112,7 +112,7 @@ window.ISLAND_CONTENT = {
     {
       n: 1, key: "who", title: "我的部門名稱", sub: "誰來發起", color: "#2E9C8F",
       question: "填入你的部門名稱",
-      hints: ["護理部", "資訊室", "人資部", "教學部"],
+      hints: ["護理部", "資訊室", "人資室", "教學部"],
       pre: "", post: ""
     },
     {
