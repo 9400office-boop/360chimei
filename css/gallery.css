@@ -68,3 +68,14 @@ body.gallerymode .joy, body.gallerymode .mebar { display: none !important; }
   .gl-art.feat .gl-frame { transform: scale(1.08); }
   .gl-art.feat figcaption { transform: translateY(2vw); }
 }
+
+/* 輪播時的大圖：從中間畫框放大成全螢幕，停留後縮回 */
+.gl-view.auto { animation: none; }
+.gl-view.auto.zin { animation: glAutoBg .9s ease both; }
+.gl-view.auto.zin .gl-big { animation: glAutoIn 1.1s cubic-bezier(.2,.8,.2,1) both; }
+.gl-view.auto.zout { animation: glAutoBg .8s ease reverse both; }
+.gl-view.auto.zout .gl-big { animation: glAutoOut .8s cubic-bezier(.5,0,.75,0) both; }
+.gl-view.auto .gl-cap { animation: glAutoBg 1.2s .6s both; }
+@keyframes glAutoBg { from { background: rgba(20,16,10,0); } to { background: rgba(20,16,10,.88); } }
+@keyframes glAutoIn { from { opacity: .3; transform: scale(.42); } to { opacity: 1; transform: none; } }
+@keyframes glAutoOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.42); } }

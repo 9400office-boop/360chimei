@@ -27,12 +27,26 @@
     const a = list[cur]; center(a);
     // 放大時換成高畫質原圖
     const img = a.querySelector("img[data-big]"); if (img && !img.dataset.up) { img.dataset.up = 1; img.src = img.dataset.big; }
-    tA = setTimeout(() => running && a.classList.add("feat"), ZOOM_IN_AT);
-    tB = setTimeout(() => a.classList.remove("feat"), ZOOM_OUT_AT);
+    const si = a.dataset.i !== undefined ? Number(a.dataset.i) : -1;
+    tA = setTimeout(() => { if (!running) return; a.classList.add("feat"); if (si >= 0) autoBig(si, true); }, ZOOM_IN_AT);
+    tB = setTimeout(() => { a.classList.remove("feat"); if (si >= 0) autoBig(si, false); }, ZOOM_OUT_AT);
     tC = setTimeout(step, STEP_MS);
   }
+  // 輪播放大：從畫框位置放大成接近全螢幕的大圖，停留後縮回
+  function autoBig(i, on) {
+    const v = el.querySelector(".gl-view");
+    if (on) {
+      const n = SLIDES[i];
+      v.querySelector("img").src = `assets/gallery/${pad(n)}.jpg?v=${IMGV}`;
+      v.querySelector(".gl-cap").textContent = `${i + 1} / ${SLIDES.length}`;
+      v.classList.remove("hide", "zout"); v.classList.add("auto"); void v.offsetWidth; v.classList.add("zin");
+    } else if (v.classList.contains("auto")) {
+      v.classList.remove("zin"); v.classList.add("zout");
+      setTimeout(() => { if (v.classList.contains("zout")) { v.classList.add("hide"); v.classList.remove("auto", "zout"); } }, 800);
+    }
+  }
   function startAuto(delay = 1200) { stopAuto(); running = true; tC = setTimeout(step, delay); }
-  function stopAuto() { running = false; clearT(); clearTimeout(pauseT); arts().forEach((a) => a.classList.remove("feat")); }
+  function stopAuto() { running = false; clearT(); clearTimeout(pauseT); arts().forEach((a) => a.classList.remove("feat")); if (el) { const v = el.querySelector(".gl-view"); if (v.classList.contains("auto")) { v.classList.add("hide"); v.classList.remove("auto", "zin", "zout"); } } }
   // 有人手動操作（捲動、點畫）時暫停，15 秒沒動作再接著輪播
   function nudge() { if (!el || el.classList.contains("hide")) return; stopAuto(); pauseT = setTimeout(() => { if (idx < 0 && !(window.Memories && Memories.visible)) { cur = cur - 1; startAuto(0); } else nudge(); }, 15000); }
 
@@ -80,8 +94,9 @@
   function view(i) {
     idx = i;
     const v = el.querySelector(".gl-view");
+    const wasAuto = v.classList.contains("auto"); v.classList.remove("auto", "zin", "zout");
     if (i < 0) { v.classList.add("hide"); if (el && !el.classList.contains("hide")) nudge(); return; }
-    stopAuto();
+    running = false; clearT(); clearTimeout(pauseT); arts().forEach((a) => a.classList.remove("feat")); void wasAuto;
     const n = SLIDES[i];
     v.querySelector("img").src = `assets/gallery/${pad(n)}.jpg?v=${IMGV}`;
     v.querySelector(".gl-cap").textContent = `${i + 1} / ${SLIDES.length}`;
