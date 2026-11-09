@@ -693,7 +693,13 @@
     People.sync(people, firstSync || settling);
     Object.entries(Store.moves).forEach(([id, m]) => { const e = People.ents[id]; if (e && (e._mt === undefined)) applyMove(id, m); });
     const wt = waterTotals(S), hidden = S.hide || {};
-    Life.Flowers.sync(people, flowerFirst || settling, wt, hidden);
+    // 大螢幕：揭曉之後，揭曉清單裡的花一律以盛開呈現（手機與花園仍顯示真實進度，沒滿的照樣可以繼續澆到 100%）
+    let wtShow = wt;
+    if (!ME && (phase === "reveal" || phase === "harvest" || phase === "finale") && S.sentences) {
+      wtShow = { ...wt }; const BL = bloomAt();
+      Object.values(S.sentences).forEach((s) => { if (s && s.pid) wtShow[s.pid] = Math.max(wtShow[s.pid] || 0, BL); });
+    }
+    Life.Flowers.sync(people, flowerFirst || settling, wtShow, hidden);
     if (Object.keys(people).length) { firstSync = false; flowerFirst = false; }
 
     // 日誌
