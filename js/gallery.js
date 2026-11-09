@@ -9,11 +9,37 @@
   const IMGV = "20261108k";   // 換投影片圖檔時改這個，避免手機讀到舊圖
   const pad = (n) => String(n).padStart(2, "0");
   let el = null, idx = -1;
+  // ---------- 自動輪播：每幅移到中間、放大約 10 秒、縮回，再換下一幅 ----------
+  const STEP_MS = 10000, ZOOM_IN_AT = 900, ZOOM_OUT_AT = 9000;
+  let cur = -1, tA = null, tB = null, tC = null, pauseT = null, running = false;
+  const arts = () => el ? [...el.querySelectorAll(".gl-wall .gl-art")] : [];
+  function clearT() { clearTimeout(tA); clearTimeout(tB); clearTimeout(tC); }
+  function center(a) {
+    const w = el.querySelector(".gl-wall"), vert = w.scrollHeight > w.clientHeight + 4 && w.scrollWidth <= w.clientWidth + 4;
+    if (vert) w.scrollTo({ top: a.offsetTop - (w.clientHeight - a.offsetHeight) / 2, behavior: "smooth" });
+    else w.scrollTo({ left: a.offsetLeft - (w.clientWidth - a.offsetWidth) / 2, behavior: "smooth" });
+  }
+  function step() {
+    if (!running) return;
+    const list = arts(); if (!list.length) return;
+    list.forEach((a) => a.classList.remove("feat"));
+    cur = (cur + 1) % list.length;
+    const a = list[cur]; center(a);
+    // 放大時換成高畫質原圖
+    const img = a.querySelector("img[data-big]"); if (img && !img.dataset.up) { img.dataset.up = 1; img.src = img.dataset.big; }
+    tA = setTimeout(() => running && a.classList.add("feat"), ZOOM_IN_AT);
+    tB = setTimeout(() => a.classList.remove("feat"), ZOOM_OUT_AT);
+    tC = setTimeout(step, STEP_MS);
+  }
+  function startAuto(delay = 1200) { stopAuto(); running = true; tC = setTimeout(step, delay); }
+  function stopAuto() { running = false; clearT(); clearTimeout(pauseT); arts().forEach((a) => a.classList.remove("feat")); }
+  // 有人手動操作（捲動、點畫）時暫停，15 秒沒動作再接著輪播
+  function nudge() { if (!el || el.classList.contains("hide")) return; stopAuto(); pauseT = setTimeout(() => { if (idx < 0 && !(window.Memories && Memories.visible)) { cur = cur - 1; startAuto(0); } else nudge(); }, 15000); }
 
   function frame(n, i) {
     return `<figure class="gl-art" data-i="${i}" style="--d:${(i % 6) * 80}ms">
       <div class="gl-light"></div>
-      <div class="gl-frame"><div class="gl-mat"><img src="assets/gallery/${pad(n)}_s.jpg?v=${IMGV}" alt="第 ${n} 幅" loading="lazy"></div></div>
+      <div class="gl-frame"><div class="gl-mat"><img src="assets/gallery/${pad(n)}_s.jpg?v=${IMGV}" data-big="assets/gallery/${pad(n)}.jpg?v=${IMGV}" alt="第 ${n} 幅"></div></div>
       <figcaption><span>2025–2026</span></figcaption>
     </figure>`;
   }
@@ -44,6 +70,8 @@
     });
     // 電腦：滑鼠滾輪橫向捲動畫廊
     const wall = el.querySelector(".gl-wall");
+    ["wheel", "touchstart", "pointerdown"].forEach((ev) => wall.addEventListener(ev, (e) => { if (e.isTrusted) nudge(); }, { passive: true }));
+    el.querySelector(".gl-tabs").addEventListener("click", () => nudge());
     wall.addEventListener("wheel", (e) => { if (matchMedia("(min-width: 761px)").matches && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { wall.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
     let sx = null;
     el.querySelector(".gl-view").addEventListener("touchstart", (e) => (sx = e.touches[0].clientX), { passive: true });
@@ -52,7 +80,8 @@
   function view(i) {
     idx = i;
     const v = el.querySelector(".gl-view");
-    if (i < 0) { v.classList.add("hide"); return; }
+    if (i < 0) { v.classList.add("hide"); if (el && !el.classList.contains("hide")) nudge(); return; }
+    stopAuto();
     const n = SLIDES[i];
     v.querySelector("img").src = `assets/gallery/${pad(n)}.jpg?v=${IMGV}`;
     v.querySelector(".gl-cap").textContent = `${i + 1} / ${SLIDES.length}`;
@@ -65,7 +94,7 @@
     if (idx >= 0 && e.key === "ArrowLeft") view((idx - 1 + SLIDES.length) % SLIDES.length);
   }
   window.addEventListener("keydown", onKey);
-  function open() { if (window.World) World.skipRender = true; if (!el) build(); el.classList.remove("hide"); el.classList.remove("in"); void el.offsetWidth; el.classList.add("in"); document.body.classList.add("gallerymode"); }
-  function close() { if (window.Memories) Memories.close(); if (el) { el.classList.add("hide"); view(-1); } document.body.classList.remove("gallerymode"); if (window.World) World.skipRender = document.body.classList.contains("finalemode") || !!(window.BigTree && BigTree.visible); }
+  function open() { if (window.World) World.skipRender = true; if (!el) build(); el.classList.remove("hide"); el.classList.remove("in"); void el.offsetWidth; el.classList.add("in"); document.body.classList.add("gallerymode"); cur = -1; const w = el.querySelector(".gl-wall"); w.scrollLeft = 0; w.scrollTop = 0; startAuto(1600); }
+  function close() { stopAuto(); if (window.Memories) Memories.close(); if (el) { el.classList.add("hide"); view(-1); } document.body.classList.remove("gallerymode"); if (window.World) World.skipRender = document.body.classList.contains("finalemode") || !!(window.BigTree && BigTree.visible); }
   window.Gallery = { open, close, get visible() { return !!el && !el.classList.contains("hide"); } };
 })();
