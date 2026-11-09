@@ -116,31 +116,31 @@ window.ISLAND_CONTENT = {
       pre: "", post: ""
     },
     {
-      n: 2, key: "verb", title: "動詞", sub: "核心行動與執行方向", color: "#3E8E41",
+      n: 2, key: "verb", title: "動詞", sub: "核心行動與執行方向（可選填或自行回覆）", color: "#3E8E41",
       question: "要採取什麼核心行動？",
       hints: ["提升", "優化", "建立", "促進", "引進", "整合", "推動"],
       pre: "", post: ""
     },
     {
-      n: 3, key: "obj", title: "受詞", sub: "行動作用的對象", color: "#2F6FC4",
+      n: 3, key: "obj", title: "受詞", sub: "行動作用的對象（可選填或自行回覆）", color: "#2F6FC4",
       question: "行動要作用在誰或什麼上？",
       hints: ["醫事人員", "工作環境", "醫療資源", "科技", "人才", "照護體系"],
       pre: "", post: ""
     },
     {
-      n: 4, key: "with", title: "合作夥伴", sub: "和誰一起", color: "#E07A1F",
+      n: 4, key: "with", title: "合作夥伴", sub: "和誰一起（可選填或自行回覆）", color: "#E07A1F",
       question: "可以邀請誰共同參與？",
       hints: ["資訊室及行政單位", "社區醫療與居家護理團隊", "教學單位及各職類同仁", "人資部"],
       pre: "和", post: "一起"
     },
     {
-      n: 5, key: "how", title: "方式", sub: "達成目標的策略與途徑", color: "#7B4BB0",
+      n: 5, key: "how", title: "方式", sub: "達成目標的策略與途徑（可選填或自行回覆）", color: "#7B4BB0",
       question: "用什麼策略與途徑達成？",
       hints: ["科技投資", "持續教育", "跨域合作", "創新培訓", "國際接軌", "社區醫療"],
       pre: "透過", post: ""
     },
     {
-      n: 6, key: "why", title: "目的", sub: "預期成果與最終價值", color: "#C2467A",
+      n: 6, key: "why", title: "目的", sub: "預期成果與最終價值（可選填或自行回覆）", color: "#C2467A",
       question: "希望達成什麼成果與價值？",
       hints: ["人才留任", "減輕負荷", "提升效率", "照護可及性", "醫療永續"],
       pre: "達成", post: ""

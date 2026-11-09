@@ -70,7 +70,7 @@
     const pv = local.avatar ? `<div class="preview">${Avatar.svg(local.avatar)}</div>` : "";
     return `<label class="label">部門</label>
       <input class="name-input" id="dept" maxlength="16" placeholder="例：護理部、資訊室、內科部" value="${escapeHtml(local.dept)}" autocomplete="off">
-      <label class="label">姓名或暱稱</label>
+      <label class="label">姓名</label>
       <input class="name-input" id="name" maxlength="12" placeholder="例：王小美" value="${escapeHtml(local.name)}" autocomplete="off">
       <label class="label">點一位你喜歡的人物</label>
       <div class="grid">${grid}</div>
