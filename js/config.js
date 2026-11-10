@@ -23,7 +23,7 @@ window.ISLAND_CONFIG = {
   // 留空（null）時會自動進入「本機示範模式」：
   // 同一台電腦同一個瀏覽器的分頁之間會同步，適合彩排與試玩。
   firebase: {
-    apiKey: "AIzaSyCt8mlJBm9FFoHKHlhJVI2cGq_Z6IcJ-O0",
+    apiKey: "",
     authDomain: "gen-lang-client-0406113897.firebaseapp.com",
     databaseURL: "https://gen-lang-client-0406113897-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "gen-lang-client-0406113897",
